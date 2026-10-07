@@ -76,9 +76,13 @@ jobs:
           # Diff the slim frozen-field snapshots (final games only). The full
           # source file is referenced by SHA-256 in each manifest so any alert
           # can be traced back to the exact bytes that produced it.
+          # --feed appends EVERY run to data/alerts/feed.json, including clean
+          # ones. That file is what the published site renders as the live feed,
+          # and it is what makes "nothing changed" distinguishable from "never ran".
           python3 pipeline/run.py diff "${PREV}games.slim.csv" "${CUR}games.slim.csv" \
             --min-severity "${{ github.event.inputs.min_severity || 2 }}" \
-            --out alerts/latest.md
+            --out alerts/latest.md \
+            --feed data/alerts/feed.json
           CODE=$?
           echo "exit=$CODE"
           echo "alerts=$CODE" >> "$GITHUB_OUTPUT"
@@ -120,12 +124,18 @@ jobs:
 
       # The snapshot store is the system's memory: without it there is nothing
       # to diff against on the next run.
+      # Re-copy the feed into the published docs/ layout so GitHub Pages serves
+      # the run we just recorded, not a stale one.
+      - name: Sync the feed into the published site
+        if: always()
+        run: ./pipeline/sync_site_data.sh
+
       - name: Persist snapshots
         if: always()
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -f snapshots/ alerts/ 2>/dev/null || true
+          git add -f snapshots/ alerts/ data/alerts/ docs/data/ 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "nothing to commit"
           else

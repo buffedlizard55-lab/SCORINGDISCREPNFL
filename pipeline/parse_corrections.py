@@ -44,6 +44,13 @@ _RE_POS_TEAM = re.compile(r"\b(?P<pos>QB|RB|WR|TE|K|DEF|DL|LB|DB)\s*-\s*(?P<team
 
 _TAG = re.compile(r"<[^>]+>")
 _WS = re.compile(r"\s+")
+_MD_LINK = re.compile(r"\[([^\]]*)\]\([^)]*\)")
+_MD_EMPHASIS = re.compile(r"[*_]{1,3}")
+
+# Position token with no team, e.g. "_DEF_" on a defensive-unit row. The dashed
+# form (_QB - BAL_) is tried first; this is the fallback, anchored to the end of
+# the cell so it cannot fire on a letter inside a player's name.
+_RE_POS_BARE = re.compile(r"\b(?P<pos>QB|RB|WR|TE|K|DEF|DL|LB|DB)\b\s*$")
 
 
 @dataclass
@@ -70,6 +77,37 @@ class CorrectionRow:
 
 def strip_tags(s: str) -> str:
     s = _TAG.sub(" ", s)
+    s = _html.unescape(s)
+    return _WS.sub(" ", s).strip()
+
+
+def normalize_cell(s: str) -> str:
+    """
+    Reduce one rendered table cell to the plain wording the official page
+    displayed, so that _RE_CHANGED can match it.
+
+    TWO BUGS FOUND HERE ON 2026-10-07, by running this parser against real
+    archived page content (data/evidence/pages/) rather than hand-written
+    fixtures. Both would have silently produced zero usable rows:
+
+    1. The real page wraps the numbers in bold: "Tackle changed from **0** to
+       **1**."  _RE_CHANGED's numeric class [-\\d,.]+ cannot match "**0**", so
+       every row fell through to parse_status="unparsed" with stat=None and
+       original_value=None. The old fixture omitted the asterisks, which is why
+       the test suite was green while the parser was broken.
+    2. A player who has a highlight reel renders a second link in the same cell
+       ("Case Keenum ... View Videos"). Stripping link syntax but keeping the
+       text produced the player name "Case Keenum    View Videos".
+
+    Both are fixed by (a) dropping emphasis markers, and (b) taking only the
+    text before the position marker.
+    """
+    # Keep the link TEXT: on this page the player name IS the link text, so
+    # collapsing "[Darrius Heyward-Bey](...)" to a space destroys the name.
+    # The *trailing* "View Videos" link is dropped later by the prefix split in
+    # parse_rows, not here.
+    s = _MD_LINK.sub(r"\1", s)
+    s = _MD_EMPHASIS.sub(" ", s)
     s = _html.unescape(s)
     return _WS.sub(" ", s).strip()
 
@@ -109,9 +147,7 @@ def parse_markdown_rows(text: str) -> list[list[str]]:
         line = line.strip()
         if not line.startswith("|") or set(line) <= set("|- "):
             continue
-        cells = [strip_tags(c).strip() for c in line.strip("|").split("|")]
-        # strip markdown link syntax and emphasis left behind
-        cells = [re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", c).replace("_", " ").strip() for c in cells]
+        cells = [normalize_cell(c) for c in line.strip("|").split("|")]
         if len(cells) >= 3:
             rows.append(cells)
     return rows
@@ -143,11 +179,21 @@ def parse_rows(
         old_v = _num(m.group("old")) if m else None
         new_v = _num(m.group("new")) if m else None
 
+        # Position/team sit at the END of the player cell; everything before the
+        # marker is the name. Taking only the prefix (rather than deleting the
+        # matched marker) is what keeps a trailing "View Videos" out of the name.
         pos = team = None
+        player = player_cell
         pm = _RE_POS_TEAM.search(player_cell)
         if pm:
             pos, team = pm.group("pos"), pm.group("team")
-        player = _RE_POS_TEAM.sub("", player_cell).strip(" -") or None
+            player = player_cell[: pm.start()]
+        else:
+            bm = _RE_POS_BARE.search(player_cell)
+            if bm:
+                pos = bm.group("pos")
+                player = player_cell[: bm.start()]
+        player = player.strip(" -") or None
         if player in ("", "No stat corrections to display"):
             continue
 

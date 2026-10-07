@@ -1,0 +1,65 @@
+{
+ "meta": {
+  "what_this_is": "Append-only log of automated differential-detection runs against a versioned mirror of the NFL's official record. Every run is recorded, including runs that found nothing, so 'nothing changed' is distinguishable from 'we never checked'.",
+  "what_a_recorded_alert_is": "A machine-detected difference between two snapshots. It is a CANDIDATE discrepancy, not a confirmed official NFL/Elias correction. Confirm against the official gamebook before acting.",
+  "what_a_clean_run_means": "No frozen field on any already-final game differed between the two snapshots compared. It is NOT evidence that the NFL issued no corrections in that window.",
+  "source": "nflverse/nfldata data/games.csv (third-party mirror, not the NFL)",
+  "see": [
+   "LIMITATIONS.md",
+   "RECOMMENDATIONS.md"
+  ]
+ },
+ "last_checked_at": "2026-10-07T16:58:20+00:00",
+ "runs": [
+  {
+   "checked_at": "2026-10-07T16:58:20+00:00",
+   "status": "clean",
+   "alerts_total": 0,
+   "counts_by_severity": {},
+   "records_compared": 7340,
+   "old_snapshot": "snapshots/nfldata_games/2026-10-07T045150Z/games.slim.csv",
+   "new_snapshot": "snapshots/nfldata_games/2026-10-07T165648Z/games.slim.csv",
+   "old_sha256": "341417dee2d4cb58938e4b483f9029d184b03b9e52f94949806afed1eedb0498",
+   "new_sha256": "341417dee2d4cb58938e4b483f9029d184b03b9e52f94949806afed1eedb0498",
+   "identical_inputs": true,
+   "min_severity": 0,
+   "rules_applied": [
+    "only rows final in OLD snapshot are compared",
+    "only frozen fields compared: ['away_score', 'home_score', 'result', 'total', 'overtime']",
+    "volatile fields excluded: ['spread_line', 'total_line', 'away_moneyline', 'home_moneyline', 'away_spread_odds', 'home_spread_odds', 'gametime', 'weekday']"
+   ],
+   "alerts": [],
+   "verification_status": "no_change_detected",
+   "actually_changed_outcome": null
+  }
+ ],
+ "summary": {
+  "runs_recorded": 1,
+  "runs_with_alerts": 0,
+  "runs_clean": 1,
+  "total_alerts": 0,
+  "first_run": "2026-10-07T16:58:20+00:00",
+  "last_run": "2026-10-07T16:58:20+00:00"
+ },
+ "latest": {
+  "checked_at": "2026-10-07T16:58:20+00:00",
+  "status": "clean",
+  "alerts_total": 0,
+  "counts_by_severity": {},
+  "records_compared": 7340,
+  "old_snapshot": "snapshots/nfldata_games/2026-10-07T045150Z/games.slim.csv",
+  "new_snapshot": "snapshots/nfldata_games/2026-10-07T165648Z/games.slim.csv",
+  "old_sha256": "341417dee2d4cb58938e4b483f9029d184b03b9e52f94949806afed1eedb0498",
+  "new_sha256": "341417dee2d4cb58938e4b483f9029d184b03b9e52f94949806afed1eedb0498",
+  "identical_inputs": true,
+  "min_severity": 0,
+  "rules_applied": [
+   "only rows final in OLD snapshot are compared",
+   "only frozen fields compared: ['away_score', 'home_score', 'result', 'total', 'overtime']",
+   "volatile fields excluded: ['spread_line', 'total_line', 'away_moneyline', 'home_moneyline', 'away_spread_odds', 'home_spread_odds', 'gametime', 'weekday']"
+  ],
+  "alerts": [],
+  "verification_status": "no_change_detected",
+  "actually_changed_outcome": null
+ }
+}

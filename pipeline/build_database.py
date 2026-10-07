@@ -58,7 +58,41 @@ MONTHS = {m: i + 1 for i, m in enumerate(
 
 
 def norm_team(code: str) -> str:
+    if not code:
+        return ""
     return TEAM_ALIASES.get(code.strip().upper(), code.strip().upper())
+
+
+# Defensive-unit ("DEF") rows print the franchise NICKNAME and no team code at
+# all (the cell reads "_DEF_"). Resolving that nickname to a code is therefore a
+# derivation, not a transcription, so it lives here in the derived layer and is
+# labelled as such on every row it touches. tests assert that every code in this
+# table actually occurs in the authoritative schedule snapshot, so a typo or an
+# invented code fails the build instead of shipping.
+TEAM_NAME_TO_CODE = {
+    "arizona cardinals": "ARI", "atlanta falcons": "ATL", "baltimore ravens": "BAL",
+    "buffalo bills": "BUF", "carolina panthers": "CAR", "chicago bears": "CHI",
+    "cincinnati bengals": "CIN", "cleveland browns": "CLE", "dallas cowboys": "DAL",
+    "denver broncos": "DEN", "detroit lions": "DET", "green bay packers": "GB",
+    "houston texans": "HOU", "indianapolis colts": "IND", "jacksonville jaguars": "JAX",
+    "kansas city chiefs": "KC", "los angeles chargers": "LAC", "los angeles rams": "LA",
+    "las vegas raiders": "LV", "miami dolphins": "MIA", "minnesota vikings": "MIN",
+    "new england patriots": "NE", "new orleans saints": "NO", "new york giants": "NYG",
+    "new york jets": "NYJ", "philadelphia eagles": "PHI", "pittsburgh steelers": "PIT",
+    "san francisco 49ers": "SF", "seattle seahawks": "SEA", "tampa bay buccaneers": "TB",
+    "tennessee titans": "TEN", "washington commanders": "WAS",
+    # historical nicknames, so pre-relocation DEF rows still resolve
+    "oakland raiders": "OAK", "san diego chargers": "SD", "st. louis rams": "STL",
+    "washington redskins": "WSH", "washington football team": "WSH",
+}
+
+
+def team_code_from_nickname(name: str) -> str | None:
+    """Resolve a printed franchise nickname to a code, or None if unknown.
+    Never guesses: an unmapped nickname stays unresolved and gets flagged."""
+    if not name:
+        return None
+    return TEAM_NAME_TO_CODE.get(name.strip().lower())
 
 
 def parse_correction_date(text: str, season: int) -> datetime | None:
@@ -111,13 +145,44 @@ def build(raw_path: str, games_path: str) -> tuple[dict, list[dict]]:
     out_rows: list[dict] = []
     for i, c in enumerate(raw["corrections"], start=1):
         src = sources[c["source_id"]]
-        team = norm_team(c["team"])
+        # `team` is exactly what the official page printed. On a defensive-unit row
+        # the page prints a franchise nickname and NO code, so any code on such a
+        # row is derived here and labelled as derived. Previously the raw file
+        # carried a normalised code (e.g. "JAX" where the page printed "JAC"), which
+        # made the "as printed" field untrue — fixed 2026-10-07.
+        printed_team = c.get("team")
+        team_source = "as_printed_on_official_page"
+        team = ""
+        if printed_team:
+            team = norm_team(printed_team)
+        elif c.get("position") == "DEF":
+            # A defensive-unit row prints the franchise nickname and no code.
+            derived = team_code_from_nickname(c.get("player"))
+            if derived:
+                team = norm_team(derived)
+                team_source = "derived_from_printed_nickname"
+        if not team:
+            # The page printed a position with no team code (seen on real 2013 W1
+            # rows). Resolving it would mean inferring a team the source never
+            # published, so we do not: we record the gap and flag it.
+            team_source = "not_printed_on_source"
         flags: list[str] = []
+        if team_source == "not_printed_on_source":
+            flags.append(
+                "TEAM_NOT_PRINTED: the official page printed no team code for this "
+                "player, so the game join was not attempted (inferring a team would "
+                "put unsourced data in the database)"
+            )
 
-        game = find_game(idx, c["season"], c["week"], team)
+        # NOTE: this must test `game is not None` first. The earlier shape was
+        # `if game is None: flag ... else: <use game>`, which crashes with
+        # TypeError on any row where the join legitimately cannot run (no team
+        # code printed). Found 2026-10-07 by the 2013 W1 rows.
+        game = find_game(idx, c["season"], c["week"], team) if team else None
         game_info: dict = {}
         if game is None:
-            flags.append("GAME_JOIN_FAILED: team not found in this season+week of the schedule")
+            if team:
+                flags.append("GAME_JOIN_FAILED: team not found in this season+week of the schedule")
         else:
             # Matching uses normalised codes (the corrections page writes JAC/TB-style
             # codes that differ from the schedule's over time), but DISPLAY must use the
@@ -161,14 +226,19 @@ def build(raw_path: str, games_path: str) -> tuple[dict, list[dict]]:
             **game_info,
             "player": c["player"],
             "position": c["position"],
-            # `team` is exactly the code the official page printed — the most faithful
-            # representation of the source. `team_normalized` is what the join used.
-            "team": c["team"],
-            "team_normalized": team,
+            # `team` is exactly the code the official page printed (null when the
+            # page printed only a nickname). `team_normalized` is what the join
+            # used. `team_source` says which of the two produced it.
+            "team": printed_team,
+            "team_normalized": team or None,
+            "team_source": team_source,
             "stat": c["stat"],
             "original_value": c["original_value"],
             "corrected_value": c["corrected_value"],
-            "numeric_change": c["corrected_value"] - c["original_value"],
+            "numeric_change": (
+                None if c["original_value"] is None or c["corrected_value"] is None
+                else c["corrected_value"] - c["original_value"]
+            ),
             "correction_date_text": c["correction_date"],
             "days_from_game_to_correction": game_info.get("days_from_game_to_correction"),
             "published_fantasy_points_delta": c["published_points_delta"],

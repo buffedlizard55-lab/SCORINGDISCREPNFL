@@ -14,12 +14,15 @@ during review:
 from __future__ import annotations
 
 import io
+import pathlib
 import os
 import sys
 import unittest
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.join(os.path.dirname(HERE), "pipeline"))
+ROOT = os.path.dirname(HERE)
+DATA_DIR = os.path.join(ROOT, "data")
+sys.path.insert(0, os.path.join(ROOT, "pipeline"))
 
 import detect  # noqa: E402
 from market_rules import classify, crosses_threshold, market_outcomes  # noqa: E402
@@ -237,6 +240,284 @@ class TestCorrectionsParser(unittest.TestCase):
         self.assertNotIn("Player", [r.player for r in rows])
 
 
+class TestRealArchivedPageContent(unittest.TestCase):
+    """
+    Regression tests built from REAL archived official page content, not from
+    hand-written idealised fixtures.
+
+    WHY THIS CLASS EXISTS
+    ---------------------
+    On 2026-10-07 the parser was run against real archived page text for the
+    first time. It produced ZERO usable rows, for two reasons that the existing
+    fixture could not catch:
+
+      1. The real page bolds the numbers ("Tackle changed from **0** to **1**.").
+         _RE_CHANGED's numeric class cannot match "**0**", so every row fell
+         through to parse_status="unparsed". The old fixture had omitted the
+         asterisks, which is why the suite was green while the parser was broken.
+      2. A player with a highlight reel renders a second link in the same cell,
+         producing player names like "Case Keenum    View Videos".
+
+    These tests fail loudly if either bug ever returns.
+    """
+
+    PAGES_DIR = os.path.join(DATA_DIR, "evidence", "pages")
+
+    # Verbatim lines from the archived 2018 W14 and 2010 W1 pages.
+    REAL_BOLD_NUMBERS = (
+        "| [Darrius Heyward-Bey](https://web.archive.org/web/20181219090041/x"
+        "?leagueId=0&playerId=80427) _WR - PIT_ | Dec 12 "
+        "| Tackle changed from **0** to **1**. | 0.00 |\n"
+    )
+    REAL_VIEW_VIDEOS = (
+        "| [Case Keenum](https://web.archive.org/web/20181219090041/y"
+        "?leagueId=0&playerId=2532888) _QB - DEN_ "
+        '[View Videos](https://web.archive.org/web/20181219090041/z "View Player Videos") '
+        "| Dec 12 | Rushing Yards changed from **71** to **67**. | -0.40 |\n"
+    )
+    REAL_DEF_NICKNAME = (
+        "| [Green Bay Packers](https://web.archive.org/web/20260516203131/w"
+        "?leagueId=0&playerId=100011) _DEF_ | Sep 15 "
+        "| Sacks changed from **5** to **6**. | 1.00 |\n"
+    )
+    REAL_NEGATIVE_VALUES = (
+        "| [Ben Roethlisberger](https://web.archive.org/web/20200930215056/v) _QB - PIT_ "
+        "| Dec 30 | Receiving Yards changed from **-8** to **-3**. | 0.50 |\n"
+    )
+
+    def test_bold_numbers_are_parsed_not_dropped(self):
+        """Bug 1: '**0**' must yield 0.0, not parse_status='unparsed'."""
+        rows = parse_official_page(self.REAL_BOLD_NUMBERS, season=2018, week=14)
+        self.assertEqual(len(rows), 1)
+        r = rows[0]
+        self.assertEqual(r.parse_status, "parsed", r.raw_stat_text)
+        self.assertEqual(r.stat, "Tackle")
+        self.assertEqual(r.original_value, 0.0)
+        self.assertEqual(r.corrected_value, 1.0)
+        self.assertEqual(r.numeric_change, 1.0)
+        self.assertEqual(r.position, "WR")
+        self.assertEqual(r.team, "PIT")
+
+    def test_view_videos_link_never_leaks_into_the_player_name(self):
+        """Bug 2: the trailing highlight-reel link is not part of the name."""
+        rows = parse_official_page(self.REAL_VIEW_VIDEOS, season=2018, week=14)
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0].player, "Case Keenum")
+        self.assertNotIn("View", rows[0].player)
+        self.assertEqual(rows[0].corrected_value, 67.0)
+
+    def test_defensive_unit_rows_resolve_position_without_a_team_code(self):
+        """DEF rows print a nickname and no code; name must survive intact."""
+        rows = parse_official_page(self.REAL_DEF_NICKNAME, season=2010, week=1)
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0].player, "Green Bay Packers")
+        self.assertEqual(rows[0].position, "DEF")
+        self.assertIsNone(rows[0].team)
+        self.assertEqual(rows[0].stat, "Sacks")
+        self.assertEqual(rows[0].corrected_value, 6.0)
+
+    def test_negative_values_survive_normalisation(self):
+        rows = parse_official_page(self.REAL_NEGATIVE_VALUES, season=2015, week=16)
+        self.assertEqual(rows[0].original_value, -8.0)
+        self.assertEqual(rows[0].corrected_value, -3.0)
+        self.assertEqual(rows[0].numeric_change, 5.0)
+
+    def test_every_stored_artefact_parses_cleanly(self):
+        """
+        The shipped artefacts ARE the evidence for the database. If any of them
+        stops parsing, the database is no longer reproducible.
+        """
+        import ingest_rendered  # noqa: E402
+
+        pages = sorted(pathlib.Path(self.PAGES_DIR).glob("*.md"))
+        self.assertGreaterEqual(len(pages), 4, "expected the shipped evidence artefacts")
+
+        doc = ingest_rendered.ingest()
+        self.assertEqual(doc["_problems"], [], "irregularities flagged during ingest")
+        self.assertGreater(len(doc["corrections"]), 0)
+        for c in doc["corrections"]:
+            self.assertEqual(c["parse_status"], "parsed", c)
+            self.assertIsNotNone(c["player"], c)
+            self.assertIsNotNone(c["stat"], c)
+            self.assertIsNotNone(c["original_value"], c)
+            self.assertIsNotNone(c["corrected_value"], c)
+
+    def test_raw_database_is_reproducible_from_the_artefacts(self):
+        """No hand-editing the derived raw layer: it must regenerate byte-for-byte."""
+        import ingest_rendered  # noqa: E402
+
+        doc = ingest_rendered.ingest()
+        doc.pop("_problems", None)
+        import json as _json
+        blob = _json.dumps(doc, indent=1, ensure_ascii=False) + "\n"
+        stored = pathlib.Path(ingest_rendered.RAW_PATH).read_text(encoding="utf-8")
+        # `generated_at` legitimately differs between runs; compare the payload.
+        strip = lambda s: _json.loads(s)
+        a, b = strip(blob), strip(stored)
+        a.pop("generated_at", None)
+        b.pop("generated_at", None)
+        self.assertEqual(a, b, "run: python3 pipeline/ingest_rendered.py --write")
+
+    def test_team_nickname_table_only_contains_real_schedule_codes(self):
+        """
+        The nickname->code table is the one place a typo or an invented code
+        could enter the database. Every code it maps to must actually occur in
+        the authoritative schedule snapshot we ship.
+        """
+        from build_database import TEAM_NAME_TO_CODE, TEAM_ALIASES
+
+        snap = sorted(pathlib.Path(DATA_DIR).parent.glob("snapshots/nfldata_games/*/games.slim.csv"))
+        self.assertTrue(snap, "no schedule snapshot to validate against")
+        import csv as _csv
+        real = set()
+        with open(snap[-1], newline="", encoding="utf-8-sig") as f:
+            for row in _csv.DictReader(f):
+                real.add(row["away_team"])
+                real.add(row["home_team"])
+        self.assertGreater(len(real), 30)
+
+        for nickname, code in TEAM_NAME_TO_CODE.items():
+            target = TEAM_ALIASES.get(code, code)
+            self.assertIn(
+                target, real,
+                f"TEAM_NAME_TO_CODE['{nickname}'] = {code!r} (-> {target}) is not a "
+                f"team code that occurs in the authoritative schedule",
+            )
+        self.assertEqual(len(TEAM_NAME_TO_CODE), 37)
+
+
+class TestDocumentationIntegrity(unittest.TestCase):
+    """The docs make link promises. Two were broken on 2026-10-07; this keeps them fixed."""
+
+    def test_no_broken_relative_links_in_markdown(self):
+        import re as _re
+        broken = []
+        for md in pathlib.Path(ROOT).rglob("*.md"):
+            if ".git" in md.parts or "node_modules" in md.parts:
+                continue
+            text = md.read_text(encoding="utf-8", errors="replace")
+            for m in _re.finditer(r"\[([^\]]+)\]\(([^)#]+)(#[^)]*)?\)", text):
+                link = m.group(2).strip()
+                if not link or link.startswith(("http://", "https://", "mailto:")):
+                    continue
+                if not (md.parent / link).resolve().exists():
+                    broken.append(f"{md.relative_to(ROOT)}: {link}")
+        self.assertEqual(broken, [], "broken relative links: " + "; ".join(broken))
+
+    def test_readme_contains_the_governing_brief_verbatim(self):
+        """The brief is the acceptance criteria; it must stay in the README in full."""
+        readme = pathlib.Path(ROOT, "README.md").read_text(encoding="utf-8")
+        for phrase in (
+            "NFL Scoring Discrepancy Investigation",
+            "Elias Sports Bureau",
+            "No hallucinations",
+            "It should solve the problem of having to manually check everything ourselves",
+        ):
+            self.assertIn(phrase, readme, f"README lost the brief phrase {phrase!r}")
+
+    def test_readme_counts_match_the_shipped_database(self):
+        """Doc numbers drift silently. Assert the headline counts against the data."""
+        import json as _json
+        import re as _re
+        readme = pathlib.Path(ROOT, "README.md").read_text(encoding="utf-8")
+        with open(os.path.join(DATA_DIR, "discrepancies.json"), encoding="utf-8") as fh:
+            counts = _json.load(fh)["meta"]["counts"]
+        n = counts["total_records"]
+        self.assertIn(f"{n} official correction records", readme,
+                      f"README does not state the current row count ({n})")
+        self.assertIn(f"{n}-row verified seed", readme)
+        self.assertNotIn("36-row verified seed", readme, "README still claims the old row count")
+        self.assertEqual(counts["severity_3_scoring_or_scoreboard"], 0)
+        self.assertIn("Not one of the 74 rows is a scoring event", readme)
+
+
+class TestFeed(unittest.TestCase):
+    """
+    The feed is what makes this usable day to day: it must record clean runs, not
+    only alarms, or 'nothing changed' is indistinguishable from 'never ran'.
+    """
+
+    def setUp(self):
+        import tempfile
+        self.tmp = tempfile.TemporaryDirectory()
+        self.path = os.path.join(self.tmp.name, "feed.json")
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def _report(self, n_alerts=0):
+        """Build a report through the REAL diff path, not a hand-made stub."""
+        import detect
+        old = {"g1": make_row(home_score="24", result="4", total="44")}
+        new = {"g1": make_row(home_score="24", result="4", total="44")}
+        if n_alerts:
+            new = {"g1": make_row(home_score="27", result="7", total="47")}
+        changes = detect.diff_final_records(old, new, detect.FROZEN_FIELDS_GAMES)
+        if n_alerts:
+            self.assertGreater(len(changes), 0, "fixture must actually produce a change")
+        return detect.build_alert_report(changes, source="test", min_severity=0)
+
+    def test_clean_run_is_recorded_not_dropped(self):
+        import feed
+        f = feed.append_run(self._report(0), "old.csv", "new.csv", self.path)
+        self.assertEqual(f["summary"]["runs_recorded"], 1)
+        self.assertEqual(f["summary"]["runs_clean"], 1)
+        self.assertEqual(f["latest"]["status"], "clean")
+        self.assertEqual(f["latest"]["verification_status"], "no_change_detected")
+
+    def test_alert_run_is_recorded_with_pending_confirmation(self):
+        import feed
+        f = feed.append_run(self._report(1), "old.csv", "new.csv", self.path)
+        self.assertEqual(f["latest"]["status"], "ALERTS")
+        # One game whose score, result and total all moved = 3 field-level alerts.
+        self.assertEqual(f["latest"]["alerts_total"], 3)
+        self.assertEqual(f["summary"]["runs_with_alerts"], 1)
+        self.assertEqual(f["summary"]["total_alerts"], 3)
+        self.assertEqual(
+            f["latest"]["verification_status"],
+            "detected_by_diff_pending_manual_confirmation",
+        )
+        # The machine never claims a realised outcome change.
+        self.assertIsNone(f["latest"]["actually_changed_outcome"])
+
+    def test_newest_run_is_first_and_history_is_capped(self):
+        import feed
+        for i in range(3):
+            f = feed.append_run(self._report(0), f"old{i}.csv", f"new{i}.csv", self.path)
+        self.assertEqual(f["summary"]["runs_recorded"], 3)
+        self.assertEqual(f["runs"][0]["old_snapshot"], "old2.csv")
+        self.assertEqual(f["summary"]["last_run"], f["runs"][0]["checked_at"])
+
+    def test_rerunning_the_same_pair_does_not_duplicate(self):
+        import feed
+        feed.append_run(self._report(0), "a.csv", "b.csv", self.path)
+        f = feed.append_run(self._report(0), "a.csv", "b.csv", self.path)
+        self.assertEqual(f["summary"]["runs_recorded"], 1, "same snapshot pair double-counted")
+
+    def test_identical_inputs_are_flagged_so_a_clean_run_is_interpretable(self):
+        """A clean run whose two snapshots are the same bytes is a no-op, not a check."""
+        import feed
+        r = self._report(0)
+        r["inputs"] = {"old": {"sha256": "aa"}, "new": {"sha256": "aa"}, "old_final_records": 5}
+        f = feed.append_run(r, "a.csv", "b.csv", self.path)
+        self.assertTrue(f["latest"]["identical_inputs"])
+
+    def test_shipped_feed_is_well_formed(self):
+        """The feed the site renders must exist and carry its honesty labels."""
+        import json as _json
+        p = os.path.join(DATA_DIR, "alerts", "feed.json")
+        if not os.path.exists(p):
+            self.skipTest("no feed recorded yet")
+        with open(p, encoding="utf-8") as fh:
+            d = _json.load(fh)
+        for key in ("what_this_is", "what_a_recorded_alert_is", "what_a_clean_run_means"):
+            self.assertIn(key, d["meta"], f"feed is missing its honesty label {key}")
+        self.assertIn("runs", d)
+        for run in d["runs"]:
+            self.assertIn(run["status"], ("clean", "ALERTS"))
+            self.assertIsNone(run["actually_changed_outcome"])
+
+
 class TestShippedDatabase(unittest.TestCase):
     """Guards the shipped artefacts, including the 'no hallucination' contract."""
 
@@ -299,11 +580,37 @@ class TestShippedDatabase(unittest.TestCase):
 
         # Any row whose normalised code differs must show the original, and the
         # two must be recorded separately so the join stays reproducible.
+        #
+        # CONTRACT (tightened 2026-10-07): `team` is exactly what the official page
+        # printed. On a defensive-unit row the page prints a franchise NICKNAME and
+        # no code at all, so `team` is null there by design and `team_source` says
+        # "derived_from_printed_nickname". Every other row must carry a real code.
+        # Previously the raw layer silently normalised codes (JAC -> JAX), which
+        # made this "as printed" field untrue.
         for r in db["records"]:
             self.assertIn("team_normalized", r, r["record_id"])
-            self.assertNotIn(
-                r["team"], ("", None), f"{r['record_id']} lost its as-printed team code"
-            )
+            self.assertIn("team_source", r, r["record_id"])
+            if r["team"] in ("", None):
+                self.assertIn(
+                    r["team_source"],
+                    ("derived_from_printed_nickname", "not_printed_on_source"),
+                    f"{r['record_id']} has no as-printed code but claims {r['team_source']}",
+                )
+                if r["team_source"] == "derived_from_printed_nickname":
+                    self.assertEqual(r["position"], "DEF", r["record_id"])
+                else:
+                    # A row with no team code must be flagged, never silently joined.
+                    self.assertTrue(
+                        any(f.startswith("TEAM_NOT_PRINTED") for f in r["review_flags"]),
+                        f"{r['record_id']} has no team code but no TEAM_NOT_PRINTED flag",
+                    )
+                    self.assertIsNone(r.get("game_id"), r["record_id"])
+            else:
+                self.assertEqual(
+                    r["team_source"], "as_printed_on_official_page", r["record_id"]
+                )
+            if r.get("game_id"):
+                self.assertNotIn(r["team_normalized"], ("", None), r["record_id"])
 
         # And the 2015 Rams game itself must show STL on both sides of the join.
         for r in db["records"]:
@@ -321,6 +628,53 @@ class TestShippedDatabase(unittest.TestCase):
         ms = self._load("market_sensitivity_2025_2026.json")
         self.assertIn("Sensitivity only", ms["summary"]["framing"])
         self.assertGreater(ms["summary"]["games_considered_with_scores_and_lines"], 0)
+
+
+    def test_every_case_card_on_the_site_resolves_to_a_real_record(self):
+        """
+        Regression guard for a bug shipped on 2026-10-07: the site selected its
+        six case cards by record_id, which is a POSITIONAL ordinal assigned in
+        build order. Adding 38 rows silently re-pointed every card at a different
+        record. app.js now selects by natural key; this asserts each key still
+        matches exactly one shipped record, so the guard survives future edits
+        to either file.
+        """
+        import json as _json
+        import re as _re
+
+        app = pathlib.Path(ROOT, "docs", "app.js").read_text(encoding="utf-8")
+        block = _re.search(r"const CASE_KEYS = \[(.*?)\];", app, _re.S)
+        self.assertIsNotNone(block, "CASE_KEYS array not found in docs/app.js")
+        keys = _re.findall(
+            r"season:\s*(\d+),\s*week:\s*(\d+),\s*player:\s*'([^']+)',\s*"
+            r"stat:\s*'([^']+)',\s*date:\s*'([^']+)'",
+            block.group(1),
+        )
+        self.assertEqual(len(keys), 6, f"expected 6 case cards, parsed {len(keys)}")
+
+        db = self._load("discrepancies.json")
+        for season, week, player, stat, date in keys:
+            matches = [
+                r for r in db["records"]
+                if str(r["season"]) == season and str(r["week"]) == week
+                and r["player"] == player and r["stat"] == stat
+                and r.get("correction_date_text") == date
+            ]
+            self.assertEqual(
+                len(matches), 1,
+                f"case card {player} / {stat} ({season} W{week}, {date}) matches "
+                f"{len(matches)} records — it must match exactly one",
+            )
+
+    def test_live_feed_is_published_alongside_the_site(self):
+        """The site renders data/alerts/feed.json; it must be copied like the rest."""
+        src = os.path.join(DATA_DIR, "alerts", "feed.json")
+        dst = os.path.join(ROOT, "docs", "data", "alerts", "feed.json")
+        if not os.path.exists(src):
+            self.skipTest("no feed recorded yet")
+        self.assertTrue(os.path.exists(dst), "run ./pipeline/sync_site_data.sh")
+        with open(src, "rb") as a, open(dst, "rb") as b:
+            self.assertEqual(a.read(), b.read(), "published feed has drifted from data/")
 
 
 class TestSiteDataContract(unittest.TestCase):

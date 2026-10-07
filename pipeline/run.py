@@ -28,6 +28,7 @@ from datetime import datetime, timezone
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import detect  # noqa: E402
+import feed  # noqa: E402
 import fetch  # noqa: E402
 from parse_corrections import parse_official_page  # noqa: E402
 
@@ -74,6 +75,13 @@ def cmd_diff(args: argparse.Namespace) -> int:
     if args.out:
         detect.notify_file(report, args.out)
         print(f"wrote report -> {args.out}")
+    if getattr(args, "feed", None):
+        # Record EVERY run, including clean ones: that is what turns a detector
+        # into a feed. See pipeline/feed.py.
+        f = feed.append_run(report, args.old, args.new, args.feed)
+        print(f"appended run to feed -> {args.feed} "
+              f"({f['summary']['runs_recorded']} runs, "
+              f"{f['summary']['runs_with_alerts']} with alerts)")
     return 10 if report["total_alerts"] else 0
 
 
@@ -218,6 +226,8 @@ def main() -> int:
     d.add_argument("--source", default="nfldata_games")
     d.add_argument("--min-severity", type=int, default=1)
     d.add_argument("--out", default=None)
+    d.add_argument("--feed", default=None,
+                   help="append this run to the persistent feed JSON (records clean runs too)")
     d.set_defaults(fn=cmd_diff)
 
     e = sub.add_parser("evidence"); e.set_defaults(fn=cmd_evidence)

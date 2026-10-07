@@ -39,10 +39,73 @@ async function loadFirst(candidates) {
   throw lastErr;
 }
 
+/* ------------------------------------------------------------- live feed */
+/* Renders data/alerts/feed.json. Loaded separately and non-fatally: the feed is
+   operational state, and its absence must never blank the historical database. */
+function renderFeed(feed) {
+  const cards = document.getElementById('feed-cards');
+  const note = document.getElementById('feed-note');
+  const tbody = document.querySelector('#tbl-feed tbody');
+  if (!cards || !tbody) return;
+
+  const latest = feed.latest;
+  const s = feed.summary || {};
+
+  if (!latest) {
+    cards.innerHTML = '';
+    note.innerHTML = '<p class="footnote">No detection run has been recorded yet.</p>';
+    tbody.innerHTML = '<tr><td class="empty" colspan="5">No runs recorded.</td></tr>';
+    return;
+  }
+
+  const clean = latest.status === 'clean';
+  cards.innerHTML = `
+    <div class="card">
+      <div class="num ${clean ? 'ok' : 'warn'}">${num(latest.alerts_total)}</div>
+      <div class="lbl">alerts in the latest run</div>
+      <div class="sub">${clean ? 'no scoreboard change detected' : 'pending manual confirmation'}</div>
+    </div>
+    <div class="card">
+      <div class="num accent">${num(s.runs_recorded)}</div>
+      <div class="lbl">runs recorded</div>
+      <div class="sub">${num(s.runs_clean)} clean · ${num(s.runs_with_alerts)} with alerts</div>
+    </div>
+    <div class="card">
+      <div class="num">${num(latest.records_compared)}</div>
+      <div class="lbl">already-final games compared</div>
+      <div class="sub">in the latest run</div>
+    </div>
+    <div class="card">
+      <div class="num">${num(s.total_alerts)}</div>
+      <div class="lbl">alerts across all recorded runs</div>
+      <div class="sub">since ${esc(s.first_run || '—')}</div>
+    </div>`;
+
+  const identical = latest.identical_inputs
+    ? ' The two snapshots compared were byte-identical (same SHA-256), so this run was a no-op rather than a fresh check.'
+    : '';
+  note.innerHTML = `<p class="footnote">Last checked <strong>${esc(latest.checked_at)}</strong>.
+    Status: <strong>${esc(latest.status)}</strong>. ${esc(identical.trim())}</p>`;
+
+  tbody.innerHTML = (feed.runs || []).slice(0, 25).map((r) => {
+    const cls = r.status === 'clean' ? 'sev-0' : 'sev-3';
+    const hash = (h) => (h ? esc(String(h).slice(0, 10)) + '…' : '—');
+    return `<tr>
+      <td>${esc(r.checked_at)}</td>
+      <td><span class="pill ${cls}">${esc(r.status === 'clean' ? 'clean' : 'ALERTS')}</span></td>
+      <td class="num">${num(r.alerts_total)}</td>
+      <td class="num">${num(r.records_compared)}</td>
+      <td class="mono">${hash(r.old_sha256)} → ${hash(r.new_sha256)}</td>
+    </tr>`;
+  }).join('') || '<tr><td class="empty" colspan="5">No runs recorded.</td></tr>';
+}
+
 /* ------------------------------------------------------------------ cards */
 function renderTopCards(db, study) {
   const c = db.meta.counts;
   document.getElementById('stat-records').textContent = num(c.total_records);
+  const sampleEl = document.getElementById('stat-sample-rows');
+  if (sampleEl) sampleEl.textContent = num(c.total_records);
   document.getElementById('stat-potential').textContent = num(c.potential_to_change_market);
   document.getElementById('stat-snapshots').textContent = num(study.totals.game_snapshots_examined);
   document.getElementById('stat-snapshots-2').textContent = num(study.totals.game_snapshots_examined);
@@ -140,15 +203,36 @@ function wireSorting() {
 }
 
 /* -------------------------------------------------------------- case cards */
-/* Selected by record_id only. All prose is generated from the record's own
-   fields, so nothing here can assert something the database does not contain. */
-const CASE_IDS = ['SC-0034', 'SC-0029', 'SC-0026', 'SC-0005', 'SC-0023', 'SC-0035'];
+/* Selected by NATURAL KEY, not by record_id.
+   BUG FIXED 2026-10-07: this list used to hold record_ids ('SC-0034', ...), but
+   record_id is a positional ordinal assigned in build order. Adding 38 new rows
+   silently re-pointed all six cards at different records — SC-0034 went from
+   Michael Clark's 0 -> 36 receiving yards to an unrelated Roethlisberger row.
+   A natural key cannot shift when rows are added. All prose is still generated
+   from the matched record's own fields, so nothing here can assert something the
+   database does not contain. */
+/* The key MUST include the correction date: the official page sometimes lists the
+   same correction twice on consecutive days (Dak Prescott, 2017 W16, Passing Yards
+   182 -> 181 appears on both Dec 26 and Dec 27), so (season, week, player, stat)
+   is not unique. */
+const CASE_KEYS = [
+  { season: 2017, week: 16, player: 'Michael Clark',      stat: 'Receiving Yards',   date: 'Dec 27' },
+  { season: 2017, week: 16, player: 'Dak Prescott',       stat: 'Passing Yards',     date: 'Dec 26' },
+  { season: 2017, week: 16, player: 'Dez Bryant',         stat: 'Receiving Yards',   date: 'Dec 26' },
+  { season: 2015, week: 16, player: 'Ben Roethlisberger', stat: 'Receiving Yards',   date: 'Dec 30' },
+  { season: 2018, week: 14, player: 'Lamar Jackson',      stat: 'Every Time Sacked', date: 'Dec 12' },
+  { season: 2010, week: 1,  player: 'Green Bay Packers',  stat: 'Sacks',             date: 'Sep 15' },
+];
+
+const naturalKey = (r) =>
+  `${r.season}|${r.week}|${r.player}|${r.stat}|${r.correction_date_text || ''}`;
+const caseKey = (k) => `${k.season}|${k.week}|${k.player}|${k.stat}|${k.date}`;
 
 function renderCases(db) {
-  const byId = Object.fromEntries(db.records.map((r) => [r.record_id, r]));
+  const byKey = Object.fromEntries(db.records.map((r) => [naturalKey(r), r]));
   const host = document.getElementById('cases');
-  host.innerHTML = CASE_IDS.filter((id) => byId[id]).map((id) => {
-    const r = byId[id];
+  host.innerHTML = CASE_KEYS.map(caseKey).filter((k) => byKey[k]).map((k) => {
+    const r = byKey[k];
     const d = r.numeric_change;
     const delta = d > 0 ? `+${d}` : `${d}`;
     const markets = (r.markets_potentially_affected || []).slice(0, 3)
@@ -159,7 +243,7 @@ function renderCases(db) {
         <span class="pill ${SEV_CLASS[r.severity_label]}">${esc(r.severity_label)}</span>
       </div>
       <div class="src" style="margin:4px 0 10px;">
-        ${esc(r.position || '')} ${esc(r.team)} · ${esc(r.season)} W${esc(r.week)} ·
+        ${esc(r.position || '')} ${esc(fmt(r.team))} · ${esc(r.season)} W${esc(r.week)} ·
         <span class="mono">${esc(fmt(r.game_id))}</span>
       </div>
       <div class="chg" style="font-size:1.05rem;margin-bottom:8px;">
@@ -224,7 +308,7 @@ const LIMITS = [
   ['Medium', 'No free, redistributable source of per-game prop lines.',
    'Real player-prop lines are a commercial product. We therefore model the pricing convention of line-priced stats and never assert that a specific line existed.'],
   ['Medium', 'The database is a verified seed, not the full corpus.',
-   '36 rows across four sampled weeks, against an archived corpus spanning 2010–2025 × 10 position filters × 18+ weeks. Each page is a separate rate-limited request, so bulk expansion belongs in a scheduled job with backoff.'],
+   'A verified seed parsed from stored archived pages, against an archived corpus spanning 2010–2025 × 10 position filters × 18+ weeks. Each page is a separate rate-limited request, so bulk expansion belongs in a scheduled job with backoff. Expansion is now mechanical: drop a new archived page into data/evidence/pages/ and re-run pipeline/ingest_rendered.py --write.'],
   ['Low', 'Betting-line sign conventions are ambiguous in secondary sources.',
    'The exposure analysis uses only the magnitude of the spread, which is correct under either convention. The sign is never asserted.'],
   ['Low', 'A correction reverted between two polls is invisible.',
@@ -251,6 +335,13 @@ function renderLimits() {
     ]);
 
     DB = db.records;
+
+    // The feed is operational state: load it, but never let a missing feed file
+    // take the historical database down with it.
+    loadFirst(['data/alerts/feed.json', 'data/feed.json'])
+      .then(renderFeed)
+      .catch(() => renderFeed({ latest: null, runs: [], summary: {} }));
+
     renderTopCards(db, study);
     renderIntegrity(study);
     renderCases(db);

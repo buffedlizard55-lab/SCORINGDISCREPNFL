@@ -20,7 +20,7 @@
     </p>
     <div class="badges">
       <span class="badge ok" id="badge-records">verified records</span>
-      <span class="badge ok" id="badge-tests">32 tests passing</span>
+      <span class="badge ok" id="badge-tests">test-gated merges</span>
       <span class="badge warn">official feed retired 2026</span>
       <span class="badge">stdlib only · no dependencies</span>
     </div>
@@ -31,6 +31,7 @@
   <div class="wrap">
     <ul>
       <li><a href="#answer">The answer</a></li>
+      <li><a href="#feed">Live feed</a></li>
       <li><a href="#scoreboard">Do scores change?</a></li>
       <li><a href="#database">Verified database</a></li>
       <li><a href="#exposure">Exposure</a></li>
@@ -101,10 +102,61 @@
   </div>
 </section>
 
+<!-- ================= LIVE FEED ================= -->
+<section id="feed">
+  <h2><span class="kicker">Current status</span>Live detection feed</h2>
+  <p class="lede">
+    Every automated detection run is recorded here — <strong>including the runs that found
+    nothing</strong>. That is deliberate: without clean runs logged, "nothing changed" is
+    indistinguishable from "it never ran", which is exactly the manual-checking problem this
+    project exists to remove.
+  </p>
+
+  <div class="cards" id="feed-cards"></div>
+
+  <div class="note" id="feed-note"></div>
+
+  <h3>Recent runs</h3>
+  <div class="table-wrap">
+    <table id="tbl-feed">
+      <thead>
+        <tr>
+          <th>Checked (UTC)</th>
+          <th>Result</th>
+          <th class="num">Alerts</th>
+          <th class="num">Final games compared</th>
+          <th>Snapshots compared</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <details class="caveat">
+    <summary>How to read this feed — and what it does <em>not</em> prove</summary>
+    <ul>
+      <li>A run diffs two snapshots of <strong>nflverse/nfldata</strong>, a third-party mirror of the
+        NFL's official record. It is not the NFL's own database.</li>
+      <li>An alert is a <strong>machine-detected candidate</strong>, never a confirmed official
+        correction. Every alert carries
+        <code>verification_status: detected_by_diff_pending_manual_confirmation</code> and
+        <code>actually_changed_outcome: null</code>. The machine detects; a human confirms.</li>
+      <li>A <strong>clean</strong> run means: no frozen field (score, result, total, overtime) on any
+        already-final game differed between the two snapshots compared. It is <strong>not</strong>
+        evidence that the NFL issued no corrections in that window — corrections to
+        <em>player statistics</em> do not move the scoreboard and are not visible here.</li>
+      <li>Only rows already final in the older snapshot are compared, and pre-game lines are
+        excluded, so newly-played games and line movement never produce false alerts.</li>
+      <li>Both input SHA-256 hashes are stored per run, so any result can be independently
+        reproduced from the exact bytes that produced it.</li>
+    </ul>
+  </details>
+</section>
+
 <!-- ================= SCOREBOARD ================= -->
 <section id="supplemental">
   <h2>Additional sourced cases &amp; timing limits</h2>
-  <p>The selected 36-row sample is not an exhaustive history or a universal correction window.
+  <p>The selected <span id="stat-sample-rows">—</span>-row sample is not an exhaustive history or a universal correction window.
   <a href="https://www.nfl.com/news/j-j-watt-loses-nfl-s-sack-lead-on-statistical-correction-0ap1000000079268">NFL.com reported on October 10, 2012</a> that a sack from J.J. Watt's September 9 game was removed—a 31-calendar-day game-to-report gap, not an exact correction timestamp.</p>
   <p><a href="research-seed/index.html">Explore twelve supplemental narrative cases</a>: Dawson's apparent-final reversal,
   Polamalu's unchanged final score, Manning's non-change and post-game player-stat corrections.
@@ -377,7 +429,7 @@
       <li><strong>No fabricated prop lines.</strong> We model the <em>pricing convention</em> of line-priced stats. We never assert that a line existed at a specific number.</li>
       <li><strong>No realised-outcome claims.</strong> Every record documents <em>potential</em> impact only. A test fails the build if an outcome change is asserted without evidence.</li>
       <li><strong>No unverifiable anecdote.</strong> Widely repeated community reports of corrections flipping fantasy championships are excluded, because they could not be verified to primary-source standard. Their absence is a known gap, not evidence that nothing happened.</li>
-      <li><strong>No inflating the row count.</strong> The database is a verified seed, not the full archived corpus. 36 checkable rows beat thousands nobody can verify.</li>
+      <li><strong>No inflating the row count.</strong> The database is a verified seed, not the full archived corpus. Every row must be regenerable from a stored archived page, so a checkable row always beats a thousand unverifiable ones.</li>
     </ul>
   </details>
 </section>
