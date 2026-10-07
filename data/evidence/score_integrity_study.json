@@ -1,7 +1,7 @@
 {
-  "study": "final-score integrity of the NFL record as mirrored by nflverse/nfldata",
+  "study": "selected frozen-game-field comparisons in the nflverse/nfldata mirror",
   "method": "For each historical commit of nflverse/nfldata data/games.csv, retain games whose `result` field was already populated (i.e. the game had concluded), then compare the frozen fields (away_score, home_score, result, total, overtime) against the current record and count any difference.",
-  "generated_at": "2026-10-07T04:47:49+00:00",
+  "generated_at": "2026-10-07T20:48:40+00:00",
   "baselines": [
     {
       "baseline": "2023-12-03",
@@ -11,7 +11,7 @@
       "frozen_field_changes_vs_current": 0,
       "changes": [],
       "old_sha256": "f463ac6e8a96c070b9be48b14c94f110d4861f0d8a7f9e4baa87ba8d5dc17d2f",
-      "current_sha256": "1da074c8db0f1cfd95dc13e0badbe6b4c9578d73fbb7465ba66d66c1cbd5ac14"
+      "current_sha256": "d3a4878d4a63ac400b8501e6e313a5715b4b4973a4fb9244332751cef6d5c497"
     },
     {
       "baseline": "2025-11-12",
@@ -21,7 +21,7 @@
       "frozen_field_changes_vs_current": 0,
       "changes": [],
       "old_sha256": "3ad1cf34042da1019231b73ce99a5609040a159a33b9d76bc07deb7c60779e3c",
-      "current_sha256": "1da074c8db0f1cfd95dc13e0badbe6b4c9578d73fbb7465ba66d66c1cbd5ac14"
+      "current_sha256": "d3a4878d4a63ac400b8501e6e313a5715b4b4973a4fb9244332751cef6d5c497"
     },
     {
       "baseline": "2026-01-20",
@@ -31,7 +31,7 @@
       "frozen_field_changes_vs_current": 0,
       "changes": [],
       "old_sha256": "f22125b8981318f13553b27875ba488d8535e881cb2e548440f820a653dbadc5",
-      "current_sha256": "1da074c8db0f1cfd95dc13e0badbe6b4c9578d73fbb7465ba66d66c1cbd5ac14"
+      "current_sha256": "d3a4878d4a63ac400b8501e6e313a5715b4b4973a4fb9244332751cef6d5c497"
     },
     {
       "baseline": "2026-09-22",
@@ -41,13 +41,17 @@
       "frozen_field_changes_vs_current": 0,
       "changes": [],
       "old_sha256": "92e5890f110c99650580d9e9b6be3ebb1a53daf8303ca0024d5173589ec808d3",
-      "current_sha256": "1da074c8db0f1cfd95dc13e0badbe6b4c9578d73fbb7465ba66d66c1cbd5ac14"
+      "current_sha256": "d3a4878d4a63ac400b8501e6e313a5715b4b4973a4fb9244332751cef6d5c497"
     }
   ],
+  "status": "complete",
   "totals": {
     "game_snapshots_examined": 28323,
-    "final_scores_revised_after_completion": 0
+    "frozen_field_changes_vs_current": 0,
+    "selected_baselines": 4,
+    "baselines_fetched": 4,
+    "baselines_failed": 0
   },
-  "conclusion": "Across every baseline examined, zero completed games had any frozen score field revised afterwards. Within the retention window of this mirror, an NFL game's final score is effectively immutable once posted; what changes post-game is ATTRIBUTION and STATISTICS, not the scoreboard.",
-  "caveat": "This tests a third-party MIRROR of the NFL's record, not the NFL's own database. It cannot detect a correction that the NFL made and then re-corrected back within a single mirror update interval, nor any correction made before this mirror existed."
+  "conclusion": "Across the 4 selected historical baselines, no differences were observed in the five frozen game fields for rows already final in each older mirror snapshot, when compared with the current mirror. This limited third-party mirror comparison does not establish that official NFL scores never change or estimate how often they change.",
+  "caveat": "This compares selected vintages of a third-party mirror, not the NFL's own database. It cannot detect a correction that was made and reverted between sampled vintages, nor any correction made before this mirror existed. The total counts overlapping game-snapshot comparisons, not unique games."
 }

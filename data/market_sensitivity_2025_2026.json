@@ -1,12 +1,21 @@
 {
   "summary": {
     "games_considered_with_scores_and_lines": 349,
-    "correction_sensitive_games": 82,
-    "sensitive_share_pct": 23.5,
-    "threshold_points": 1.0,
-    "exact_spread_pushes": 10,
-    "exact_total_pushes": 0,
-    "framing": "Sensitivity only. A row means a scoreboard correction WOULD have changed a market outcome. It does not mean one occurred \u2014 see data/evidence/score_integrity_study.json."
+    "games_within_distance_threshold_of_a_line": 82,
+    "within_threshold_share_pct": 23.5,
+    "distance_threshold_points": 1.0,
+    "zero_margin_line_distance_matches": 10,
+    "zero_total_line_distance_matches": 0,
+    "framing": "Distance-based sensitivity screen only. A row means the final score margin or total is within the configured distance of a closing-line value. It does not mean a correction occurred, that a particular side pushed or won, or that a wager settled. See data/evidence/score_integrity_study.json and LIMITATIONS.md.",
+    "game_data_input": {
+      "source": "nflverse/nfldata data/games.csv (third-party mirror)",
+      "source_url": "https://github.com/nflverse/nfldata/blob/master/data/games.csv",
+      "input_basename": "nfldata-games-final.csv",
+      "sha256": "d3a4878d4a63ac400b8501e6e313a5715b4b4973a4fb9244332751cef6d5c497",
+      "bytes": 2183215,
+      "retained_by_builder": false,
+      "note": "Hash identifies the exact --games input; retrieval time and Git commit are not inferred."
+    }
   },
   "games": [
     {
@@ -24,13 +33,11 @@
       "closing_total": 47.5,
       "margin_gap_points": 3.0,
       "total_gap_points": 0.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": false,
-      "total_sensitive": true,
-      "min_correction_points_to_flip_spread": null,
-      "min_correction_points_to_flip_total": 0.5,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": false,
+      "total_line_within_threshold": true,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_01_ARI_NO",
@@ -47,13 +54,11 @@
       "closing_total": 44.5,
       "margin_gap_points": 1.0,
       "total_gap_points": 11.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 1.0,
-      "min_correction_points_to_flip_total": null,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_01_PIT_NYJ",
@@ -70,13 +75,11 @@
       "closing_total": 37.5,
       "margin_gap_points": 1.0,
       "total_gap_points": 28.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 1.0,
-      "min_correction_points_to_flip_total": null,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_01_TEN_DEN",
@@ -93,13 +96,11 @@
       "closing_total": 42.5,
       "margin_gap_points": 0.5,
       "total_gap_points": 10.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 0.5,
-      "min_correction_points_to_flip_total": null,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_01_BAL_BUF",
@@ -116,13 +117,11 @@
       "closing_total": 50.5,
       "margin_gap_points": 0.5,
       "total_gap_points": 30.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 0.5,
-      "min_correction_points_to_flip_total": null,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_02_JAX_CIN",
@@ -139,13 +138,11 @@
       "closing_total": 49.5,
       "margin_gap_points": 0.5,
       "total_gap_points": 8.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 0.5,
-      "min_correction_points_to_flip_total": null,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_03_DEN_LAC",
@@ -162,13 +159,11 @@
       "closing_total": 45.5,
       "margin_gap_points": 0.5,
       "total_gap_points": 2.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 0.5,
-      "min_correction_points_to_flip_total": null,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_03_ARI_SF",
@@ -185,13 +180,11 @@
       "closing_total": 44.5,
       "margin_gap_points": 0.5,
       "total_gap_points": 13.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 0.5,
-      "min_correction_points_to_flip_total": null,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_04_SEA_ARI",
@@ -208,13 +201,11 @@
       "closing_total": 43.5,
       "margin_gap_points": 1.5,
       "total_gap_points": 0.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": false,
-      "total_sensitive": true,
-      "min_correction_points_to_flip_spread": null,
-      "min_correction_points_to_flip_total": 0.5,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": false,
+      "total_line_within_threshold": true,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_04_MIN_PIT",
@@ -231,13 +222,11 @@
       "closing_total": 41.5,
       "margin_gap_points": 0.5,
       "total_gap_points": 3.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 0.5,
-      "min_correction_points_to_flip_total": null,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_04_CLE_DET",
@@ -254,13 +243,11 @@
       "closing_total": 44.5,
       "margin_gap_points": 14.0,
       "total_gap_points": 0.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": false,
-      "total_sensitive": true,
-      "min_correction_points_to_flip_spread": null,
-      "min_correction_points_to_flip_total": 0.5,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": false,
+      "total_line_within_threshold": true,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_04_CHI_LV",
@@ -277,13 +264,11 @@
       "closing_total": 47.5,
       "margin_gap_points": 0.5,
       "total_gap_points": 1.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 0.5,
-      "min_correction_points_to_flip_total": null,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_05_MIN_CLE",
@@ -300,13 +285,11 @@
       "closing_total": 35.5,
       "margin_gap_points": 0.5,
       "total_gap_points": 2.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 0.5,
-      "min_correction_points_to_flip_total": null,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_05_LV_IND",
@@ -323,13 +306,11 @@
       "closing_total": 46.5,
       "margin_gap_points": 27.0,
       "total_gap_points": 0.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": false,
-      "total_sensitive": true,
-      "min_correction_points_to_flip_spread": null,
-      "min_correction_points_to_flip_total": 0.5,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": false,
+      "total_line_within_threshold": true,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_05_DEN_PHI",
@@ -346,13 +327,11 @@
       "closing_total": 44.5,
       "margin_gap_points": 0.5,
       "total_gap_points": 6.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 0.5,
-      "min_correction_points_to_flip_total": null,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_05_TB_SEA",
@@ -369,13 +348,11 @@
       "closing_total": 44.5,
       "margin_gap_points": 0.5,
       "total_gap_points": 28.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 0.5,
-      "min_correction_points_to_flip_total": null,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_05_KC_JAX",
@@ -392,13 +369,11 @@
       "closing_total": 45.5,
       "margin_gap_points": 0.5,
       "total_gap_points": 13.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 0.5,
-      "min_correction_points_to_flip_total": null,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_06_DAL_CAR",
@@ -415,13 +390,11 @@
       "closing_total": 47.5,
       "margin_gap_points": 0.0,
       "total_gap_points": 9.5,
-      "pushed_on_spread": true,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 0.0,
-      "min_correction_points_to_flip_total": null,
-      "note": "A scoring correction of any size would create a winner where the game pushed."
+      "zero_margin_line_distance": true,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Absolute score-margin magnitude equals absolute spread-line magnitude. Spread sign/side and operator settlement are not inferred."
     },
     {
       "game_id": "2025_06_CIN_GB",
@@ -438,13 +411,11 @@
       "closing_total": 44.5,
       "margin_gap_points": 5.0,
       "total_gap_points": 0.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": false,
-      "total_sensitive": true,
-      "min_correction_points_to_flip_spread": null,
-      "min_correction_points_to_flip_total": 0.5,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": false,
+      "total_line_within_threshold": true,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_06_CHI_WAS",
@@ -461,13 +432,11 @@
       "closing_total": 49.5,
       "margin_gap_points": 4.5,
       "total_gap_points": 0.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": false,
-      "total_sensitive": true,
-      "min_correction_points_to_flip_spread": null,
-      "min_correction_points_to_flip_total": 0.5,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": false,
+      "total_line_within_threshold": true,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_08_MIA_ATL",
@@ -484,13 +453,11 @@
       "closing_total": 44.5,
       "margin_gap_points": 17.0,
       "total_gap_points": 0.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": false,
-      "total_sensitive": true,
-      "min_correction_points_to_flip_spread": null,
-      "min_correction_points_to_flip_total": 0.5,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": false,
+      "total_line_within_threshold": true,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_08_CHI_BAL",
@@ -507,13 +474,11 @@
       "closing_total": 45.5,
       "margin_gap_points": 11.5,
       "total_gap_points": 0.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": false,
-      "total_sensitive": true,
-      "min_correction_points_to_flip_spread": null,
-      "min_correction_points_to_flip_total": 0.5,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": false,
+      "total_line_within_threshold": true,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_08_SF_HOU",
@@ -530,13 +495,11 @@
       "closing_total": 41.5,
       "margin_gap_points": 8.5,
       "total_gap_points": 0.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": false,
-      "total_sensitive": true,
-      "min_correction_points_to_flip_spread": null,
-      "min_correction_points_to_flip_total": 0.5,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": false,
+      "total_line_within_threshold": true,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_09_NO_LA",
@@ -553,13 +516,11 @@
       "closing_total": 44.5,
       "margin_gap_points": 10.0,
       "total_gap_points": 0.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": false,
-      "total_sensitive": true,
-      "min_correction_points_to_flip_spread": null,
-      "min_correction_points_to_flip_total": 0.5,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": false,
+      "total_line_within_threshold": true,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_10_ATL_IND",
@@ -576,13 +537,11 @@
       "closing_total": 48.5,
       "margin_gap_points": 0.5,
       "total_gap_points": 7.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 0.5,
-      "min_correction_points_to_flip_total": null,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_10_NYG_CHI",
@@ -599,13 +558,11 @@
       "closing_total": 45.5,
       "margin_gap_points": 0.5,
       "total_gap_points": 1.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 0.5,
-      "min_correction_points_to_flip_total": null,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_11_NYJ_NE",
@@ -622,13 +579,11 @@
       "closing_total": 43.5,
       "margin_gap_points": 0.5,
       "total_gap_points": 2.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 0.5,
-      "min_correction_points_to_flip_total": null,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_11_WAS_MIA",
@@ -645,13 +600,11 @@
       "closing_total": 47.5,
       "margin_gap_points": 0.5,
       "total_gap_points": 18.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 0.5,
-      "min_correction_points_to_flip_total": null,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_11_CHI_MIN",
@@ -668,13 +621,11 @@
       "closing_total": 47.5,
       "margin_gap_points": 1.0,
       "total_gap_points": 11.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 1.0,
-      "min_correction_points_to_flip_total": null,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_11_GB_NYG",
@@ -691,13 +642,11 @@
       "closing_total": 41.5,
       "margin_gap_points": 0.5,
       "total_gap_points": 5.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 0.5,
-      "min_correction_points_to_flip_total": null,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_11_SEA_LA",
@@ -714,13 +663,11 @@
       "closing_total": 49.5,
       "margin_gap_points": 1.0,
       "total_gap_points": 9.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 1.0,
-      "min_correction_points_to_flip_total": null,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_11_BAL_CLE",
@@ -737,13 +684,11 @@
       "closing_total": 37.5,
       "margin_gap_points": 0.5,
       "total_gap_points": 1.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 0.5,
-      "min_correction_points_to_flip_total": null,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_11_KC_DEN",
@@ -760,13 +705,11 @@
       "closing_total": 44.5,
       "margin_gap_points": 0.5,
       "total_gap_points": 3.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 0.5,
-      "min_correction_points_to_flip_total": null,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_11_DAL_LV",
@@ -783,13 +726,11 @@
       "closing_total": 48.5,
       "margin_gap_points": 13.5,
       "total_gap_points": 0.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": false,
-      "total_sensitive": true,
-      "min_correction_points_to_flip_spread": null,
-      "min_correction_points_to_flip_total": 0.5,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": false,
+      "total_line_within_threshold": true,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_12_NYJ_BAL",
@@ -806,13 +747,11 @@
       "closing_total": 44.5,
       "margin_gap_points": 1.0,
       "total_gap_points": 11.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 1.0,
-      "min_correction_points_to_flip_total": null,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_12_PIT_CHI",
@@ -829,13 +768,11 @@
       "closing_total": 46.5,
       "margin_gap_points": 0.0,
       "total_gap_points": 12.5,
-      "pushed_on_spread": true,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 0.0,
-      "min_correction_points_to_flip_total": null,
-      "note": "A scoring correction of any size would create a winner where the game pushed."
+      "zero_margin_line_distance": true,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Absolute score-margin magnitude equals absolute spread-line magnitude. Spread sign/side and operator settlement are not inferred."
     },
     {
       "game_id": "2025_12_IND_KC",
@@ -852,13 +789,11 @@
       "closing_total": 50.5,
       "margin_gap_points": 0.5,
       "total_gap_points": 7.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 0.5,
-      "min_correction_points_to_flip_total": null,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_12_JAX_ARI",
@@ -875,13 +810,11 @@
       "closing_total": 47.5,
       "margin_gap_points": 0.5,
       "total_gap_points": 3.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 0.5,
-      "min_correction_points_to_flip_total": null,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_12_PHI_DAL",
@@ -898,13 +831,11 @@
       "closing_total": 47.5,
       "margin_gap_points": 0.0,
       "total_gap_points": 2.5,
-      "pushed_on_spread": true,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 0.0,
-      "min_correction_points_to_flip_total": null,
-      "note": "A scoring correction of any size would create a winner where the game pushed."
+      "zero_margin_line_distance": true,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Absolute score-margin magnitude equals absolute spread-line magnitude. Spread sign/side and operator settlement are not inferred."
     },
     {
       "game_id": "2025_13_KC_DAL",
@@ -921,13 +852,11 @@
       "closing_total": 53.5,
       "margin_gap_points": 0.5,
       "total_gap_points": 5.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 0.5,
-      "min_correction_points_to_flip_total": null,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_13_HOU_IND",
@@ -944,13 +873,11 @@
       "closing_total": 44.5,
       "margin_gap_points": 1.0,
       "total_gap_points": 8.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 1.0,
-      "min_correction_points_to_flip_total": null,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_13_ATL_NYJ",
@@ -967,13 +894,11 @@
       "closing_total": 38.5,
       "margin_gap_points": 0.0,
       "total_gap_points": 12.5,
-      "pushed_on_spread": true,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 0.0,
-      "min_correction_points_to_flip_total": null,
-      "note": "A scoring correction of any size would create a winner where the game pushed."
+      "zero_margin_line_distance": true,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Absolute score-margin magnitude equals absolute spread-line magnitude. Spread sign/side and operator settlement are not inferred."
     },
     {
       "game_id": "2025_14_PIT_BAL",
@@ -990,13 +915,11 @@
       "closing_total": 43.5,
       "margin_gap_points": 0.5,
       "total_gap_points": 5.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 0.5,
-      "min_correction_points_to_flip_total": null,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_14_CIN_BUF",
@@ -1013,13 +936,11 @@
       "closing_total": 54.5,
       "margin_gap_points": 1.0,
       "total_gap_points": 18.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 1.0,
-      "min_correction_points_to_flip_total": null,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_14_DEN_LV",
@@ -1036,13 +957,11 @@
       "closing_total": 40.5,
       "margin_gap_points": 1.5,
       "total_gap_points": 0.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": false,
-      "total_sensitive": true,
-      "min_correction_points_to_flip_spread": null,
-      "min_correction_points_to_flip_total": 0.5,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": false,
+      "total_line_within_threshold": true,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_14_CHI_GB",
@@ -1059,13 +978,11 @@
       "closing_total": 44.5,
       "margin_gap_points": 0.5,
       "total_gap_points": 4.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 0.5,
-      "min_correction_points_to_flip_total": null,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_14_PHI_LAC",
@@ -1082,13 +999,11 @@
       "closing_total": 41.5,
       "margin_gap_points": 1.5,
       "total_gap_points": 0.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": false,
-      "total_sensitive": true,
-      "min_correction_points_to_flip_spread": null,
-      "min_correction_points_to_flip_total": 0.5,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": false,
+      "total_line_within_threshold": true,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_15_CAR_NO",
@@ -1105,13 +1020,11 @@
       "closing_total": 41.5,
       "margin_gap_points": 0.5,
       "total_gap_points": 4.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 0.5,
-      "min_correction_points_to_flip_total": null,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_15_TEN_SF",
@@ -1128,13 +1041,11 @@
       "closing_total": 44.5,
       "margin_gap_points": 0.5,
       "total_gap_points": 16.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 0.5,
-      "min_correction_points_to_flip_total": null,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_15_MIA_PIT",
@@ -1151,13 +1062,11 @@
       "closing_total": 42.5,
       "margin_gap_points": 10.0,
       "total_gap_points": 0.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": false,
-      "total_sensitive": true,
-      "min_correction_points_to_flip_spread": null,
-      "min_correction_points_to_flip_total": 0.5,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": false,
+      "total_line_within_threshold": true,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_16_LA_SEA",
@@ -1174,13 +1083,11 @@
       "closing_total": 42.5,
       "margin_gap_points": 0.5,
       "total_gap_points": 32.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 0.5,
-      "min_correction_points_to_flip_total": null,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_16_TB_CAR",
@@ -1197,13 +1104,11 @@
       "closing_total": 44.5,
       "margin_gap_points": 0.0,
       "total_gap_points": 1.5,
-      "pushed_on_spread": true,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 0.0,
-      "min_correction_points_to_flip_total": null,
-      "note": "A scoring correction of any size would create a winner where the game pushed."
+      "zero_margin_line_distance": true,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Absolute score-margin magnitude equals absolute spread-line magnitude. Spread sign/side and operator settlement are not inferred."
     },
     {
       "game_id": "2025_16_LAC_DAL",
@@ -1220,13 +1125,11 @@
       "closing_total": 50.5,
       "margin_gap_points": 15.5,
       "total_gap_points": 0.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": false,
-      "total_sensitive": true,
-      "min_correction_points_to_flip_spread": null,
-      "min_correction_points_to_flip_total": 0.5,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": false,
+      "total_line_within_threshold": true,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_16_MIN_NYG",
@@ -1243,13 +1146,11 @@
       "closing_total": 41.5,
       "margin_gap_points": 0.5,
       "total_gap_points": 12.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 0.5,
-      "min_correction_points_to_flip_total": null,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_16_PIT_DET",
@@ -1266,13 +1167,11 @@
       "closing_total": 52.5,
       "margin_gap_points": 2.5,
       "total_gap_points": 0.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": false,
-      "total_sensitive": true,
-      "min_correction_points_to_flip_spread": null,
-      "min_correction_points_to_flip_total": 0.5,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": false,
+      "total_line_within_threshold": true,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_16_NE_BAL",
@@ -1289,13 +1188,11 @@
       "closing_total": 48.5,
       "margin_gap_points": 0.5,
       "total_gap_points": 3.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 0.5,
-      "min_correction_points_to_flip_total": null,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_17_CHI_SF",
@@ -1312,13 +1209,11 @@
       "closing_total": 51.5,
       "margin_gap_points": 0.5,
       "total_gap_points": 28.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 0.5,
-      "min_correction_points_to_flip_total": null,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_18_CAR_TB",
@@ -1335,13 +1230,11 @@
       "closing_total": 43.5,
       "margin_gap_points": 1.0,
       "total_gap_points": 13.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 1.0,
-      "min_correction_points_to_flip_total": null,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_18_GB_MIN",
@@ -1358,13 +1251,11 @@
       "closing_total": 37.5,
       "margin_gap_points": 0.5,
       "total_gap_points": 18.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 0.5,
-      "min_correction_points_to_flip_total": null,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_18_DAL_NYG",
@@ -1381,13 +1272,11 @@
       "closing_total": 50.5,
       "margin_gap_points": 14.0,
       "total_gap_points": 0.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": false,
-      "total_sensitive": true,
-      "min_correction_points_to_flip_spread": null,
-      "min_correction_points_to_flip_total": 0.5,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": false,
+      "total_line_within_threshold": true,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_18_DET_CHI",
@@ -1404,13 +1293,11 @@
       "closing_total": 51.5,
       "margin_gap_points": 0.5,
       "total_gap_points": 16.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 0.5,
-      "min_correction_points_to_flip_total": null,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_19_BUF_JAX",
@@ -1427,13 +1314,11 @@
       "closing_total": 51.5,
       "margin_gap_points": 1.5,
       "total_gap_points": 0.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": false,
-      "total_sensitive": true,
-      "min_correction_points_to_flip_spread": null,
-      "min_correction_points_to_flip_total": 0.5,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": false,
+      "total_line_within_threshold": true,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_20_LA_CHI",
@@ -1450,13 +1335,11 @@
       "closing_total": 49.5,
       "margin_gap_points": 0.5,
       "total_gap_points": 12.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 0.5,
-      "min_correction_points_to_flip_total": null,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2025_21_NE_DEN",
@@ -1473,13 +1356,11 @@
       "closing_total": 43.5,
       "margin_gap_points": 0.5,
       "total_gap_points": 26.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 0.5,
-      "min_correction_points_to_flip_total": null,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2026_01_NE_SEA",
@@ -1496,13 +1377,11 @@
       "closing_total": 44.5,
       "margin_gap_points": 0.0,
       "total_gap_points": 21.5,
-      "pushed_on_spread": true,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 0.0,
-      "min_correction_points_to_flip_total": null,
-      "note": "A scoring correction of any size would create a winner where the game pushed."
+      "zero_margin_line_distance": true,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Absolute score-margin magnitude equals absolute spread-line magnitude. Spread sign/side and operator settlement are not inferred."
     },
     {
       "game_id": "2026_01_ATL_PIT",
@@ -1519,13 +1398,11 @@
       "closing_total": 40.5,
       "margin_gap_points": 0.5,
       "total_gap_points": 7.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 0.5,
-      "min_correction_points_to_flip_total": null,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2026_01_MIA_LV",
@@ -1542,13 +1419,11 @@
       "closing_total": 40.5,
       "margin_gap_points": 11.0,
       "total_gap_points": 0.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": false,
-      "total_sensitive": true,
-      "min_correction_points_to_flip_spread": null,
-      "min_correction_points_to_flip_total": 0.5,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": false,
+      "total_line_within_threshold": true,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2026_01_DAL_NYG",
@@ -1565,13 +1440,11 @@
       "closing_total": 47.5,
       "margin_gap_points": 5.0,
       "total_gap_points": 0.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": false,
-      "total_sensitive": true,
-      "min_correction_points_to_flip_spread": null,
-      "min_correction_points_to_flip_total": 0.5,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": false,
+      "total_line_within_threshold": true,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2026_02_GB_NYJ",
@@ -1588,13 +1461,11 @@
       "closing_total": 44.5,
       "margin_gap_points": 0.5,
       "total_gap_points": 7.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 0.5,
-      "min_correction_points_to_flip_total": null,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2026_02_CLE_TB",
@@ -1611,13 +1482,11 @@
       "closing_total": 41.5,
       "margin_gap_points": 4.5,
       "total_gap_points": 0.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": false,
-      "total_sensitive": true,
-      "min_correction_points_to_flip_spread": null,
-      "min_correction_points_to_flip_total": 0.5,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": false,
+      "total_line_within_threshold": true,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2026_03_LAC_BUF",
@@ -1634,13 +1503,11 @@
       "closing_total": 50.5,
       "margin_gap_points": 1.0,
       "total_gap_points": 10.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 1.0,
-      "min_correction_points_to_flip_total": null,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2026_03_CAR_CLE",
@@ -1657,13 +1524,11 @@
       "closing_total": 41.5,
       "margin_gap_points": 0.5,
       "total_gap_points": 2.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 0.5,
-      "min_correction_points_to_flip_total": null,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2026_03_NYJ_DET",
@@ -1680,13 +1545,11 @@
       "closing_total": 49.5,
       "margin_gap_points": 0.0,
       "total_gap_points": 5.5,
-      "pushed_on_spread": true,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 0.0,
-      "min_correction_points_to_flip_total": null,
-      "note": "A scoring correction of any size would create a winner where the game pushed."
+      "zero_margin_line_distance": true,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Absolute score-margin magnitude equals absolute spread-line magnitude. Spread sign/side and operator settlement are not inferred."
     },
     {
       "game_id": "2026_03_HOU_IND",
@@ -1703,13 +1566,11 @@
       "closing_total": 41.5,
       "margin_gap_points": 0.5,
       "total_gap_points": 5.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 0.5,
-      "min_correction_points_to_flip_total": null,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2026_03_CIN_PIT",
@@ -1726,13 +1587,11 @@
       "closing_total": 42.5,
       "margin_gap_points": 0.5,
       "total_gap_points": 14.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 0.5,
-      "min_correction_points_to_flip_total": null,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2026_03_BAL_DAL",
@@ -1749,13 +1608,11 @@
       "closing_total": 53.5,
       "margin_gap_points": 0.0,
       "total_gap_points": 11.5,
-      "pushed_on_spread": true,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 0.0,
-      "min_correction_points_to_flip_total": null,
-      "note": "A scoring correction of any size would create a winner where the game pushed."
+      "zero_margin_line_distance": true,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Absolute score-margin magnitude equals absolute spread-line magnitude. Spread sign/side and operator settlement are not inferred."
     },
     {
       "game_id": "2026_04_PIT_CLE",
@@ -1772,13 +1629,11 @@
       "closing_total": 38.5,
       "margin_gap_points": 0.5,
       "total_gap_points": 12.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 0.5,
-      "min_correction_points_to_flip_total": null,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2026_04_TEN_BAL",
@@ -1795,13 +1650,11 @@
       "closing_total": 42.5,
       "margin_gap_points": 5.5,
       "total_gap_points": 0.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": false,
-      "total_sensitive": true,
-      "min_correction_points_to_flip_spread": null,
-      "min_correction_points_to_flip_total": 0.5,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": false,
+      "total_line_within_threshold": true,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2026_04_DAL_HOU",
@@ -1818,13 +1671,11 @@
       "closing_total": 48.5,
       "margin_gap_points": 1.0,
       "total_gap_points": 15.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 1.0,
-      "min_correction_points_to_flip_total": null,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2026_04_LA_PHI",
@@ -1841,13 +1692,11 @@
       "closing_total": 42.5,
       "margin_gap_points": 0.5,
       "total_gap_points": 1.5,
-      "pushed_on_spread": false,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 0.5,
-      "min_correction_points_to_flip_total": null,
-      "note": "Closest market outcome to the final score; listed because a correction within the stated gap would have flipped a spread/total market."
+      "zero_margin_line_distance": false,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Included because the final margin or total is within the configured distance threshold of a closing-line value; no correction or settlement is inferred."
     },
     {
       "game_id": "2026_04_GB_TB",
@@ -1864,13 +1713,11 @@
       "closing_total": 38.5,
       "margin_gap_points": 0.0,
       "total_gap_points": 7.5,
-      "pushed_on_spread": true,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 0.0,
-      "min_correction_points_to_flip_total": null,
-      "note": "A scoring correction of any size would create a winner where the game pushed."
+      "zero_margin_line_distance": true,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Absolute score-margin magnitude equals absolute spread-line magnitude. Spread sign/side and operator settlement are not inferred."
     },
     {
       "game_id": "2026_04_LAC_SEA",
@@ -1887,13 +1734,11 @@
       "closing_total": 42.5,
       "margin_gap_points": 0.0,
       "total_gap_points": 10.5,
-      "pushed_on_spread": true,
-      "pushed_on_total": false,
-      "spread_sensitive": true,
-      "total_sensitive": false,
-      "min_correction_points_to_flip_spread": 0.0,
-      "min_correction_points_to_flip_total": null,
-      "note": "A scoring correction of any size would create a winner where the game pushed."
+      "zero_margin_line_distance": true,
+      "zero_total_line_distance": false,
+      "margin_line_within_threshold": true,
+      "total_line_within_threshold": false,
+      "note": "Absolute score-margin magnitude equals absolute spread-line magnitude. Spread sign/side and operator settlement are not inferred."
     }
   ]
 }

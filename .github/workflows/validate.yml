@@ -32,9 +32,8 @@ jobs:
           python-version: '3.11'
 
       - name: Unit tests, including the site/data contracts
-        # Full discovery, not just tests/test_pipeline.py: the module's own
-        # __main__ runs 50 tests, while discover also picks up tests/test_project.py
-        # (9 more). The merge gate must cover the whole suite.
+        # Full discovery, not just tests/test_pipeline.py: all test modules
+        # must run as the merge gate.
         run: python3 -m unittest discover -s tests -v
 
       - name: Every published copy must match the canonical docs/ copy

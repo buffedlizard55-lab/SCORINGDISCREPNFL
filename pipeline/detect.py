@@ -3,26 +3,23 @@ detect.py — Core differential detection engine for NFL stat/scoring discrepanc
 
 THE CENTRAL IDEA
 ----------------
-We cannot rely on the NFL publishing a correction feed we can poll (see
-LIMITATIONS.md — the official feed was retired in 2026). What we CAN do is
-keep our own versioned snapshots of an authoritative mirror of the NFL's own
-game-and-stat record, and diff snapshot N against snapshot N-1.
+We cannot rely on the retired NFL correction feed as a live source (see
+LIMITATIONS.md). This module compares versioned snapshots of nflverse/nfldata,
+a third-party mirror of NFL game results.
 
-Any difference in a *frozen* field on a game that had already reached a final
-state is, by definition, a post-completion revision of the official record.
-That is the signal.
+A difference in a frozen field for a game already final in the older snapshot
+is a *candidate mirror revision* for human review. It is not, by itself, proof
+that the NFL/Elias changed its official record.
 
 DESIGN RULES THAT CAME OUT OF EMPIRICAL TESTING (see FINDINGS.md)
 -----------------------------------------------------------------
 RULE 1 — Only diff rows that were already final in the OLD snapshot.
-         Otherwise every newly-played game looks like a "change". A naive diff
-         of nfldata games.csv 2026-09-22 -> 2026-10-07 produced 61 "changes"
-         of which 61 were simply games that had not kicked off yet.
+         Otherwise newly completed games and schedule updates look like
+         post-game changes.
 
 RULE 2 — Only diff FROZEN fields for final games (scores, result, total, OT).
-         Pre-game fields (spread_line, total_line, moneylines) move constantly
-         as the market moves. Including them buries the real signal in noise.
-         18 of the 61 naive diffs above were pure line movement.
+         Pre-game fields (spread_line, total_line, moneylines) are volatile and
+         are excluded from the post-completion scoreboard comparison.
 
 RULE 3 — Record the old AND new value plus hashes, so any third party can
          independently reproduce the finding. Never store a derived claim
@@ -231,6 +228,29 @@ def change_to_alert(change: Change, source: str, retrieved_at: str) -> dict:
             ),
         }
         stat_label = scoreboard[stat]
+        away = change.context.get("away_team") or "away team"
+        home = change.context.get("home_team") or "home team"
+        scoreboard_markets = {
+            "away_score": [
+                f"{away} team total, if offered",
+                "game total (over/under), if offered",
+                "point spread, if offered",
+                "moneyline if the corrected margin changes the winner, if offered",
+            ],
+            "home_score": [
+                f"{home} team total, if offered",
+                "game total (over/under), if offered",
+                "point spread, if offered",
+                "moneyline if the corrected margin changes the winner, if offered",
+            ],
+            "result": [
+                "point spread, if offered",
+                "moneyline if the corrected margin changes the winner, if offered",
+            ],
+            "total": ["game total (over/under), if offered"],
+            "overtime": ["final game-state review; no wager result inferred from this field alone"],
+        }
+        markets = scoreboard_markets[stat]
     else:
         stat_label = stat
         cls = classify(stat, of, nf) if of is not None and nf is not None else {
@@ -239,6 +259,11 @@ def change_to_alert(change: Change, source: str, retrieved_at: str) -> dict:
             "threshold": None,
             "reason": "non-numeric change on a frozen field",
         }
+        markets = (
+            market_outcomes(stat_label, of, nf)
+            if of is not None and nf is not None
+            else ["unknown — manual review required"]
+        )
 
     return {
         "alert_id": f"{source}:{change.key}:{stat}",
@@ -255,9 +280,7 @@ def change_to_alert(change: Change, source: str, retrieved_at: str) -> dict:
         "category": cls["category"],
         "threshold_crossed": cls["threshold"],
         "reason": cls["reason"],
-        "markets_potentially_affected": market_outcomes(stat_label, of, nf)
-        if (of is not None and nf is not None)
-        else ["unknown — manual review required"],
+        "markets_potentially_affected": markets,
         "actually_changed_outcome": None,  # requires scorer/manual confirmation; never asserted
         "verification_status": "detected_by_diff_pending_manual_confirmation",
     }
@@ -288,8 +311,8 @@ def build_alert_report(
             "Alerts are MACHINE-DETECTED differences between two snapshots of a "
             "third-party mirror of the NFL's official record. Each alert is a "
             "candidate discrepancy, not a confirmed official correction. "
-            "Confirm against https://operations.nfl.com statistics / official "
-            "gamebook before acting. See LIMITATIONS.md."
+            "Cross-check against an authoritative source before treating it as "
+            "official. See LIMITATIONS.md."
         ),
     }
 
@@ -341,7 +364,9 @@ def notify_stdout(report: dict) -> None:
 
 
 def notify_file(report: dict, path: str) -> None:
-    os.makedirs(os.path.dirname(path), exist_ok=True)
+    directory = os.path.dirname(path)
+    if directory:
+        os.makedirs(directory, exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
         f.write(render_markdown(report))
     with open(os.path.splitext(path)[0] + ".json", "w", encoding="utf-8") as f:
@@ -349,25 +374,54 @@ def notify_file(report: dict, path: str) -> None:
 
 
 def notify_webhook(report: dict, url: str, timeout: int = 15) -> tuple[bool, str]:
-    """
-    POST a compact summary to any Slack/Discord-compatible incoming webhook.
-    Reads the URL from an env var by the caller; never hard-code a secret.
+    """POST a compact summary to Slack or Discord without storing the URL.
+
+    Slack incoming webhooks require a ``text`` field; Discord incoming
+    webhooks require ``content``. A generic endpoint defaults to Slack's
+    documented ``text`` shape. Callers must read ``url`` from configuration or
+    a secret and must treat a failed response as a delivery failure.
     """
     import urllib.request
+    from urllib.parse import urlparse
 
     if report["total_alerts"] == 0:
         return True, "skipped: no alerts"
-    hi = [a for a in report["alerts"] if a["severity"] >= 2]
+    alerts = report["alerts"]
     text = (
-        f"*NFL scoring-discrepancy alert* — {report['total_alerts']} change(s) detected "
-        f"({len(hi)} market-relevant) in `{report['source']}` at {report['generated_at']}.\n"
+        f"*Unconfirmed NFL results-mirror change candidate* — {report['total_alerts']} "
+        f"frozen-field change(s) detected in `{report['source']}` at {report['generated_at']}.\n"
+        "This is a third-party mirror difference, not confirmation of an official correction "
+        "or a wager settlement.\n"
     )
-    for a in hi[:10]:
-        text += (
-            f"• `{a['game_id']}` **{a['stat']}**: {a['original_value']} → {a['corrected_value']} "
-            f"({a['severity_label']})\n"
+    if report.get("review_url"):
+        text += f"Review the workflow report and snapshot artefacts: {report['review_url']}\n"
+    for a in alerts[:5]:
+        context = a.get("context") or {}
+        game_context = " ".join(
+            part for part in [
+                str(context.get("season") or ""),
+                f"W{context['week']}" if context.get("week") else "",
+                f"{context['away_team']}@{context['home_team']}"
+                if context.get("away_team") and context.get("home_team") else "",
+            ] if part
         )
-    payload = json.dumps({"text": text}).encode()
-    req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"})
+        text += (
+            f"• `{a['game_id']}` {game_context} — **{a['stat']}**: "
+            f"{a['original_value']} → {a['corrected_value']} ({a['severity_label']})\n"
+        )
+    if len(alerts) > 5:
+        text += f"…and {len(alerts) - 5} more; see the report link above.\n"
+
+    host = (urlparse(url).hostname or "").lower()
+    if host == "discord.com" or host == "discordapp.com":
+        payload = {"content": text}
+    else:
+        payload = {"text": text}
+    req = urllib.request.Request(
+        url,
+        data=json.dumps(payload).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+    )
     with urllib.request.urlopen(req, timeout=timeout) as resp:
-        return 200 <= resp.status < 300, f"http {resp.status}"
+        status = getattr(resp, "status", None) or resp.getcode()
+        return 200 <= status < 300, f"http {status}"

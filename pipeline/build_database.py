@@ -4,13 +4,13 @@ build_database.py — Enrich raw official corrections into the shipping database
 
 Pipeline:
   data/verified_corrections_raw.json   (transcribed facts, no inference)
-        + nfverse/nfldata games.csv     (authoritative schedule/results/lines)
+        + nflverse/nfldata games.csv    (third-party schedule/results/line mirror)
         + market_rules.py               (threshold + scoring-event rules)
    -> data/discrepancies.json  +  data/discrepancies.csv
 
-Everything the ship-file adds beyond the raw facts is tagged
-`derived_from_authoritative_sources` so a reviewer can tell exactly which
-columns are quoted from the NFL and which are computed by this tool.
+Everything the ship-file adds beyond the raw facts is tagged as derived from
+a named source so reviewers can distinguish page-transcribed values from
+schedule joins and project-computed fields.
 
 VALIDATION / IRREGULARITY FLAGGING
 ----------------------------------
@@ -18,10 +18,9 @@ The brief requires irregularities to be flagged rather than smoothed over.
 This script checks three things and records a `review_flags` list per row:
 
   1. GAME JOIN      — does the player's team actually appear in that season+week?
-  2. DATE SANITY    — is the correction date between the game date and +14 days?
-                      (Elias revisits games on the Wednesday after, but has been
-                      documented to act later, so we allow a generous window and
-                      flag anything outside it rather than silently accepting.)
+  2. DATE SANITY    — is the displayed correction date between the game date
+                      and the project's +14-day review marker? This is a
+                      validation heuristic, not an NFL deadline or policy.
   3. VALUE SANITY   — is the published fantasy-points delta consistent with the
                       stat and the numeric change? (A soft check: many stats are
                       not scored in default NFL fantasy scoring, so a 0.00 delta
@@ -32,6 +31,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import json
 import os
 import sys
@@ -66,8 +66,8 @@ def norm_team(code: str) -> str:
 # Defensive-unit ("DEF") rows print the franchise NICKNAME and no team code at
 # all (the cell reads "_DEF_"). Resolving that nickname to a code is therefore a
 # derivation, not a transcription, so it lives here in the derived layer and is
-# labelled as such on every row it touches. tests assert that every code in this
-# table actually occurs in the authoritative schedule snapshot, so a typo or an
+# labelled as such on every row it touches. Tests assert that every code in this
+# table occurs in the versioned third-party schedule snapshot, so a typo or an
 # invented code fails the build instead of shipping.
 TEAM_NAME_TO_CODE = {
     "arizona cardinals": "ARI", "atlanta falcons": "ATL", "baltimore ravens": "BAL",
@@ -128,6 +128,15 @@ def load_games(path: str) -> dict:
                 continue
             idx.setdefault(key, []).append(r)
     return idx
+
+
+def sha256_file(path: str) -> str:
+    """Hash an input file without loading the full source into memory."""
+    digest = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def find_game(idx: dict, season: int, week: int, team: str) -> dict | None:
@@ -202,8 +211,8 @@ def build(raw_path: str, games_path: str) -> tuple[dict, list[dict]]:
                 "final_score": f"{game.get('away_team')} {game.get('away_score')} @ {game.get('home_team')} {game.get('home_score')}",
                 "closing_spread": game.get("spread_line"),
                 "closing_total": game.get("total_line"),
-                "derived_from_authoritative_sources": (
-                    "nflverse/nfldata data/games.csv (mirror of NFL schedule/results/lines)"
+                "derived_from_versioned_mirror": (
+                    "nflverse/nfldata data/games.csv (third-party mirror of NFL schedule/results/lines)"
                 ),
             }
             gd = datetime.strptime(game["gameday"], "%Y-%m-%d") if game.get("gameday") else None
@@ -214,7 +223,7 @@ def build(raw_path: str, games_path: str) -> tuple[dict, list[dict]]:
                 if delta < 0:
                     flags.append(f"DATE_INCONSISTENT: correction dated {delta} days BEFORE the game")
                 elif delta > 14:
-                    flags.append(f"DATE_LATE: correction published {delta} days after the game (exceeds 14-day window)")
+                    flags.append(f"DATE_LATE: source row date is {delta} days after the game (exceeds 14-day review window)")
 
         cls = classify(c["stat"], c["original_value"], c["corrected_value"])
         markets = market_outcomes(c["stat"], c["original_value"], c["corrected_value"])
@@ -233,6 +242,13 @@ def build(raw_path: str, games_path: str) -> tuple[dict, list[dict]]:
             "team_normalized": team or None,
             "team_source": team_source,
             "stat": c["stat"],
+            # The archived correction rows expose the changed value but do not
+            # give a rationale field. Keep the cause explicitly unknown rather
+            # than turning a market-impact explanation into an NFL explanation.
+            "correction_reason": c.get("correction_reason"),
+            "correction_reason_status": (
+                "stated_in_source" if c.get("correction_reason") else "not_stated_in_archived_official_notice"
+            ),
             "original_value": c["original_value"],
             "corrected_value": c["corrected_value"],
             "numeric_change": (
@@ -253,9 +269,10 @@ def build(raw_path: str, games_path: str) -> tuple[dict, list[dict]]:
             # ---- outcome vs potential ----
             "actually_changed_official_outcome": False,
             "outcome_change_rationale": (
-                "No. This correction altered one player's statistic. The game's final score and "
-                "result are unchanged by it, and the score-integrity study found zero post-completion "
-                "score revisions. It is therefore a POTENTIAL market impact, not a realised one."
+                "No verified final-score change or sportsbook/fantasy settlement is documented for "
+                "this row. The archived notice changes a player statistic only; any player-market "
+                "effect depends on the actual offered line and applicable rules, which are not "
+                "verified here. Treat the impact as potential, not realised."
             ),
             "potential_to_change_market": cls["severity"] >= 2,
             # ---- provenance ----
@@ -282,9 +299,20 @@ def build(raw_path: str, games_path: str) -> tuple[dict, list[dict]]:
             "RETIRED. As of 2026-10-07 https://fantasy.nfl.com/research/statcorrections "
             "302-redirects to https://www.nfl.com/news/series/fantasy. Archived snapshots were used."
         ),
+        "game_data_input": {
+            "source": "nflverse/nfldata data/games.csv (third-party mirror)",
+            "source_url": "https://github.com/nflverse/nfldata/blob/master/data/games.csv",
+            "input_basename": os.path.basename(games_path),
+            "sha256": sha256_file(games_path),
+            "bytes": os.path.getsize(games_path),
+            "retained_by_builder": False,
+            "note": "Hash identifies the exact --games input; retrieval time and Git commit are not inferred.",
+        },
         "counts": {
             "total_records": len(out_rows),
-            "severity_3_scoring_or_scoreboard": sum(1 for r in out_rows if r["severity"] == 3),
+            "severity_3_high_priority_scoring_stat_or_scoreboard_candidate": sum(
+                1 for r in out_rows if r["severity"] == 3
+            ),
             "severity_2_market_relevant_numeric": sum(1 for r in out_rows if r["severity"] == 2),
             "severity_1_relevant_but_small": sum(1 for r in out_rows if r["severity"] == 1),
             "severity_0_out_of_scope": sum(1 for r in out_rows if r["severity"] == 0),
@@ -299,11 +327,11 @@ def build(raw_path: str, games_path: str) -> tuple[dict, list[dict]]:
             "weeks_covered": sorted({(r["season"], r["week"]) for r in out_rows}),
         },
         "interpretation": (
-            "Every row here is a real, transcribed official correction. The headline finding is not "
-            "in this table: it is that NONE of them changed a game's final score or result. That is "
-            "why 'confirmed_changed_official_outcome' is 0 while 'potential_to_change_market' is "
-            "non-zero. Player-prop and fantasy markets absorb these; game-level markets are "
-            "essentially immune because final scores are not revised post-game."
+            f"These {len(out_rows)} rows are transcribed from selected archived NFL/Elias correction pages. "
+            "None documents a final-score amendment or a sportsbook/fantasy settlement outcome. "
+            "The zero confirmed-outcome count is limited to this dataset and is not evidence that "
+            "all post-game score changes are impossible. Potential player-market sensitivity is "
+            "not the same as a verified offered line or a realized settlement."
         ),
     }
     return meta, out_rows
@@ -332,7 +360,7 @@ def main() -> int:
         d["review_flags"] = " | ".join(d["review_flags"])
         flat.append(d)
     with open(cpath, "w", newline="", encoding="utf-8") as f:
-        w = csv.DictWriter(f, fieldnames=list(flat[0].keys()))
+        w = csv.DictWriter(f, fieldnames=list(flat[0].keys()), lineterminator="\n")
         w.writeheader()
         w.writerows(flat)
 

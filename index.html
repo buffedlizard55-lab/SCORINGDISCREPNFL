@@ -13,10 +13,9 @@
   <div class="wrap">
     <h1>NFL Scoring Discrepancy Tracker</h1>
     <p class="tagline">
-      Every row below is transcribed from an archived snapshot of the NFL's own
-      stat-corrections release — published by the <strong>NFL League Office</strong> and the
-      official statistician of the NFL, the <strong>Elias Sports Bureau</strong> — with a link you can
-      open and check by hand. Nothing is inferred. Nothing is guessed.
+      Correction values are transcribed from archived pages identified as NFL League Office / Elias
+      releases, with a source link for review. Game joins, team normalization and market classifications
+      are derived separately, labelled in the data, and flagged when uncertain; no sportsbook outcome is guessed.
     </p>
     <div class="badges">
       <span class="badge ok" id="badge-records">verified records</span>
@@ -31,7 +30,7 @@
   <div class="wrap">
     <ul>
       <li><a href="#answer">The answer</a></li>
-      <li><a href="#feed">Live feed</a></li>
+      <li><a href="#feed">Comparison feed</a></li>
       <li><a href="#scoreboard">Do scores change?</a></li>
       <li><a href="#database">Verified database</a></li>
       <li><a href="#exposure">Exposure</a></li>
@@ -66,13 +65,13 @@
     </div>
     <div class="card">
       <div class="num warn" id="stat-potential">—</div>
-      <div class="lbl">Could have moved a market</div>
-      <div class="sub">potential impact — <strong>not</strong> a confirmed outcome change</div>
+      <div class="lbl">Market-review candidates</div>
+      <div class="sub">project-defined heuristic; not a verified offered market or outcome</div>
     </div>
     <div class="card">
-      <div class="num" id="stat-cadence">2–4</div>
-      <div class="lbl">Days in this selected sample</div>
-      <div class="sub">every transcribed row fell in this window</div>
+      <div class="num" id="stat-cadence">1–4</div>
+      <div class="lbl">Calendar days in the joined sample</div>
+      <div class="sub">70 of 74 rows join to a game; not a general deadline</div>
     </div>
   </div>
 
@@ -84,11 +83,11 @@
   </div>
 
   <div class="callout warn">
-    <p><strong>What <em>does</em> change is attribution and statistics — and it changes every week.</strong>
-    A receiver's 44 yards becomes 43. A sack is reassigned. A play is reclassified from a
-    forward pass to a backwards lateral. A player recorded as not having played at all is
-    credited with three catches for 36 yards, four days later. Those move
-    <strong>player props and fantasy scoring</strong>, and they are routine.</p>
+    <p><strong>The selected archive pages document post-game player-stat and attribution changes.</strong>
+    Examples include yardage adjustments, sack/credit changes and a player line added after a game.
+    These may be relevant to player markets or fantasy scoring if the applicable market and rules
+    existed; the rows alone do not establish an offered line, a scoreboard change or settlement.
+    The nine sampled weeks do not establish a universal weekly frequency.</p>
   </div>
 
   <div class="callout bad">
@@ -104,12 +103,12 @@
 
 <!-- ================= LIVE FEED ================= -->
 <section id="feed">
-  <h2><span class="kicker">Current status</span>Live detection feed</h2>
+  <h2><span class="kicker">Scheduled status</span>Detection comparison feed</h2>
   <p class="lede">
-    Every automated detection run is recorded here — <strong>including the runs that found
-    nothing</strong>. That is deliberate: without clean runs logged, "nothing changed" is
-    indistinguishable from "it never ran", which is exactly the manual-checking problem this
-    project exists to remove.
+    This feed records completed snapshot comparisons, including clean comparisons. A baseline-only,
+    failed or aborted workflow may not add a row; the feed is not a health monitor. Check the
+    <a href="https://github.com/buffedlizard55-lab/SCORINGDISCREPNFL/actions/workflows/detect.yml">workflow history</a>
+    for the latest attempt and whether collection/comparison succeeded.
   </p>
 
   <div class="cards" id="feed-cards"></div>
@@ -143,8 +142,8 @@
         <code>actually_changed_outcome: null</code>. The machine detects; a human confirms.</li>
       <li>A <strong>clean</strong> run means: no frozen field (score, result, total, overtime) on any
         already-final game differed between the two snapshots compared. It is <strong>not</strong>
-        evidence that the NFL issued no corrections in that window — corrections to
-        <em>player statistics</em> do not move the scoreboard and are not visible here.</li>
+        evidence that the NFL issued no corrections in that window — post-game
+        <em>player-stat changes</em> are outside this monitor unless a frozen game-level field also changes.</li>
       <li>Only rows already final in the older snapshot are compared, and pre-game lines are
         excluded, so newly-played games and line movement never produce false alerts.</li>
       <li>Both input SHA-256 hashes are stored per run, so any result can be independently
@@ -166,7 +165,7 @@
 <section id="scoreboard">
   <h2><span class="kicker">Finding 1</span>Can a final score change after the game?</h2>
   <p class="lede">
-    We took four historical versions of a git-versioned mirror of the NFL's official results,
+    We took four historical versions of the third-party nflverse/nfldata game-results mirror,
     kept <strong>only games that had already finished</strong> at that point in time, and compared
     every frozen score field against today's record. A difference would demonstrate a mirror revision requiring official confirmation,
     not by itself a confirmed NFL score amendment.
@@ -198,10 +197,10 @@
 <section id="database">
   <h2><span class="kicker">Finding 2</span>Verified corrections database</h2>
   <p class="lede">
-    Transcribed verbatim from archived official release pages. Game, date, teams and closing
-    lines are joined from an authoritative schedule/results record — not assumed. The
-    <em>Original → Corrected</em> column shows exactly what the official record said before and
-    after, so any row can be reproduced and checked.
+    Correction values are transcribed from the archived release pages. Game/date joins and any team
+    normalization or market classifications are derived from a versioned third-party schedule/results
+    mirror and labelled in the data; unresolved rows are flagged rather than silently completed. The
+    <em>Original → Corrected</em> column shows the published before/after values for review.
   </p>
 
   <div class="controls">
@@ -209,7 +208,7 @@
     <select id="f-sev" aria-label="Filter by severity">
       <option value="">All severities</option>
       <option value="3">3 — scoring / scoreboard event</option>
-      <option value="2">2 — line-priced or threshold</option>
+      <option value="2">2 — project-defined market-review candidate</option>
       <option value="1">1 — market-relevant but small</option>
       <option value="0">0 — out of scope</option>
     </select>
@@ -225,9 +224,11 @@
           <th data-k="season">Season</th>
           <th data-k="player">Player</th>
           <th data-k="team">Team</th>
+          <th class="no-sort">Review flags</th>
           <th data-k="game_id">Game</th>
           <th data-k="game_date">Game date</th>
           <th data-k="stat">Statistic</th>
+          <th class="no-sort">Correction rationale in source</th>
           <th class="chg">Original → Corrected</th>
           <th class="num" data-k="days_from_game_to_correction">Days to correction</th>
           <th class="no-sort">Official source</th>
@@ -237,9 +238,9 @@
     </table>
   </div>
   <p class="footnote">
-    Click any column header to sort. Every <em>source</em> link opens an archived snapshot of the
-    official page at the Internet Archive for manual review. The retired live URL is recorded on
-    each record too, so the provenance is auditable even though the page no longer exists.
+    Click sortable headers to sort. Every <em>source</em> link opens an archived snapshot for manual
+    review; each row's review flags remain visible when a source field is missing or a join was skipped.
+    The retired live URL is retained in the data for provenance.
   </p>
 </section>
 
@@ -247,8 +248,8 @@
 <section id="detail">
   <h2><span class="kicker">Finding 3</span>The cases worth understanding</h2>
   <p class="lede">
-    Six rows from the database that show what post-game corrections actually look like in
-    practice, and why they move player markets but not the scoreboard.
+    Six selected rows show documented post-game stat changes and their possible market relevance.
+    They do not establish a specific offered line, player-market settlement or scoreboard change.
   </p>
   <div id="cases" class="grid-2"></div>
 </section>
@@ -257,21 +258,20 @@
 <section id="exposure">
   <h2><span class="kicker">Finding 4</span>Exposure — which games <em>could</em> have flipped</h2>
   <p class="lede">
-    The brief asks us to separate corrections that <strong>actually</strong> changed an outcome from
-    corrections that merely <strong>had the potential</strong> to change a market. The first half is
-    answered above (zero score revisions). This is the second half: how close the finished games
-    actually came to a market line.
+    This section is a distance-based screen using third-party mirror closing-line fields, not actual
+    sportsbook offers. It does not connect a specific correction to a game or market outcome; it only
+    identifies final scores numerically close to those line values.
   </p>
   <div class="cards" id="exposure-cards"></div>
   <div class="callout">
-    <p><strong>Read this as sensitivity, not occurrence.</strong> A row means a scoring correction
-    <em>would</em> have changed a market. Combined with zero observed score revisions, the honest
-    reading is: this is the set of games where the failure mode <em>could</em> have bitten — and
-    empirically it did not, because scores are not revised. Full arithmetic per row in
+    <p><strong>Read this as numeric proximity, not occurrence or settlement.</strong> The screen does
+    not demonstrate that a correction happened, that a particular sportsbook offered a line, or that
+    a wager would push/win/lose. It uses absolute spread magnitude and total-line distance only;
+    direction, prices and book rules are not evaluated. Full arithmetic is in
     <code>data/market_sensitivity_2025_2026.csv</code>.</p>
   </div>
-  <h3>Sharpest cases — games that pushed exactly on the closing spread</h3>
-  <p class="footnote">On a push, no bet wins or loses. A correction of <em>any</em> size creates a winner where there was none.</p>
+  <h3>Zero-distance absolute-margin / spread-size matches</h3>
+  <p class="footnote">These are arithmetic matches of absolute values, not verified pushes. Settlement and the effect of any hypothetical correction are not modeled.</p>
   <div class="table-wrap">
     <table id="tbl-push">
       <thead>
@@ -290,32 +290,32 @@
 <section id="detection">
   <h2><span class="kicker">Finding 5</span>Can this be detected automatically?</h2>
   <p class="lede">
-    Partly — and it is important to be precise about which part. Detection is solved and shipped.
-    <em>Attribution</em> — knowing a detected change is a genuine official Elias correction rather
-    than a data-provider glitch — is not solvable for free in 2026.
+    A narrow scoreboard-mirror comparison and a published comparison feed are implemented. The
+    broader player-stat correction problem is not yet monitored end-to-end, and mirror-only changes
+    cannot be attributed to the NFL/Elias without independent evidence.
   </p>
 
   <div class="table-wrap">
     <table>
       <thead><tr><th>Capability</th><th>Status</th><th>Why</th></tr></thead>
       <tbody>
-        <tr><td>Detect a scoreboard change after the game</td><td><span class="pill sev-2">works</span></td><td>Differential snapshots of a versioned mirror; engine implemented and tested</td></tr>
-        <tr><td>Detect a player-stat change after the game</td><td><span class="pill sev-2">works in principle</span></td><td>Same method on play-by-play vintages — but those assets are network-blocked in the build sandbox, not on CI</td></tr>
-        <tr><td>Read the official corrections list automatically</td><td><span class="pill sev-3">blocked</span></td><td>The official feed was retired; the successor is client-side JS with no documented public API</td></tr>
-        <tr><td>Distinguish official corrections from mirror bugs</td><td><span class="pill sev-3">not reliably</span></td><td>No free, independent second mirror was found for cross-checking</td></tr>
+        <tr><td>Compare frozen scoreboard fields between snapshots</td><td><span class="pill sev-2">implemented; narrow</span></td><td>Works on two valid third-party mirror snapshots; transient/reverted changes between polls can be missed</td></tr>
+        <tr><td>Detect a player-stat change after the game</td><td><span class="pill sev-3">not yet implemented end-to-end</span></td><td>Download helpers exist, but no validated vintage adapter, identity mapping or historical-correction backtest is shipped</td></tr>
+        <tr><td>Read the official corrections list automatically</td><td><span class="pill sev-3">not available here</span></td><td>The legacy feed was retired; the successor page has no documented public API used by this project</td></tr>
+        <tr><td>Attribute a mirror change to NFL/Elias</td><td><span class="pill sev-3">not reliably</span></td><td>No independent corroboration source is integrated; agreement between correlated providers would still not prove official attribution</td></tr>
       </tbody>
     </table>
   </div>
 
   <h3>How the engine works, and why it is built this way</h3>
   <p class="lede">
-    Since there is no authoritative feed to poll, the system keeps <strong>its own versioned
-    snapshots</strong> of a mirror of the official record and diffs them. Three rules — each one
+    Since the legacy corrections feed is retired, the scoreboard workflow keeps <strong>its own versioned
+    snapshots</strong> of a third-party results mirror and diffs them. Three rules — each one
     derived from a real bug found by testing against real data — keep the signal clean:
   </p>
   <ul class="tight lede">
-    <li><strong>Only compare records already final</strong> at the older snapshot. A naive diff flagged 61 "changes"; <em>all 61</em> were simply games that had not kicked off yet.</li>
-    <li><strong>Only compare frozen fields</strong> — score, result, total, overtime. Pre-game betting lines move constantly; 18 of those 61 false positives were pure line movement.</li>
+    <li><strong>Only compare records already final</strong> at the older snapshot. A newly completed game is not a post-final revision.</li>
+    <li><strong>Only compare frozen fields</strong> — score, result, total, overtime. Volatile pre-game line fields are excluded from the scoreboard comparison.</li>
     <li><strong>Carry both values and SHA-256 hashes of both inputs</strong>, so any alert can be independently reproduced by a third party.</li>
   </ul>
 
@@ -324,9 +324,9 @@
     <table>
       <thead><tr><th>Severity</th><th>Meaning</th><th>Examples</th></tr></thead>
       <tbody>
-        <tr><td><span class="pill sev-3">3</span></td><td>Discrete scoring event, or a scoreboard field changed</td><td>Touchdown, field goal, extra point, two-point conversion, safety, defensive score</td></tr>
-        <tr><td><span class="pill sev-2">2</span></td><td>A line-priced stat moved, or a round-number milestone was crossed</td><td>Passing yards 182→181 (crosses 181.5); receiving yards 0→36; sacks 5→6; passing yards 299→301</td></tr>
-        <tr><td><span class="pill sev-1">1</span></td><td>Market-relevant but small, and not line-priced</td><td>Tackles, assisted tackles, games-played eligibility</td></tr>
+        <tr><td><span class="pill sev-3">3</span></td><td>Scoreboard change or scoring-related player/team statistic; high review priority, not proof of points changing</td><td>Touchdowns, kicks, safeties, defensive scores</td></tr>
+        <tr><td><span class="pill sev-2">2</span></td><td>Project-defined candidate stat category or round-number marker selected for market review</td><td>Passing yards 182→181; receptions; project threshold crossing — actual lines are not asserted</td></tr>
+        <tr><td><span class="pill sev-1">1</span></td><td>Other potentially relevant categories under the project heuristic</td><td>Tackles, assisted tackles, games-played eligibility</td></tr>
         <tr><td><span class="pill sev-0">0</span></td><td>Out of scope under the brief</td><td>Stats that cannot determine a player or game market result</td></tr>
       </tbody>
     </table>
@@ -355,7 +355,7 @@
 <section id="method">
   <h2><span class="kicker">Auditability</span>Method &amp; sources</h2>
 
-  <h3>The official record and who controls it</h3>
+  <h3>Correction source and provenance</h3>
   <p class="lede">
     The official corrections page stated its own provenance, quoted verbatim:
   </p>
@@ -364,9 +364,10 @@
     statistician of the NFL, Elias Sports Bureau."
   </blockquote>
   <p class="lede">
-    So <strong>Elias Sports Bureau</strong> is the official statistician of the NFL, the
-    <strong>NFL League Office</strong> co-publishes, and that publication is what controls the final
-    record. <strong>That channel is now retired.</strong>
+    The archived page identifies <strong>Elias Sports Bureau</strong> as the NFL's official statistician
+    and the <strong>NFL League Office</strong> as co-publisher. It is the primary source for the
+    correction rows transcribed here; this project does not infer sportsbook or fantasy-platform
+    settlement authority from that statement. <strong>That channel is now retired.</strong>
   </p>
 
   <h3>Source register</h3>
@@ -376,7 +377,7 @@
       <tbody>
         <tr>
           <td>NFL League Office + Elias Sports Bureau, via NFL.com Fantasy "Stat Corrections"</td>
-          <td>The authoritative correction release — every row in the database comes from here</td>
+          <td>Primary release source for the transcribed correction rows; this does not imply a sportsbook settlement ruling</td>
           <td><span class="pill sev-3">retired 2026</span> live URL 302s to a news hub</td>
           <td><a href="https://web.archive.org/web/20260516203131/https://fantasy.nfl.com/research/statcorrections?position=8&amp;sort=pts&amp;statCategory=stats&amp;statSeason=2010&amp;statType=weekStats&amp;statWeek=1" target="_blank" rel="noopener">archived snapshot ↗</a></td>
         </tr>
@@ -388,14 +389,14 @@
         </tr>
         <tr>
           <td>nflverse / nfldata — <code>data/games.csv</code></td>
-          <td>Schedule, final scores and closing lines; input to the diff engine and the game join</td>
-          <td><span class="pill sev-2">live</span> auto-committed ~every 30 min in season</td>
+          <td>Third-party schedule/results/line mirror; input to the diff engine and game joins</td>
+          <td><span class="pill sev-2">versioned</span> no official NFL provenance or freshness SLA established</td>
           <td><a href="https://github.com/nflverse/nfldata" target="_blank" rel="noopener">github.com/nflverse/nfldata ↗</a></td>
         </tr>
         <tr>
           <td>nflverse-pbp — raw play-by-play</td>
-          <td>Highest-resolution correction signal. nflverse explicitly refreshes it weekly to fold in stat corrections (Wed 02:00 UTC)</td>
-          <td><span class="pill sev-2">CI only</span> release assets unreachable from the build sandbox</td>
+          <td>Candidate player-stat signal; upstream workflow documentation describes a weekly refresh intended to incorporate corrections</td>
+          <td><span class="pill sev-3">not integrated</span> no end-to-end adapter or historical backtest is shipped; Actions access is unverified</td>
           <td><a href="https://github.com/nflverse/nflverse-pbp" target="_blank" rel="noopener">github.com/nflverse/nflverse-pbp ↗</a></td>
         </tr>
         <tr>
@@ -409,16 +410,17 @@
   </div>
 
   <h3>Reproduce every number on this page</h3>
-  <p class="lede">Stdlib Python only — no dependencies, no network needed to re-derive the database:</p>
+  <p class="lede">The code uses only the Python standard library. Regenerating derived game joins still requires the specific full games.csv input; the moving upstream is not a reproducibility pin.</p>
   <div class="table-wrap">
     <table>
       <thead><tr><th>What</th><th>Command</th></tr></thead>
       <tbody>
-        <tr><td>Verify the pipeline</td><td class="mono">python3 tests/test_pipeline.py</td></tr>
+        <tr><td>Verify the whole suite</td><td class="mono">python3 -m unittest discover -s tests -v</td></tr>
+        <tr><td>Check raw correction payload against stored page artefacts</td><td class="mono">python3 pipeline/ingest_rendered.py --check</td></tr>
         <tr><td>Re-run the score-integrity study</td><td class="mono">python3 pipeline/run.py evidence</td></tr>
         <tr><td>Rebuild the verified database</td><td class="mono">python3 pipeline/build_database.py --games games.csv</td></tr>
         <tr><td>Recompute market exposure</td><td class="mono">python3 pipeline/market_sensitivity.py --games games.csv --seasons 2025,2026</td></tr>
-        <tr><td>Diff two snapshots for alerts</td><td class="mono">python3 pipeline/run.py diff OLD.csv NEW.csv --min-severity 2</td></tr>
+        <tr><td>Diff two snapshots and append the feed</td><td class="mono">python3 pipeline/run.py diff OLD.slim.csv NEW.slim.csv --min-severity 2 --feed data/alerts/feed.json</td></tr>
       </tbody>
     </table>
   </div>
@@ -426,7 +428,7 @@
   <details>
     <summary>What this project deliberately does not do</summary>
     <ul class="tight">
-      <li><strong>No fabricated prop lines.</strong> We model the <em>pricing convention</em> of line-priced stats. We never assert that a line existed at a specific number.</li>
+      <li><strong>No fabricated markets or lines.</strong> Project-defined stat categories and distance thresholds are review heuristics; they do not prove that any specific market, line or price was offered.</li>
       <li><strong>No realised-outcome claims.</strong> Every record documents <em>potential</em> impact only. A test fails the build if an outcome change is asserted without evidence.</li>
       <li><strong>No unverifiable anecdote.</strong> Widely repeated community reports of corrections flipping fantasy championships are excluded, because they could not be verified to primary-source standard. Their absence is a known gap, not evidence that nothing happened.</li>
       <li><strong>No inflating the row count.</strong> The database is a verified seed, not the full archived corpus. Every row must be regenerable from a stored archived page, so a checkable row always beats a thousand unverifiable ones.</li>

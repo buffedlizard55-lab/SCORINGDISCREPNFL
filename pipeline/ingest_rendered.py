@@ -8,7 +8,7 @@ stat-corrections page but, until 2026-10-07, had never been run against real
 archived content, because web.archive.org is not on this sandbox's bash egress
 allowlist. That gap (LIMITATIONS.md #4) was not hypothetical: running the parser
 against real archived page text on 2026-10-07 found TWO bugs that would have
-produced zero usable rows from every real page (see normalize_cell's docstring).
+produced zero usable rows from the nine non-empty pages; the tenth explicitly reported no corrections (see normalize_cell's docstring).
 
 This script closes the loop. Each artefact in data/evidence/pages/ is a stored
 copy of the table portion of one archived official page, together with the URL
@@ -27,7 +27,7 @@ USAGE
 -----
     python3 pipeline/ingest_rendered.py                 # report only
     python3 pipeline/ingest_rendered.py --write         # rebuild raw JSON
-    python3 pipeline/ingest_rendered.py --check         # exit 1 on any drift
+    python3 pipeline/ingest_rendered.py --check         # compare parsed payloads, ignoring generated_at
 """
 
 from __future__ import annotations
@@ -208,7 +208,7 @@ def ingest(pages_dir: pathlib.Path = PAGES_DIR) -> dict:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--write", action="store_true", help="write data/verified_corrections_raw.json")
-    ap.add_argument("--check", action="store_true", help="exit 1 if the stored file would change")
+    ap.add_argument("--check", action="store_true", help="compare parsed payloads with stored data, ignoring generated_at")
     args = ap.parse_args()
 
     doc = ingest()

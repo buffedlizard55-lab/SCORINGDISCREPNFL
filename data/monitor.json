@@ -1,7 +1,7 @@
 {
-  "status": "blocked",
+  "status": "legacy_not_in_use",
   "last_success": null,
-  "last_attempt": "2026-10-07",
-  "detail": "No live official feed connected. Legacy NFL corrections URL redirected to news. nflverse release metadata accessible; CSV download blocked by sandbox release-assets host restriction. No baseline collected.",
+  "last_attempt": null,
+  "detail": "Historical status artifact for an earlier local prototype. The current scheduled scoreboard-mirror comparator is .github/workflows/detect.yml and its completed-comparison feed is data/alerts/feed.json. This file is not updated by that workflow; check GitHub Actions for current run health.",
   "alerts": []
 }

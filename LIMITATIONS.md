@@ -1,8 +1,8 @@
 # Limitations
 
-Ranked by how much each one blocks the brief. Everything here was verified by
-hand during the build; where a limitation has a workaround, the workaround is
-named. Nothing here is speculative.
+Ranked by how much each one blocks the brief. Each entry distinguishes what
+was observed or tested from what remains unverified; a workaround is called out
+only where one has actually been implemented.
 
 ---
 
@@ -33,9 +33,7 @@ data-provider bug.
 **Workaround shipped.** Archived snapshots remain and are what the database is
 built from. They are excellent for *history* and useless for *live* alerting.
 
-**What would unblock it.** A licensed data feed that republishes Elias
-corrections (e.g. a commercial sports-data vendor), or a documented public API
-from whichever party now publishes them.
+**What could help.** A licensed or documented feed may provide corroboration, but it would only address attribution if its NFL/Elias provenance, correction history, timestamps, access terms and field coverage are established for the specific product. No vendor product has been evaluated or licensed here; a feed is not assumed to be authoritative merely because it is commercial.
 
 ---
 
@@ -54,30 +52,29 @@ rather than papered over with a fragile scraper.
 
 ---
 
-## 3. HIGH — the highest-resolution correction signal is network-blocked here
+## 3. HIGH — player-stat monitoring is not implemented end-to-end
 
-`nflverse/nflverse-pbp` publishes **raw play-by-play per game** and, per
-nflverse's own internal workflow documentation, runs a job whose stated purpose
-is to *"Refresh raw pbp of the last week … to incorporate stat corrections
-during the week"* (`.github/workflows/refresh_raw_pbp.yaml`, cron
-`0 2 * 1,2,9-12 3` → **Wednesdays 02:00 UTC**).
+The repository contains release-metadata/download helpers for nflverse play-by-
+play assets, and the upstream repository documents a weekly refresh intended to
+incorporate stat corrections. That makes the source worth evaluating; it does
+not demonstrate that a usable, stable vintage is available to this project's
+workflow or that the data can be replayed historically.
 
-That is the ideal detector: a play-by-play vintage that is *explicitly refreshed
-to fold in corrections*. Diffing two vintages of one game's pbp would pinpoint
-the exact play that changed.
+**What is missing.** No validated adapter currently downloads two genuine
+player-stat vintages, verifies and retains their bytes/hashes, normalizes game
+and player identities, separates additions/removals/nulls, diffs the changed
+plays/stat fields, and reconciles candidates against a known official correction.
+No player-stat detector has been backtested, and access from a GitHub Actions
+run has not been demonstrated as part of this review.
 
-**Why it is blocked.** Release assets are served from
-`release-assets.githubusercontent.com`, which is **not reachable from the
-evaluation sandbox** (`curl` returns `000`). Only `github.com`,
-`codeload.github.com`, `api.github.com`, `registry.npmjs.org`, `pypi.org` and
-`files.pythonhosted.org` are on the allowlist. On a GitHub Actions runner this
-restriction does not apply.
+**Environment note.** The release assets were not reachable from this sandbox;
+that limits local experimentation but does not prove they will work on Actions.
+Conversely, Actions availability alone would not solve version retention,
+schema, identity, provenance, licensing or false-positive issues.
 
-**Workaround shipped.** The adapter exists (`fetch.nflverse_pbp_asset_index`,
-`fetch.download_release_asset`) and the release index is enumerable via
-`api.github.com` even here — asset *bytes* are what cannot be fetched. The
-`detect.py` engine is source-agnostic, so pointing it at two pbp vintages is a
-configuration change, not a rewrite.
+**Status.** Helpers and source documentation are leads, not a shipped
+player-stat monitoring capability. The player-stat adapter and historical
+backtest remain P0 work in `RECOMMENDATIONS.md`.
 
 ---
 
@@ -88,7 +85,8 @@ against real input because `web.archive.org` is **not on this sandbox's bash egr
 allowlist** (`curl` returns `000`). That gap was not hypothetical. On 2026-10-07 the
 archive became reachable through a document-render channel, the parser was run against
 real archived page content for the first time, and it produced **zero usable rows from
-every page**, for two reasons the hand-written fixtures could not catch:
+the nine non-empty pages** (the tenth archived page explicitly reports no corrections),
+for two reasons the hand-written fixtures could not catch:
 
 1. The real page **bolds the numbers** — `Tackle changed from **0** to **1**.` The
    numeric class in `_RE_CHANGED` cannot match `**0**`, so every row fell through to
@@ -110,9 +108,9 @@ real bytes.
 **Workaround shipped.** `python3 pipeline/run.py selfcheck` fetches a known-good
 archived page and asserts the parser recovers ≥10 fully-parsed rows — **run it on
 Actions before trusting the HTML path.** Separately,
-`python3 pipeline/ingest_rendered.py --check` fails if the shipped raw database is not
-byte-reproducible from the stored artefacts, so the rows can never silently drift from
-their evidence.
+`python3 pipeline/ingest_rendered.py --check` fails if the shipped raw database's
+parsed payload differs from the stored artefacts (the generated timestamp is ignored),
+so substantive row drift is surfaced.
 
 ---
 
@@ -133,37 +131,43 @@ third-party mirror of the NFL's official game statistics. It is not the NFL.
 
 **Workaround.** Every alert is labelled
 `detected_by_diff_pending_manual_confirmation` and carries `actually_changed_outcome: null`.
-Cross-checking against a *second* independent mirror would materially improve
-confidence; no suitable free second mirror was found.
+Cross-checking against a genuinely independent second source could improve
+confidence, but no such source is integrated or validated in this project.
+Provider lineage would need review because two services may share upstream data.
 
 ---
 
-## 6. MEDIUM — no free, redistributable source of per-game prop lines
+## 6. MEDIUM — no verified per-game prop-line or settlement record
 
-To say "this 1-yard correction flipped a prop", you need the prop line. Real
-per-game player-prop lines are a commercial product.
+To say "this 1-yard correction flipped a prop", the project would need the
+actual offered line, book, time, applicable settlement rules and (for a claim
+about a wager) the relevant wager/settlement record. None is present in this
+repository. This review did not establish that no free source exists. Any
+candidate source must be evaluated separately for coverage, timestamps, terms
+and rights before being used.
 
-**Workaround shipped.** `market_rules.py` encodes only what is defensible:
+**Workaround shipped.** `market_rules.py` and `market_sensitivity.py` use
+project-defined screening heuristics only:
 
-- **Discrete scoring events** (touchdowns, field goals, extra points, two-point
-  conversions, safeties, defensive scores) — binary, no threshold judgement needed.
-- **Line-priced stats** — stats that books price at essentially every integer,
-  almost always at `X.5`. For these, *any* integer change can cross a line. This
-  is a statement about the stat's pricing convention, **not** an assertion that a
-  line existed at a specific value.
-- **Round-number milestones** (300 passing yards, 100 receiving yards, …) for
-  bonus markets.
+- **Scoring-related stats** are flagged as high-priority candidates but do not
+  prove points were added to the scoreboard.
+- **Candidate line-market categories** and **round-number review markers**
+  prioritize human review; they are not a verified inventory of markets,
+  offers, specific lines, prices or settlement rules.
+- The 2025–26 screen uses mirror-supplied closing-line values and numeric
+  distance only; it does not determine wager flips or settlements.
 
-Per-game prop lines are **never guessed**.
+Per-game lines, bets and outcomes are **never guessed**.
 
 ---
 
 ## 7. MEDIUM — the database is a seed, not the comprehensive corpus
 
-**74 verified rows across 9 season-weeks in 6 seasons** (2010 W1, 2012 W1, 2013 W1,
-2015 W1, 2015 W16, 2017 W1, 2017 W16, 2018 W1, 2018 W14), parsed from 10 stored
-archived pages. The archived corpus spans 2010–2025 × 10 position filters × 18+ weeks,
-so the achievable ceiling is orders of magnitude larger.
+**74 verified rows across 9 sampled season-weeks in 6 seasons** (2010 W1, 2012 W1,
+2013 W1, 2015 W1, 2015 W16, 2017 W1, 2017 W16, 2018 W1, 2018 W14), parsed from 10
+stored archived pages. An observed archive search surface includes candidate
+captures across 2010–2025, multiple position filters and weeks, but that surface
+has not been validated as a complete denominator or a guaranteed collection.
 
 **Rows per sampled week:** 2, 3, 6, 7, 7, 9, 11, 14, 15 (mean 8.2).
 
@@ -180,6 +184,44 @@ interactive session.
 **Deliberate choice.** 74 rows that each regenerate from a stored archived page a
 human can open beat thousands of rows nobody can check. Bulk expansion is the top
 item in `RECOMMENDATIONS.md`.
+
+---
+
+## 8. LOW — `spread_line` sign convention is ambiguous in secondary sources
+
+nflverse's `spread_line` field has been described inconsistently as to whether a
+negative value means the home team is favoured. We could not resolve this to a
+primary definition during the build.
+
+**Workaround shipped.** `market_sensitivity.py` uses **only the magnitude**,
+`|spread_line|`. That is correct under either convention, so the analysis cannot
+be wrong because of it. The sign is never asserted.
+
+---
+
+## 9. LOW — a correction reverted between two snapshots is invisible
+
+If a value changes and changes back between poll N and poll N+1, the diff sees
+nothing.
+
+**Consequence.** The current workflow polls on a configured seasonal schedule,
+not continuously. A change-and-revert between snapshots is therefore invisible;
+the cadence is best-effort and is not a feed or Actions SLA. No verified example
+of this exact failure mode is included in the evidence database.
+
+---
+
+## 10. LOW — exact publication latency and any general deadline remain unknown
+
+The archived pages expose correction calendar dates, not the exact publication
+time. In the selected 74-row seed, the 70 joined rows are 1–4 calendar days from
+game date to displayed correction date (mode 3). This sample does not establish
+a general deadline or that all later corrections are captured. We did not verify
+a primary-source rule setting a universal correction deadline.
+
+**Workaround shipped.** The build flags `DATE_LATE` beyond its project-defined
+14-day review threshold and `DATE_INCONSISTENT` for a date before the game; the
+threshold is a heuristic, not an NFL policy.
 
 ---
 
@@ -208,8 +250,8 @@ Two shapes were observed in real pages:
   `Isaac Redman` rows render as `_RB_` with no team.
 
 **Workaround shipped.** Nicknames resolve through an explicit, tested
-`TEAM_NAME_TO_CODE` table (a test asserts every code it maps to actually occurs in the
-authoritative schedule, so a typo fails the build). Rows where no code can be
+`TEAM_NAME_TO_CODE` table (a test asserts every mapped code occurs in the
+versioned third-party schedule snapshot, so a typo fails the build). Rows where no code can be
 established are left `team: null`, labelled `team_source: "not_printed_on_source"`,
 flagged `TEAM_NOT_PRINTED`, and **no game join is attempted** — inferring a team would
 put unsourced data in the database. 4 of 74 rows are in this state.
@@ -225,59 +267,25 @@ is why the site's case cards are keyed on `season|week|player|stat|correction_da
 
 ---
 
-## 8. LOW — `spread_line` sign convention is ambiguous in secondary sources
-
-nflverse's `spread_line` field has been described inconsistently as to whether a
-negative value means the home team is favoured. We could not resolve this to a
-primary definition during the build.
-
-**Workaround shipped.** `market_sensitivity.py` uses **only the magnitude**,
-`|spread_line|`. That is correct under either convention, so the analysis cannot
-be wrong because of it. The sign is never asserted.
-
----
-
-## 9. LOW — a correction reverted between two snapshots is invisible
-
-If a value changes and changes back between poll N and poll N+1, the diff sees
-nothing.
-
-**Workaround.** Poll frequency is the only lever. In season, `nfldata` commits
-every ~30 minutes, so a 30-minute poll cadence reduces (but does not eliminate)
-the window. A real-world example of exactly this failure mode was observed in
-the wild during 2025: a team sack was removed and then restored across the
-fantasy playoffs.
-
----
-
-## 10. LOW — no SLA, and no published deadline, for how long corrections may arrive
-
-The source pages do not state a deadline. Multiple secondary sources agree there
-is no fixed schedule, and that corrections can arrive days or weeks later.
-
-**Workaround shipped.** The build does not assume a deadline. It flags
-`DATE_LATE` beyond 14 days and `DATE_INCONSISTENT` for anything before the game,
-rather than silently rejecting or accepting late rows.
-
----
-
 ## Summary — what is genuinely blocked vs merely unfinished
 
 | Limitation | Blocked, or unfinished? |
 |---|---|
 | 1. Official feed retired | **Blocked by an external party's decision.** Needs a licensed feed. |
 | 2. ESPN channel is JS-only | **Blocked** absent a documented API or permission. |
-| 3. pbp assets unreachable | **Environment-only.** Works on Actions. Not a design problem. |
-| 4. Parser vs byte-exact HTML | **Partly resolved.** Validated against real rendered content; the HTML path still needs `selfcheck` on Actions. |
-| 5. Mirror ≠ NFL | **Inherent.** Mitigate with a second source; cannot eliminate. |
-| 6. No prop lines | **Commercial.** Model the convention, never guess values. |
+| 3. Player-stat adapter/backtest | **Unfinished.** Local asset access is restricted; Actions access and a production adapter remain unproven. |
+| 4. Parser vs byte-exact HTML | **Partly resolved.** Validated against real rendered content; the HTML path still needs `selfcheck` on an appropriate runner. |
+| 5. Mirror ≠ NFL | **Inherent.** Requires independent provenance/corroboration; no second source is integrated. |
+| 6. Per-game lines/settlements | **Unverified source gap.** Do not assume they are unavailable everywhere or infer them. |
 | 7. Seed database (74 rows) | **Unfinished.** Now mechanical; needs a scheduled bulk job. |
 | 11. Archive serves another timestamp | **Inherent.** Both timestamps recorded per artefact. |
 | 12. No team code printed | **Inherent to the source.** Flagged, never inferred. |
 | 13. Duplicate published rows | **Inherent to the source.** Date is part of every key. |
 | 8–10. Convention/edge cases | **Unfinished or inherent.** Mitigations shipped. |
 
-**Bottom line.** The *detection* problem is solvable and largely solved here. The
-*authoritative-attribution* problem — knowing that a detected change is an
-official Elias correction rather than a data glitch — is not solvable for free
-as of 2026, because the channel that used to answer it was switched off.
+**Bottom line.** A narrow scoreboard-mirror diff and a published run feed are
+implemented; they do not solve the broader player-stat correction problem. The
+player-stat adapter/backtest is unfinished, and mirror-only alerts cannot
+establish official NFL/Elias attribution. The retired correction channel is an
+external blocker; alternatives require product-specific evidence, rights and
+provenance review.
