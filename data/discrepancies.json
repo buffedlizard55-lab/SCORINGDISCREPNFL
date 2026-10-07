@@ -139,7 +139,7 @@
         "home_team_full": "Jacksonville Jaguars",
         "week": 6,
         "season": 2024,
-        "final_score": "CHI 35, JAX 16"
+        "final_score": "Bears won (exact score not in primary source)"
       },
       "players": ["Caleb Williams"],
       "original_ruling": "Rush for -5 yards",
@@ -169,13 +169,12 @@
       "category": "defensive_stat",
       "game": {
         "date": "2019-12-22",
-        "away_team": null,
         "home_team": "BAL",
         "away_team_full": null,
         "home_team_full": "Baltimore Ravens",
         "week": 16,
         "season": 2019,
-        "final_score": "Unknown"
+        "final_score": "Not specified in source"
       },
       "players": ["Ravens D/ST"],
       "original_ruling": "Sack negated due to penalty",
@@ -233,13 +232,12 @@
       "category": "defensive_stat",
       "game": {
         "date": "2025-12-28",
-        "away_team": "DET",
-        "home_team": "MIN",
-        "away_team_full": "Detroit Lions",
-        "home_team_full": "Minnesota Vikings",
+        "home_team": "DET",
+        "away_team_full": null,
+        "home_team_full": "Detroit Lions",
         "week": 17,
         "season": 2025,
-        "final_score": "Unknown"
+        "final_score": "Not specified in source"
       },
       "players": ["Detroit Lions D/ST"],
       "original_ruling": "7 sacks credited to Lions defense",
@@ -265,13 +263,12 @@
       "category": "special_teams_stat",
       "game": {
         "date": "2020-10-25",
-        "away_team": null,
         "home_team": "NE",
         "away_team_full": null,
         "home_team_full": "New England Patriots",
         "week": 7,
         "season": 2020,
-        "final_score": "Unknown"
+        "final_score": "Not specified in source"
       },
       "players": ["New England D/ST"],
       "original_ruling": "Blocked extra point not credited",
@@ -297,13 +294,12 @@
       "category": "passing_yardage",
       "game": {
         "date": "2008-09-07",
-        "away_team": null,
         "home_team": "DEN",
         "away_team_full": null,
         "home_team_full": "Denver Broncos",
         "week": 1,
         "season": 2008,
-        "final_score": "Unknown"
+        "final_score": "Not specified in source"
       },
       "players": ["Jay Cutler"],
       "original_ruling": "299 passing yards",

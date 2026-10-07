@@ -65,7 +65,7 @@ const entries = [
     category: "play_classification",
     title: "Caleb Williams Aborted Snap (10-Week Delay)",
     date: "October 13, 2024",
-    teams: "CHI @ JAX",
+    teams: "CHI @ JAX (Bears won)",
     week: "Week 6, 2024 (corrected Week 16)",
     players: ["Caleb Williams"],
     original: "Rush for -5 yards",
@@ -85,7 +85,7 @@ const entries = [
     category: "defensive_stat",
     title: "Ravens D/ST Sack Stat Correction",
     date: "December 2019",
-    teams: "BAL",
+    teams: "Baltimore Ravens",
     week: "Week 16, 2019",
     players: ["Ravens D/ST"],
     original: "Sack negated due to penalty",
@@ -140,7 +140,7 @@ const entries = [
     category: "special_teams_stat",
     title: "Patriots D/ST Blocked Kick",
     date: "October 2020",
-    teams: "NE",
+    teams: "New England Patriots",
     week: "Week 7, 2020",
     players: ["New England D/ST"],
     original: "Blocked extra point not credited",
@@ -158,7 +158,7 @@ const entries = [
     category: "passing_yardage",
     title: "Jay Cutler 300-Yard Threshold",
     date: "September 2008",
-    teams: "DEN",
+    teams: "Denver Broncos",
     week: "Week 1, 2008",
     players: ["Jay Cutler"],
     original: "299 passing yards",
@@ -219,7 +219,9 @@ function renderEntries(filter = 'all') {
   
   const filtered = filter === 'all' 
     ? entries 
-    : entries.filter(e => e.category === filter || e.category.includes(filter.replace('_', '')));
+    : filter === 'outcome_changed'
+    ? entries.filter(e => e.changedOutcome)
+    : entries.filter(e => e.category.includes(filter));
 
   filtered.forEach(entry => {
     const card = document.createElement('div');
