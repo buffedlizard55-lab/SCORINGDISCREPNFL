@@ -347,6 +347,40 @@ class TestSiteDataContract(unittest.TestCase):
         for k in set(re.findall(r"\bg\.([a-z_][a-z0-9_]*)", js)):
             self.assertIn(k, game_fields, f"app.js reads g.{k} which is not on market-sensitivity rows")
 
+    def test_root_site_copies_match_the_canonical_docs_copies(self):
+        """
+        GitHub Pages for this repo publishes from the repository ROOT (a setting
+        the available token cannot change), while docs/ stays canonical. The
+        root files are generated from docs/ by pipeline/sync_site_data.sh, so
+        they must stay byte-identical or the live site silently goes stale.
+        """
+        import filecmp
+
+        for f in ["index.html", "app.js", "styles.css", ".nojekyll"]:
+            docs_f = os.path.join(self.ROOT, "docs", f)
+            root_f = os.path.join(self.ROOT, f)
+            self.assertTrue(os.path.exists(docs_f), f"missing canonical docs/{f}")
+            self.assertTrue(
+                os.path.exists(root_f),
+                f"missing root {f} — GitHub Pages publishes from the root, so the "
+                f"site would be blank. Run pipeline/sync_site_data.sh",
+            )
+            self.assertTrue(
+                filecmp.cmp(docs_f, root_f, shallow=False),
+                f"root {f} has drifted from docs/{f} — run pipeline/sync_site_data.sh",
+            )
+
+    def test_app_js_can_resolve_data_in_both_published_layouts(self):
+        """
+        One app.js is published twice (root and docs/) where the study artefact
+        sits at different relative paths. It must therefore try both.
+        """
+        with open(os.path.join(self.ROOT, "docs", "app.js"), encoding="utf-8") as f:
+            js = f.read()
+        self.assertIn("loadFirst", js, "app.js lost its multi-layout data resolution")
+        self.assertIn("data/score_integrity_study.json", js)
+        self.assertIn("data/evidence/score_integrity_study.json", js)
+
     def test_site_data_files_are_in_sync_with_the_source_of_truth(self):
         """docs/data must be a byte-identical copy of data/ so the page cannot drift."""
         import filecmp
