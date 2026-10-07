@@ -324,7 +324,7 @@ Critically, every alert is emitted as `verification_status: detected_by_diff_pen
 Stdlib only — no dependencies. Python 3.10+.
 
 ```bash
-# verify the whole pipeline (87 tests at this review; rerun after changes)
+# verify the whole pipeline (88 tests at this review; rerun after changes)
 python3 -m unittest discover -s tests -v
 
 # 0. Regenerate the raw corrections from stored archived pages; --check compares

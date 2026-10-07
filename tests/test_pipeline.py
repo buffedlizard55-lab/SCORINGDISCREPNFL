@@ -1186,6 +1186,28 @@ class TestSiteDataContract(unittest.TestCase):
         self.assertEqual([], missing,
                          "app.js touches element ids that index.html does not define")
 
+    def test_no_placeholder_on_the_page_is_left_unpopulated(self):
+        """
+        The reverse of the check above. `stat-snapshots-2` shipped as a literal
+        "—" in the prose and nothing ever filled it in, so the page read
+        "The study covers — game-snapshot comparisons". A placeholder that is
+        never populated is worse than a missing one: it looks like data.
+        """
+        import re as _re
+
+        app = pathlib.Path(ROOT, "docs", "app.js").read_text(encoding="utf-8")
+        html = pathlib.Path(ROOT, "docs", "index.html").read_text(encoding="utf-8")
+        refs = set(_re.findall(r"getElementById\(\s*['\"]([^'\"]+)['\"]", app))
+        refs |= set(_re.findall(r"querySelector\(\s*['\"]#([A-Za-z0-9_-]+)", app))
+        refs |= set(_re.findall(r"setText\(\s*['\"]([^'\"]+)['\"]", app))
+
+        placeholders = _re.findall(
+            r'<(\w+)[^>]*id="([A-Za-z0-9_-]+)"[^>]*>\s*\u2014\s*</\1>', html
+        )
+        self.assertTrue(placeholders, "no placeholder spans found — the scan is broken")
+        unset = [i for _, i in placeholders if i not in refs]
+        self.assertEqual([], unset, "index.html has placeholders app.js never fills in")
+
     def test_the_site_script_never_assigns_to_an_unchecked_element(self):
         """Direct `.textContent =` on getElementById is the pattern that broke the page."""
         import re as _re
