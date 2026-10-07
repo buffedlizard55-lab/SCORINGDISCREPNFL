@@ -1,0 +1,769 @@
+{
+  "schema_version": 1,
+  "research_as_of": "2026-10-07",
+  "coverage_status": "curated_examples_not_a_complete_census",
+  "scope_note": "These are documented examples found and checked for this initial release. This list is not a count of all NFL corrections or a statistically representative sample. Each possible betting-market effect is hypothetical unless an archived sportsbook line and settlement are directly sourced. Several cited legacy NFL Fantasy correction-table URLs currently redirect to general fantasy news; source access and the provisional original values are called out per case.",
+  "cases": [
+    {
+      "id": "2008-cutler-den-oak-week-1",
+      "game": {
+        "season": 2008,
+        "week": 1,
+        "date": "2008-09-08",
+        "away_team": "DEN",
+        "home_team": "OAK",
+        "final_score": "DEN 41 - OAK 14",
+        "url": "https://www.nfl.com/games/broncos-at-raiders-2008-reg-1"
+      },
+      "reported_on": "2008-09-11",
+      "reported_on_basis": "Publication date and 3:16 p.m. timestamp on the contemporaneous MyFantasyLeague report; the precise NFL change timestamp was not found.",
+      "elapsed_days_to_report": 3,
+      "players": [
+        {
+          "name": "Jay Cutler",
+          "position": "QB",
+          "changes": [
+            {
+              "stat": "Passing yards",
+              "initial": 299,
+              "corrected": 300,
+              "delta": 1,
+              "initial_basis": "Contemporaneous MyFantasyLeague report",
+              "final_basis": "NFL.com final player game log"
+            }
+          ]
+        }
+      ],
+      "reason": "The contemporary report says the total was changed after reviewing game film, but it does not identify the specific play or provide an official NFL change-history record.",
+      "possible_market_impact": [
+        "A player passing-yards prop with a hypothetical line between 299 and 300 (for example, 299.5) could change sides. No historical sportsbook line was verified."
+      ],
+      "actual_market_impact": {
+        "sportsbook_line_verified": false,
+        "sportsbook_settlement_change": "not verified",
+        "fantasy_or_other_platform_note": "The report called the change potentially significant for fantasy scoring; no specific matchup outcome was documented."
+      },
+      "score_effect": {
+        "official_score_changed": false,
+        "winner_changed": false,
+        "point_total_or_margin_changed": false,
+        "basis": "NFL.com game center gives the final score; the documented correction is a player passing-yard total."
+      },
+      "evidence_grade": "B",
+      "evidence_grade_note": "A dated contemporary report gives both values; NFL.com confirms the corrected player total and final game result. No official before/after correction artifact was located.",
+      "sources": [
+        {
+          "label": "NFL.com final player game log — Jay Cutler, 2008",
+          "url": "https://www.nfl.com/players/jay-cutler/stats/logs/2008/",
+          "source_type": "official_nfl_final_stats",
+          "supports": "Corrected final passing-yard total"
+        },
+        {
+          "label": "NFL.com game center — Broncos at Raiders, 2008 Week 1",
+          "url": "https://www.nfl.com/games/broncos-at-raiders-2008-reg-1",
+          "source_type": "official_nfl_game_center",
+          "supports": "Game date, final score, and gamebook link"
+        },
+        {
+          "label": "MyFantasyLeague — Official NFL Stat Corrections (Sep. 11, 2008)",
+          "url": "https://myfantasyleague.wordpress.com/2008/09/11/official-nfl-stat-corrections/",
+          "source_type": "contemporary_secondary_report",
+          "supports": "299-to-300 passing-yard change, film-review explanation, and report date"
+        }
+      ]
+    },
+    {
+      "id": "2010-fitzpatrick-parrish-buf-bal-week-7",
+      "game": {
+        "season": 2010,
+        "week": 7,
+        "date": "2010-10-24",
+        "away_team": "BUF",
+        "home_team": "BAL",
+        "final_score": "BUF 34 - BAL 37",
+        "url": "https://www.nfl.com/games/bills-at-ravens-2010-reg-7"
+      },
+      "reported_on": "2010-10-28",
+      "reported_on_basis": "Date on the contemporary correction report; exact NFL publication timestamp was not found.",
+      "elapsed_days_to_report": 4,
+      "players": [
+        {
+          "name": "Ryan Fitzpatrick",
+          "position": "QB",
+          "changes": [
+            {
+              "stat": "Passing yards",
+              "initial": 374,
+              "corrected": 382,
+              "delta": 8,
+              "initial_basis": "Contemporaneous Buffalo Bills article",
+              "final_basis": "NFL.com final player game log"
+            }
+          ]
+        },
+        {
+          "name": "Roscoe Parrish",
+          "position": "WR",
+          "changes": [
+            {
+              "stat": "Receiving yards",
+              "initial": 49,
+              "corrected": 57,
+              "delta": 8,
+              "initial_basis": "Contemporaneous Buffalo Bills article",
+              "final_basis": "NFL.com final player game log"
+            }
+          ]
+        }
+      ],
+      "reason": "The contemporary correction report identifies a changed play but does not establish the official rationale. No primary NFL correction record was found for this example.",
+      "possible_market_impact": [
+        "Either player's yardage prop could change sides if its line fell between the original and corrected total. No historical sportsbook line was verified."
+      ],
+      "actual_market_impact": {
+        "sportsbook_line_verified": false,
+        "sportsbook_settlement_change": "not verified",
+        "fantasy_or_other_platform_note": "No specific fantasy matchup result was verified."
+      },
+      "score_effect": {
+        "official_score_changed": false,
+        "winner_changed": false,
+        "point_total_or_margin_changed": false,
+        "basis": "NFL.com game center confirms a final 37-34 Baltimore win; the documented changes concern player yardage."
+      },
+      "evidence_grade": "B",
+      "evidence_grade_note": "Official Bills articles document the initial values, a contemporary correction report documents the changes, and current NFL.com logs confirm the final values. The correction notice itself is secondary evidence.",
+      "sources": [
+        {
+          "label": "NFL.com final player game log — Ryan Fitzpatrick, 2010",
+          "url": "https://www.nfl.com/players/ryan-fitzpatrick/stats/logs/2010/",
+          "source_type": "official_nfl_final_stats",
+          "supports": "Corrected 382 passing yards"
+        },
+        {
+          "label": "NFL.com final player game log — Roscoe Parrish, 2010",
+          "url": "https://www.nfl.com/players/roscoe-parrish-2/stats/logs/2010/",
+          "source_type": "official_nfl_final_stats",
+          "supports": "Corrected 57 receiving yards"
+        },
+        {
+          "label": "NFL.com game center — Bills at Ravens, 2010 Week 7",
+          "url": "https://www.nfl.com/games/bills-at-ravens-2010-reg-7",
+          "source_type": "official_nfl_game_center",
+          "supports": "Game date, final score, and NFL Game Book link"
+        },
+        {
+          "label": "Buffalo Bills — Fitz flourishing in Bills offense (Oct. 25, 2010)",
+          "url": "https://www.buffalobills.com/news/fitz-flourishing-in-bills-offense-2960204",
+          "source_type": "official_team_contemporaneous_report",
+          "supports": "Initial Fitzpatrick passing total of 374 yards"
+        },
+        {
+          "label": "Buffalo Bills — Bills wideouts emerging (Oct. 26, 2010)",
+          "url": "https://www.buffalobills.com/news/bills-wideouts-emerging-2964915",
+          "source_type": "official_team_contemporaneous_report",
+          "supports": "Initial Parrish receiving total of 49 yards"
+        },
+        {
+          "label": "Footballguys — Week 7 Stat Corrections (Oct. 28, 2010)",
+          "url": "https://forums.footballguys.com/threads/week-7-stat-corrections.566261/",
+          "source_type": "contemporary_secondary_correction_report",
+          "supports": "Reports the NFL changed Fitzpatrick 374-to-382 and Parrish 49-to-57"
+        }
+      ]
+    },
+    {
+      "id": "2011-rodgers-gb-stl-week-6",
+      "game": {
+        "season": 2011,
+        "week": 6,
+        "date": "2011-10-16",
+        "away_team": "STL",
+        "home_team": "GB",
+        "final_score": "STL 3 - GB 24",
+        "url": "https://www.nfl.com/games/rams-at-packers-2011-reg-6"
+      },
+      "reported_on": "2011-12-31",
+      "reported_on_basis": "AP story is marked 'FOR RELEASE' Dec. 31, 2011; ESPN page metadata says 'Updated: Dec. 28' (pre-release). It retrospectively reports the correction but does not give the NFL correction date. The 76-day figure is game-to-release lag, not the actual correction delay.",
+      "elapsed_days_to_report": 76,
+      "players": [
+        {
+          "name": "Aaron Rodgers",
+          "position": "QB",
+          "changes": [
+            {
+              "stat": "Passing yards",
+              "initial": 310,
+              "corrected": 316,
+              "delta": 6,
+              "initial_basis": "Reconstructed by subtracting the AP-reported six-yard increase from the official NFL final total; 310 was not directly located in a pre-correction record.",
+              "final_basis": "NFL.com final player game log"
+            }
+          ]
+        }
+      ],
+      "reason": "AP reports that a completion had initially been recorded as a run and Rodgers later received six additional passing yards. The final value is independently confirmed; the exact original box-score value is reconstructed, not directly sourced.",
+      "possible_market_impact": [
+        "A player passing-yards prop with a hypothetical line between 310 and 316 could change sides. The initial value is reconstructed and no historical sportsbook line was verified."
+      ],
+      "actual_market_impact": {
+        "sportsbook_line_verified": false,
+        "sportsbook_settlement_change": "not verified",
+        "fantasy_or_other_platform_note": "The AP article says the correction swung some fantasy matchups, but it does not identify the leagues or document specific outcomes."
+      },
+      "score_effect": {
+        "official_score_changed": false,
+        "winner_changed": false,
+        "point_total_or_margin_changed": false,
+        "basis": "NFL.com game center confirms the final 24-3 Green Bay win; the reported correction reclassified a play's statistical category."
+      },
+      "evidence_grade": "C",
+      "evidence_grade_note": "The change amount and play reclassification are reported by AP; the final total and score are official NFL records. The initial 310-yard value is arithmetic reconstruction, not a direct observation.",
+      "sources": [
+        {
+          "label": "NFL.com final player game log — Aaron Rodgers, 2011",
+          "url": "https://www.nfl.com/players/aaron-rodgers/stats/logs/2011/",
+          "source_type": "official_nfl_final_stats",
+          "supports": "Corrected final total of 316 passing yards"
+        },
+        {
+          "label": "NFL.com game center — Rams at Packers, 2011 Week 6",
+          "url": "https://www.nfl.com/games/rams-at-packers-2011-reg-6",
+          "source_type": "official_nfl_game_center",
+          "supports": "Game date, final score, and NFL Game Book link"
+        },
+        {
+          "label": "Associated Press via ESPN — Stats-taking at NFL games more art than science (marked for release Dec. 31; updated Dec. 28, 2011)",
+          "url": "https://www.espn.com/espn/wire?id=7399087",
+          "source_type": "contemporary_secondary_correction_report",
+          "supports": "Six-yard increase and reclassification from a run to a completion; report says some fantasy matchups swung"
+        }
+      ]
+    },
+    {
+      "id": "2011-manning-nicks-nyg-stl-week-2",
+      "game": {
+        "season": 2011,
+        "week": 2,
+        "date": "2011-09-19",
+        "away_team": "STL",
+        "home_team": "NYG",
+        "final_score": "STL 16 - NYG 28",
+        "url": "https://www.nfl.com/games/rams-at-giants-2011-reg-2"
+      },
+      "reported_on": "2011-09-21",
+      "reported_on_basis": "Date on the contemporary Fleaflicker discussion documenting the NFL change; game-week discussion date, not an independently recorded NFL issuance timestamp.",
+      "elapsed_days_to_report": 2,
+      "players": [
+        {
+          "name": "Eli Manning",
+          "position": "QB",
+          "changes": [
+            {
+              "stat": "Pass completions",
+              "initial": 18,
+              "corrected": 19,
+              "delta": 1,
+              "initial_basis": "Official Giants postgame notes published after the game",
+              "final_basis": "NFL.com final player game log"
+            },
+            {
+              "stat": "Pass attempts",
+              "initial": 29,
+              "corrected": 30,
+              "delta": 1,
+              "initial_basis": "Official Giants postgame notes published after the game",
+              "final_basis": "NFL.com final player game log"
+            },
+            {
+              "stat": "Passing yards",
+              "initial": 200,
+              "corrected": 223,
+              "delta": 23,
+              "initial_basis": "Official Giants postgame notes published after the game",
+              "final_basis": "NFL.com final player game log"
+            }
+          ]
+        },
+        {
+          "name": "Hakeem Nicks",
+          "position": "WR",
+          "changes": [
+            {
+              "stat": "Receptions",
+              "initial": 3,
+              "corrected": 4,
+              "delta": 1,
+              "initial_basis": "Contemporaneous Boston Herald report and Fleaflicker correction discussion",
+              "final_basis": "NFL.com final player game log"
+            },
+            {
+              "stat": "Receiving yards",
+              "initial": 15,
+              "corrected": 38,
+              "delta": 23,
+              "initial_basis": "Contemporaneous Boston Herald report and Fleaflicker correction discussion",
+              "final_basis": "NFL.com final player game log"
+            }
+          ]
+        }
+      ],
+      "reason": "The play was initially treated as a 23-yard pass-interference penalty after being ruled incomplete; the NFL later credited a 23-yard completion to Nicks. The exact official rationale was not located. The Fleaflicker discussion says its platform did not automatically rescore the matchup after its Tuesday cutoff and left the decision to commissioners.",
+      "possible_market_impact": [
+        "Hypothetical reception and receiving-yard lines between the old and corrected totals could change sides (for example, 3.5 receptions or 22.5 receiving yards for Nicks). No historical sportsbook line was verified."
+      ],
+      "actual_market_impact": {
+        "sportsbook_line_verified": false,
+        "sportsbook_settlement_change": "not verified",
+        "fantasy_or_other_platform_note": "Fleaflicker documented that it would not automatically rescore after its own Tuesday cutoff, while the NFL had changed the statistics. This establishes differing platform treatment, not a verified fantasy matchup result."
+      },
+      "score_effect": {
+        "official_score_changed": false,
+        "winner_changed": false,
+        "point_total_or_margin_changed": false,
+        "basis": "NFL.com game center confirms the 28-16 Giants win; the corrected play was a non-scoring completion."
+      },
+      "evidence_grade": "B",
+      "evidence_grade_note": "Official Giants notes preserve Manning's initial passing line, NFL.com logs give the final lines, and contemporary sources describe the omitted catch and later NFL change. No official NFL before/after correction artifact was located.",
+      "sources": [
+        {
+          "label": "NFL.com final player game log — Eli Manning, 2011",
+          "url": "https://www.nfl.com/players/eli-manning/stats/logs/2011/",
+          "source_type": "official_nfl_final_stats",
+          "supports": "Corrected 19/30 for 223 passing yards"
+        },
+        {
+          "label": "NFL.com final player game log — Hakeem Nicks, 2011",
+          "url": "https://www.nfl.com/players/hakeem-nicks/stats/logs/2011/",
+          "source_type": "official_nfl_final_stats",
+          "supports": "Corrected 4 receptions for 38 receiving yards"
+        },
+        {
+          "label": "NFL.com game center — Rams at Giants, 2011 Week 2",
+          "url": "https://www.nfl.com/games/rams-at-giants-2011-reg-2",
+          "source_type": "official_nfl_game_center",
+          "supports": "Game date, final score, and NFL Game Book link"
+        },
+        {
+          "label": "New York Giants — Postgame Notes & Anecdotes (Sep. 19, 2011)",
+          "url": "https://www.giants.com/news/postgame-notes-anecdotes-5860212",
+          "source_type": "official_team_contemporaneous_report",
+          "supports": "Initial Eli Manning line of 18 completions on 29 attempts for 200 yards"
+        },
+        {
+          "label": "Boston Herald — Hakeem Nicks not only plays, he amazes (Sep. 20, 2011)",
+          "url": "https://www.bostonherald.com/2011/09/20/hakeem-nicks-not-only-plays-he-amazes/",
+          "source_type": "contemporary_secondary_report",
+          "supports": "Initial Nicks line of three catches for 15 yards and description of the sideline play"
+        },
+        {
+          "label": "New York Giants — Anatomy of a Play: WR Nicks TD",
+          "url": "https://www.giants.com/news/anatomy-of-a-play-wr-nicks-td-5873978",
+          "source_type": "official_team_play_context",
+          "supports": "Describes the fourth-down play as initially incomplete with pass interference and Nicks' subsequent touchdown"
+        },
+        {
+          "label": "Fleaflicker — Hakeem Nicks scoring mistake (Sep. 21, 2011)",
+          "url": "https://www.fleaflicker.com/forums/help/topics/hakeem-nicks-scoring-mistake-19338",
+          "source_type": "contemporary_platform_correction_report",
+          "supports": "NFL credit of the 23-yard reception, 3/15-to-4/38 change, correction date, and Fleaflicker's no-automatic-rescore decision"
+        }
+      ]
+    },
+    {
+      "id": "2013-spiller-buf-car-week-2",
+      "game": {
+        "season": 2013,
+        "week": 2,
+        "date": "2013-09-15",
+        "away_team": "CAR",
+        "home_team": "BUF",
+        "final_score": "CAR 23 - BUF 24",
+        "url": "https://www.nfl.com/games/panthers-at-bills-2013-reg-2"
+      },
+      "reported_on": "2013-09-18",
+      "reported_on_basis": "Date printed in the NFL Fantasy Stat Corrections table.",
+      "elapsed_days_to_report": 3,
+      "players": [
+        {
+          "name": "C.J. Spiller",
+          "position": "RB",
+          "changes": [
+            {
+              "stat": "Receptions",
+              "initial": 4,
+              "corrected": 3,
+              "delta": -1,
+              "initial_basis": "NFL Fantasy official correction table",
+              "final_basis": "NFL.com final player game log"
+            },
+            {
+              "stat": "Receiving yards",
+              "initial": 26,
+              "corrected": 14,
+              "delta": -12,
+              "initial_basis": "NFL Fantasy official correction table",
+              "final_basis": "NFL.com final player game log"
+            }
+          ]
+        }
+      ],
+      "reason": "The official correction table lists the changes but not the play-level rationale.",
+      "possible_market_impact": [
+        "Hypothetical reception and receiving-yards lines between the old and corrected totals could change sides (for example, 3.5 receptions or 19.5 receiving yards). No historical sportsbook line was verified."
+      ],
+      "actual_market_impact": {
+        "sportsbook_line_verified": false,
+        "sportsbook_settlement_change": "not verified",
+        "fantasy_or_other_platform_note": "The NFL Fantasy correction table shows a default-scoring adjustment; no actual matchup result was verified."
+      },
+      "score_effect": {
+        "official_score_changed": false,
+        "winner_changed": false,
+        "point_total_or_margin_changed": false,
+        "basis": "NFL.com game center confirms the final 24-23 Bills win; the changes concern receiving statistics."
+      },
+      "evidence_grade": "C",
+      "evidence_grade_note": "The legacy NFL Fantasy correction-table URL currently redirects to general fantasy news, and its original row could not be reopened in this audit. NFL.com confirms the final line of three receptions for 14 yards and the official game center confirms the score. The cited original 4-for-26 line remains provisional until a durable capture or independent contemporaneous source is recovered.",
+      "sources": [
+        {
+          "label": "NFL Fantasy official Stat Corrections — 2013 Week 2",
+          "url": "https://uk.fantasy.nfl.com/research/statcorrections?position=2&statCategory=stats&statSeason=2013&statType=weekStats&statWeek=2",
+          "source_type": "official_nfl_fantasy_correction_record",
+          "supports": "The cited legacy table is reported to list 4-to-3 receptions and 26-to-14 yards with a correction date; current direct URL redirects and the original row was not independently retrieved in this audit.",
+          "availability_note": "Current direct URL redirects to a general NFL Fantasy-news page; archival copy not located."
+        },
+        {
+          "label": "NFL.com final player game log — C.J. Spiller, 2013",
+          "url": "https://www.nfl.com/players/c-j-spiller/stats/logs/2013/",
+          "source_type": "official_nfl_final_stats",
+          "supports": "Corrected final line of three receptions for 14 yards"
+        },
+        {
+          "label": "Buffalo Bills — Bills win in dramatic fashion (Sep. 15, 2013)",
+          "url": "https://www.buffalobills.com/news/bills-win-in-dramatic-fashion-11205228",
+          "source_type": "official_team_game_report",
+          "supports": "Confirms the game/date/result and links to the original official gamebook PDF; the PDF could not be retrieved in this review, so it does not independently confirm the cited original Spiller line."
+        },
+        {
+          "label": "NFL.com game center — Panthers at Bills, 2013 Week 2",
+          "url": "https://www.nfl.com/games/panthers-at-bills-2013-reg-2",
+          "source_type": "official_nfl_game_center",
+          "supports": "Game date, final score, and NFL Game Book link"
+        }
+      ]
+    },
+    {
+      "id": "2017-kamara-no-det-week-6",
+      "game": {
+        "season": 2017,
+        "week": 6,
+        "date": "2017-10-15",
+        "away_team": "DET",
+        "home_team": "NO",
+        "final_score": "DET 38 - NO 52",
+        "url": "https://www.nfl.com/games/lions-at-saints-2017-reg-6"
+      },
+      "reported_on": "2017-10-18",
+      "reported_on_basis": "Date printed in the NFL Fantasy Stat Corrections table.",
+      "elapsed_days_to_report": 3,
+      "players": [
+        {
+          "name": "Alvin Kamara",
+          "position": "RB",
+          "changes": [
+            {
+              "stat": "Receptions",
+              "initial": 4,
+              "corrected": 3,
+              "delta": -1,
+              "initial_basis": "NFL Fantasy official correction table",
+              "final_basis": "NFL.com final player game log"
+            }
+          ]
+        }
+      ],
+      "reason": "The official correction table lists the reception change but not the play-level rationale.",
+      "possible_market_impact": [
+        "A hypothetical receptions line of 3.5 would change sides. No historical sportsbook line was verified."
+      ],
+      "actual_market_impact": {
+        "sportsbook_line_verified": false,
+        "sportsbook_settlement_change": "not verified",
+        "fantasy_or_other_platform_note": "The official table reports a one-point change under NFL-managed default fantasy scoring; no specific matchup outcome was verified."
+      },
+      "score_effect": {
+        "official_score_changed": false,
+        "winner_changed": false,
+        "point_total_or_margin_changed": false,
+        "basis": "NFL.com game center confirms the final 52-38 Saints win; only Kamara's reception count changed."
+      },
+      "evidence_grade": "C",
+      "evidence_grade_note": "NFL.com confirms the corrected final line of three receptions for 12 yards; the legacy official correction-table URL currently redirects. A contemporary fantasy-forum thread reports the 4-to-3 change but is not a primary NFL record. Treat the original line as provisional pending retrieval of an official/archive copy.",
+      "sources": [
+        {
+          "label": "NFL Fantasy official Stat Corrections — 2017 Week 6",
+          "url": "https://fantasy.nfl.com/research/statcorrections?position=2&statCategory=stats&statSeason=2017&statType=weekStats&statWeek=6",
+          "source_type": "official_nfl_fantasy_correction_record",
+          "supports": "The cited legacy table is reported to list receptions 4-to-3 and its correction date; current direct URL redirects and the original row was not independently retrieved in this audit.",
+          "availability_note": "Current direct URL redirects to a general NFL Fantasy-news page; archival copy not located."
+        },
+        {
+          "label": "NFL.com final player game log — Alvin Kamara, 2017",
+          "url": "https://www.nfl.com/players/alvin-kamara/stats/logs/2017/",
+          "source_type": "official_nfl_final_stats",
+          "supports": "Corrected final three receptions"
+        },
+        {
+          "label": "NFL.com game center — Lions at Saints, 2017 Week 6",
+          "url": "https://www.nfl.com/games/lions-at-saints-2017-reg-6",
+          "source_type": "official_nfl_game_center",
+          "supports": "Game date, final score, and NFL Game Book link"
+        },
+        {
+          "label": "r/fantasyfootball — Alvin Kamara Stat Correction (Oct. 19, 2017; secondary discussion)",
+          "url": "https://www.reddit.com/r/fantasyfootball/comments/77f3be/alvin_kamara_stat_correction/",
+          "source_type": "contemporary_fantasy_forum_report",
+          "supports": "Contemporaneous discussion reports a 4-to-3 reception change with 12 receiving yards; corroboration only, not an official record."
+        }
+      ]
+    },
+    {
+      "id": "2020-goff-lar-chi-week-7",
+      "game": {
+        "season": 2020,
+        "week": 7,
+        "date": "2020-10-26",
+        "away_team": "CHI",
+        "home_team": "LAR",
+        "final_score": "CHI 10 - LAR 24",
+        "url": "https://www.nfl.com/games/bears-at-rams-2020-reg-7"
+      },
+      "reported_on": "2020-10-28",
+      "reported_on_basis": "Date printed in the NFL Fantasy Stat Corrections table.",
+      "elapsed_days_to_report": 2,
+      "players": [
+        {
+          "name": "Jared Goff",
+          "position": "QB",
+          "changes": [
+            {
+              "stat": "Passing yards",
+              "initial": 219,
+              "corrected": 220,
+              "delta": 1,
+              "initial_basis": "NFL Fantasy official correction table",
+              "final_basis": "NFL.com final player game log"
+            }
+          ]
+        }
+      ],
+      "reason": "The official correction table records a one-yard change but does not identify the play-level rationale.",
+      "possible_market_impact": [
+        "A hypothetical passing-yards line of 219.5 would change sides. No historical sportsbook line was verified."
+      ],
+      "actual_market_impact": {
+        "sportsbook_line_verified": false,
+        "sportsbook_settlement_change": "not verified",
+        "fantasy_or_other_platform_note": "NFL Fantasy's correction table shows a 0.04-point change under its default scoring; no specific matchup outcome was verified."
+      },
+      "score_effect": {
+        "official_score_changed": false,
+        "winner_changed": false,
+        "point_total_or_margin_changed": false,
+        "basis": "NFL.com game center confirms the final 24-10 Rams win; the correction changes player passing yards only."
+      },
+      "evidence_grade": "B",
+      "evidence_grade_note": "A search-indexed NFL Fantasy correction-table entry reports 219-to-220 passing yards and the date; the current direct URL redirects. NFL.com confirms 220 yards, and contemporaneous discussion corroborates the original line. No durable primary before/after artifact was retrieved in this audit.",
+      "sources": [
+        {
+          "label": "NFL Fantasy official Stat Corrections — 2020 Week 7",
+          "url": "https://fantasy.nfl.com/research/statcorrections?position=O&statCategory=stats&statSeason=2020&statType=weekStats&statWeek=7",
+          "source_type": "official_nfl_fantasy_correction_record",
+          "supports": "Search-indexed official correction-table entry reports 219-to-220 passing yards and Oct. 28; current direct URL redirects.",
+          "availability_note": "Search-indexed row is visible, but current direct URL redirects to general NFL Fantasy news; preserve an archive/snapshot if recovered."
+        },
+        {
+          "label": "NFL.com final player game log — Jared Goff, 2020",
+          "url": "https://www.nfl.com/players/jared-goff/stats/logs/2020/",
+          "source_type": "official_nfl_final_stats",
+          "supports": "Corrected final total of 220 passing yards"
+        },
+        {
+          "label": "NFL.com game center — Bears at Rams, 2020 Week 7",
+          "url": "https://www.nfl.com/games/bears-at-rams-2020-reg-7",
+          "source_type": "official_nfl_game_center",
+          "supports": "Game date, final score, and NFL Game Book link"
+        },
+        {
+          "label": "r/fantasyfootball — Week 7 stat corrections (Oct. 29, 2020; secondary discussion)",
+          "url": "https://www.reddit.com/r/fantasyfootball/comments/jk9r3b/yes_youre_waking_up_to_some_stat_corrections/",
+          "source_type": "contemporary_fantasy_forum_report",
+          "supports": "Contemporaneous discussion reports Goff moved from 219 to 220 passing yards; corroboration only, not an official record."
+        }
+      ]
+    },
+    {
+      "id": "2024-douglas-ne-lar-week-11",
+      "game": {
+        "season": 2024,
+        "week": 11,
+        "date": "2024-11-17",
+        "away_team": "LAR",
+        "home_team": "NE",
+        "final_score": "LAR 28 - NE 22",
+        "url": "https://www.nfl.com/games/rams-at-patriots-2024-reg-11"
+      },
+      "reported_on": "2024-11-20",
+      "reported_on_basis": "Date printed in the NFL Fantasy Stat Corrections table.",
+      "elapsed_days_to_report": 3,
+      "players": [
+        {
+          "name": "DeMario Douglas",
+          "position": "WR",
+          "changes": [
+            {
+              "stat": "Receptions",
+              "initial": 5,
+              "corrected": 4,
+              "delta": -1,
+              "initial_basis": "NFL Fantasy official correction table",
+              "final_basis": "NFL.com final player game log"
+            }
+          ]
+        }
+      ],
+      "reason": "The official correction table lists the reception change but not the play-level rationale.",
+      "possible_market_impact": [
+        "A hypothetical receptions line of 4.5 would change sides. No historical sportsbook line was verified."
+      ],
+      "actual_market_impact": {
+        "sportsbook_line_verified": false,
+        "sportsbook_settlement_change": "not verified",
+        "fantasy_or_other_platform_note": "The NFL Fantasy correction table shows a one-point change under its default scoring; no specific matchup outcome was verified."
+      },
+      "score_effect": {
+        "official_score_changed": false,
+        "winner_changed": false,
+        "point_total_or_margin_changed": false,
+        "basis": "NFL.com game center confirms the final 28-22 Rams win; the correction changes Douglas's reception count only."
+      },
+      "evidence_grade": "B",
+      "evidence_grade_note": "A search-indexed NFL Fantasy correction-table entry reports 5-to-4 receptions and Nov. 20; the current direct URL redirects. NFL.com confirms four receptions for 59 yards. No durable primary before/after artifact was retrieved in this audit.",
+      "sources": [
+        {
+          "label": "NFL Fantasy official Stat Corrections — 2024 Week 11",
+          "url": "https://fantasy.nfl.com/research/statcorrections?position=3&statCategory=stats&statSeason=2024&statType=weekStats&statWeek=11",
+          "source_type": "official_nfl_fantasy_correction_record",
+          "supports": "Search-indexed official correction-table entry reports receptions 5-to-4 and Nov. 20; current direct URL redirects.",
+          "availability_note": "Search-indexed row is visible, but current direct URL redirects to general NFL Fantasy news; preserve an archive/snapshot if recovered."
+        },
+        {
+          "label": "NFL.com final player game log — DeMario Douglas, 2024",
+          "url": "https://www.nfl.com/players/demario-douglas/stats/logs/2024/",
+          "source_type": "official_nfl_final_stats",
+          "supports": "Corrected final line of four receptions"
+        },
+        {
+          "label": "NFL.com game center — Rams at Patriots, 2024 Week 11",
+          "url": "https://www.nfl.com/games/rams-at-patriots-2024-reg-11",
+          "source_type": "official_nfl_game_center",
+          "supports": "Game date, final score, and NFL Game Book link"
+        }
+      ]
+    },
+    {
+      "id": "2025-williams-chi-was-week-6",
+      "game": {
+        "season": 2025,
+        "week": 6,
+        "date": "2025-10-13",
+        "away_team": "CHI",
+        "home_team": "WAS",
+        "final_score": "CHI 25 - WAS 24",
+        "url": "https://www.nfl.com/games/bears-at-commanders-2025-reg-6"
+      },
+      "reported_on": "2025-12-17",
+      "reported_on_basis": "NFL reporter Tom Pelissero posted the correction on Dec. 17, 2025; NFL.com currently shows the corrected final player log. The original NFL release timestamp was not located.",
+      "elapsed_days_to_report": 65,
+      "players": [
+        {
+          "name": "Caleb Williams",
+          "position": "QB",
+          "changes": [
+            {
+              "stat": "Game rushing yards",
+              "initial": -2,
+              "corrected": 3,
+              "delta": 5,
+              "initial_basis": "Contemporaneous post-game line reported by RotoWire: four carries for minus-2 total yards; the five-yard play is also described by the official Bears recap and Tom Pelissero.",
+              "final_basis": "NFL.com final player game log: four carries for three yards"
+            }
+          ]
+        }
+      ],
+      "reason": "A high shotgun snap was treated in the original line as a minus-five-yard rush. Tom Pelissero reported that the NFL later classified the play as an aborted play/fumble recovery, leaving zero rushing yards on that play. The official Bears recap independently describes Williams losing five yards after fumbling the snap; the final NFL log shows three total rushing yards for the game, versus the reported original total of minus two.",
+      "possible_market_impact": [
+        "A hypothetical player rushing-yards line between -2 and 3 (for example, 0.5) could change sides. No archived sportsbook player-prop line was verified.",
+        "The player statistic changed, but the NFL game center still shows Chicago's 25-24 win; this example does not establish a spread, total-points, or moneyline settlement change."
+      ],
+      "actual_market_impact": {
+        "sportsbook_line_verified": false,
+        "sportsbook_settlement_change": "not verified",
+        "fantasy_or_other_platform_note": "Secondary analysis by FantasyGenius reports 42 fantasy managers in its dataset whose Week 6 matchup result would have changed under the corrected rushing total, and says six missed playoff places; it also reports that fantasy providers did not retroactively revise the closed Week 6 results. These counts and platform behavior were not independently audited from league records."
+      },
+      "score_effect": {
+        "official_score_changed": false,
+        "winner_changed": false,
+        "point_total_or_margin_changed": false,
+        "basis": "NFL.com game center confirms the final 25-24 Bears win. The correction concerns a quarterback rushing-yard classification, not a scoring play."
+      },
+      "evidence_grade": "B",
+      "evidence_grade_note": "NFL.com final player log and game center confirm the corrected line and result; the official team recap and contemporaneous secondary reporting describe the original play and the later correction. The fantasy matchup/playoff counts are a separate, unverified secondary analysis.",
+      "sources": [
+        {
+          "label": "NFL.com final player game log — Caleb Williams, 2025",
+          "url": "https://www.nfl.com/players/caleb-williams/stats/logs/2025/",
+          "source_type": "official_nfl_final_stats",
+          "supports": "Week 6 corrected line of four carries for three rushing yards"
+        },
+        {
+          "label": "NFL.com game center — Bears at Commanders, 2025 Week 6",
+          "url": "https://www.nfl.com/games/bears-at-commanders-2025-reg-6",
+          "source_type": "official_nfl_game_center",
+          "supports": "Game date, final 25-24 score, and NFL Game Book link"
+        },
+        {
+          "label": "Chicago Bears — Game Recap: Bears edge Commanders (Oct. 14, 2025)",
+          "url": "https://www.chicagobears.com/news/game-recap-bears-edge-commanders-in-thrilling-primetime-battle-jake-moody-2025-week-6-monday-night-football",
+          "source_type": "official_team_contemporaneous_report",
+          "supports": "Describes Williams losing five yards after fumbling the shotgun snap"
+        },
+        {
+          "label": "RotoWire — Commanders vs. Bears odds / Week 6 game report (Oct. 13, 2025)",
+          "url": "https://www.rotowire.com/betting/nfl/game/commanders-vs-bears-odds-2025-10-13-2879395",
+          "source_type": "contemporaneous_secondary_game_report",
+          "supports": "Reports Williams' original post-game total as four rushes for minus two yards"
+        },
+        {
+          "label": "Tom Pelissero — official stat correction report (Dec. 17, 2025)",
+          "url": "https://x.com/TomPelissero/status/2001410427968684212",
+          "source_type": "contemporary_nfl_reporter_post",
+          "supports": "Correction date and reclassification to fumble/recovery with zero rushing yards on the play"
+        },
+        {
+          "label": "The Sporting News — Bizarre Caleb Williams stat correction (Dec. 18, 2025)",
+          "url": "https://www.sportingnews.com/us/fantasy/chicago-bears/news/bizarre-caleb-williams-stat-correction-bears-qb-confusing-fantasy-football-scores/cc286bb9d3e34e955b4b6a20",
+          "source_type": "contemporary_secondary_fantasy_report",
+          "supports": "Reports a fantasy manager whose matchup/playoff outcome would change under the correction"
+        },
+        {
+          "label": "FantasyGenius — The worst fantasy beat I have ever seen (Dec. 19, 2025)",
+          "url": "https://blog.fantasygenius.io/caleb-williams-stat-correction-week-6",
+          "source_type": "secondary_fantasy_dataset_analysis",
+          "supports": "Claims 42 affected manager matchups and six playoff-qualification outcomes in its dataset; not independently audited"
+        }
+      ]
+    }
+  ]
+}

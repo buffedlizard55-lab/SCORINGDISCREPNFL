@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A source-linked research project tracking NFL statistical corrections, correction timing, and possible market implications without confusing possibility with verified settlement outcomes.">
+  <meta name="theme-color" content="#10221f">
+  <title>NFL Scoring Discrepancy Watch</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script src="./app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="#top" aria-label="NFL Scoring Discrepancy Watch home">
+        <span class="brand-mark" aria-hidden="true">SD</span>
+        <span><strong>SCORING</strong><span class="brand-sub">DISCREPANCY WATCH</span></span>
+      </a>
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="#alerts">Live alerts</a>
+        <a href="#cases">Historical cases</a>
+        <a href="#feasibility">Feasibility</a>
+        <a href="#method">Method</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section id="top" class="hero">
+      <div class="hero-grid">
+        <div>
+          <p class="eyebrow"><span class="live-dot" aria-hidden="true"></span> NFL statistical corrections · evidence first</p>
+          <h1>Own the outcome.<br><span>Know when the record changes.</span></h1>
+          <p class="hero-copy">A public research ledger for NFL scoring and statistical corrections—with the source trail, timing, and possible market consequences kept separate from claims we cannot verify.</p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="#cases">Explore source-linked cases <span aria-hidden="true">↓</span></a>
+            <a class="text-link" href="https://github.com/buffedlizard55-lab/SCORINGDISCREPNFL" target="_blank" rel="noopener noreferrer">Project on GitHub <span aria-hidden="true">↗</span></a>
+          </div>
+        </div>
+        <aside class="principle-card" aria-label="Project principles">
+          <div class="principle-icon" aria-hidden="true">◎</div>
+          <p class="eyebrow">North stars</p>
+          <p class="principle-line">Maximize P(Win).</p>
+          <p class="principle-line">Own the Outcome.</p>
+          <p class="principle-note">Discipline means separating a changed NFL statistic from a changed score, a fantasy result, and a sportsbook settlement.</p>
+        </aside>
+      </div>
+    </section>
+
+    <section class="summary-strip" aria-label="Current evidence summary">
+      <div class="summary-stat"><span class="summary-number" id="case-count">—</span><span class="summary-label">documented game cases</span></div>
+      <div class="summary-stat"><span class="summary-number" id="change-count">—</span><span class="summary-label">player-stat deltas recorded</span></div>
+      <div class="summary-stat"><span class="summary-number" id="score-count">—</span><span class="summary-label">score or winner changes found in this sample</span></div>
+      <div class="summary-stat"><span class="summary-number" id="book-count">—</span><span class="summary-label">verified sportsbook settlements</span></div>
+    </section>
+
+    <section id="alerts" class="section alert-section">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Best-effort monitor</p>
+          <h2>Live correction alerts</h2>
+        </div>
+        <a class="text-link" href="https://github.com/buffedlizard55-lab/SCORINGDISCREPNFL/issues?q=is%3Aissue+label%3Aofficial-stat-correction" target="_blank" rel="noopener noreferrer">Open alert issues <span aria-hidden="true">↗</span></a>
+      </div>
+      <div class="monitor-grid">
+        <div class="monitor-card">
+          <div class="monitor-card-head"><span class="status-icon" aria-hidden="true">↻</span><h3>Monitor run</h3></div>
+          <p id="monitor-status" class="status-text" role="status" aria-live="polite">Checking GitHub Actions status…</p>
+          <p class="small-note">Scheduled workflow is designed to poll the legacy NFL Fantasy correction archive up to four times daily in-season. GitHub can delay or skip scheduled runs.</p>
+          <p id="monitor-run-link" class="small-note"></p>
+        </div>
+        <div class="monitor-card alert-card">
+          <div class="monitor-card-head"><span class="status-icon" aria-hidden="true">!</span><h3>Source health & limits</h3></div>
+          <p class="status-text">The source path is experimental. Current NFL Fantasy URLs have been observed redirecting to a general fantasy-news page, while legacy correction pages are inconsistently reachable. The watcher fails closed instead of treating a redirect or changed layout as “no corrections.”</p>
+          <p class="small-note">A successful workflow run checks the feed, not bookmaker odds or settlements. A blank alert list is <strong>not</strong> proof that no NFL correction occurred.</p>
+        </div>
+      </div>
+      <div class="feed-heading">
+        <div><h3>Latest detected candidates</h3><p id="feed-status" class="feed-status" role="status" aria-live="polite">Loading public GitHub issue feed…</p></div>
+        <span id="feed-count" class="count-pill">—</span>
+      </div>
+      <div id="live-alert-list" class="live-alert-list" aria-live="polite"></div>
+      <div class="feed-footer">
+        <p>Each alert is a <strong>candidate requiring review</strong>. The automation records what its source lists; it does not claim a line moved, a bet was settled differently, or a game result changed.</p>
+        <a href="https://fantasy.nfl.com/research/statcorrections" target="_blank" rel="noopener noreferrer">NFL Fantasy correction-page entry point <span aria-hidden="true">↗</span></a>
+      </div>
+    </section>
+
+    <section id="feasibility" class="section feasibility-section">
+      <div class="section-heading">
+        <div><p class="eyebrow">What the evidence supports</p><h2>Detection is feasible.<br><span>Settlement impact is a different question.</span></h2></div>
+        <span class="verdict-badge">Feasible · with material limits</span>
+      </div>
+      <div class="findings-grid">
+        <article class="finding-card">
+          <span class="finding-index">01</span>
+          <h3>Corrections happen after games end</h3>
+          <p>The NFL’s GSIS material says game information comes from its statistical system and that existing information is corrected regularly with Elias Sports Bureau. AP reporting describes weekly Wednesday review, later team requests, no fixed deadline, and some October/November statistics still being changed in January/February.</p>
+          <a href="https://www.nflgsis.com/Help/About.html" target="_blank" rel="noopener noreferrer">NFL GSIS: About / corrections <span aria-hidden="true">↗</span></a>
+        </article>
+        <article class="finding-card">
+          <span class="finding-index">02</span>
+          <h3>There is no measured correction rate yet</h3>
+          <p>The nine game cases below are deliberately curated examples, not a random sample or complete season-by-season scrape. Seven cited report/table dates fall 2–4 days after the game; the Caleb Williams change was reported 65 days later, and the AP Rodgers article appeared 76 days after its game but does not reveal the NFL correction date. Source-date types vary, so this is not a reliable frequency distribution.</p>
+          <a href="https://www.espn.com/espn/wire?id=7399087" target="_blank" rel="noopener noreferrer">AP reporting via ESPN <span aria-hidden="true">↗</span></a>
+        </article>
+        <article class="finding-card">
+          <span class="finding-index">03</span>
+          <h3>Official records and settlement rules differ</h3>
+          <p>The NFL statistical record controls the official statistic; each operator’s applicable, jurisdiction-specific rules govern wager settlement. Fanatics’ current Tennessee rules describe a settlement window and possible amendments, while ESPN and Fleaflicker document separate fantasy cutoffs. One provider’s policy cannot be generalized to another operator, state, or market.</p>
+          <a href="https://sportsbook.fanatics.com/legal/tn/house-rules/" target="_blank" rel="noopener noreferrer">Fanatics sportsbook house rules (Tennessee) <span aria-hidden="true">↗</span></a><br>
+          <a href="https://support.espn.com/hc/en-us/articles/360000099732-Scoring-Stat-Corrections" target="_blank" rel="noopener noreferrer">ESPN fantasy correction policy <span aria-hidden="true">↗</span></a>
+        </article>
+      </div>
+      <div class="callout">
+        <span class="callout-mark" aria-hidden="true">!</span>
+        <div><strong>What we can say today:</strong> late corrections can change official player statistics and may cross a hypothetical prop threshold. In the reviewed examples, we have not verified a sportsbook line or settlement change, or a correction that changed the official score or winner. Do not interpret those sample counts as “never happens.”</div>
+      </div>
+      <div class="reported-effects-panel">
+        <div class="reported-effects-heading">
+          <div><p class="eyebrow">Not a sportsbook result</p><h3>Reported fantasy outcomes</h3></div>
+          <p>Secondary reporting illustrates downstream score changes. These reports are kept separate from verified sportsbook outcomes.</p>
+        </div>
+        <div id="reported-effects" class="reported-effects-list"></div>
+      </div>
+    </section>
+
+    <section id="cases" class="section cases-section">
+      <div class="section-heading case-title-row">
+        <div><p class="eyebrow">Source-linked dataset · curated, not exhaustive</p><h2>Historical cases</h2><p class="section-intro">Every row distinguishes the source-supported (or reconstructed) original value, corrected final value, and unresolved evidence. Some legacy correction links now redirect; those rows are explicitly provisional. Open the sources to review the evidence yourself.</p></div>
+        <div class="dataset-stamp"><span class="stamp-dot"></span><span>Research checked<br><strong>October 7, 2026</strong></span></div>
+      </div>
+      <div class="filter-bar" aria-label="Filter historical cases">
+        <label class="search-label" for="case-search">Search cases
+          <input id="case-search" type="search" placeholder="Player, team, stat, source…" autocomplete="off">
+        </label>
+        <label for="season-filter">Season
+          <select id="season-filter"><option value="all">All seasons</option></select>
+        </label>
+        <label for="grade-filter">Evidence grade
+          <select id="grade-filter">
+            <option value="all">All grades</option>
+            <option value="A">A · direct correction record</option>
+            <option value="B">B · corroborated reports</option>
+            <option value="C">C · incomplete / reconstructed</option>
+          </select>
+        </label>
+        <button id="clear-filters" class="button button-quiet" type="button">Clear filters</button>
+      </div>
+      <p id="case-results" class="result-count" role="status" aria-live="polite">Loading historical cases…</p>
+      <div id="case-list" class="case-list"></div>
+      <noscript><p class="noscript-note">JavaScript is needed to render the research tables and live issue feed. The source links and methodology are still available below.</p></noscript>
+    </section>
+
+    <section id="method" class="section method-section">
+      <div class="section-heading">
+        <div><p class="eyebrow">How to read the ledger</p><h2>Method & safeguards</h2></div>
+      </div>
+      <div class="method-grid">
+        <div class="method-copy">
+          <h3>Evidence grades</h3>
+          <ul class="grade-list">
+            <li><span class="grade grade-a">A</span><span><strong>Direct correction record.</strong> An official NFL Fantasy correction row states the before/after values; final NFL stats/game center corroborate the result.</span></li>
+            <li><span class="grade grade-b">B</span><span><strong>Corroborated contemporaneous sources.</strong> Initial values and the correction are documented in dated team, platform, or media reports; no primary correction artifact was found.</span></li>
+            <li><span class="grade grade-c">C</span><span><strong>Incomplete or reconstructed.</strong> A secondary report supports the change, but one value or the actual correction date is inferred or unavailable.</span></li>
+          </ul>
+          <h3>What counts as “actual market impact”?</h3>
+          <p>It requires a time-stamped, archived market line, the applicable operator/jurisdiction settlement rule, and a documented final disposition. A stat changing across a hypothetical threshold is marked only as <em>possible</em> impact. NFL Fantasy points or a fantasy-platform decision are not sportsbook evidence.</p>
+          <h3>Controlling records</h3>
+          <p>Use NFL GSIS / the NFL’s official statistician (Elias) for the official statistical record; use current official player logs and game centers to corroborate final values and score. A gamebook is a valuable official snapshot, but its initial publication is not a version-history log. A wager’s operator rules—not the NFL or fantasy-provider cutoff—determine the sportsbook settlement.</p>
+        </div>
+        <aside class="checklist-card">
+          <p class="eyebrow">“Own the Outcome” checklist</p>
+          <ol>
+            <li><span>01</span> Preserve a contemporaneous original box score or feed snapshot.</li>
+            <li><span>02</span> Capture the correction source, reported date, and exact play/reason if available.</li>
+            <li><span>03</span> Verify the current official player log, gamebook, score, and winner independently.</li>
+            <li><span>04</span> Match only market types whose settlement definitions cover that statistic.</li>
+            <li><span>05</span> Find an archived book line and rule before recording actual betting impact.</li>
+          </ol>
+        </aside>
+      </div>
+      <div class="source-footnotes">
+        <h3>Core references</h3>
+        <ul>
+          <li><a href="https://www.nflgsis.com/Help/About.html" target="_blank" rel="noopener noreferrer">NFL GSIS — official system, gamebooks, and correction process</a></li>
+          <li><a href="https://fantasy.nfl.com/research/statcorrections" target="_blank" rel="noopener noreferrer">NFL Fantasy — Stat Corrections page (legacy/availability caveat applies)</a></li>
+          <li><a href="https://www.espn.com/espn/wire?id=7399087" target="_blank" rel="noopener noreferrer">Associated Press via ESPN — NFL stat-taking, review timing, and Aaron Rodgers example</a></li>
+          <li><a href="https://support.espn.com/hc/en-us/articles/360000099732-Scoring-Stat-Corrections" target="_blank" rel="noopener noreferrer">ESPN — provider-specific scoring correction window</a></li>
+          <li><a href="https://www.fleaflicker.com/forums/help/topics/hakeem-nicks-scoring-mistake-19338" target="_blank" rel="noopener noreferrer">Fleaflicker — Hakeem Nicks correction and platform policy example</a></li>
+          <li><a href="https://github.com/buffedlizard55-lab/SCORINGDISCREPNFL/blob/main/docs/CASE-AUDIT.md" target="_blank" rel="noopener noreferrer">Case-by-case audit — evidence checked and unresolved gaps</a></li>
+          <li><a href="https://github.com/buffedlizard55-lab/SCORINGDISCREPNFL/blob/main/docs/FEASIBILITY.md" target="_blank" rel="noopener noreferrer">Feasibility assessment — reliability, limits, and next steps</a></li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div><a class="brand footer-brand" href="#top"><span class="brand-mark" aria-hidden="true">SD</span><span><strong>SCORING</strong><span class="brand-sub">DISCREPANCY WATCH</span></span></a><p>Independent research · source-linked · no unsupported settlement claims</p></div>
+      <div class="footer-links"><a href="https://github.com/buffedlizard55-lab/SCORINGDISCREPNFL" target="_blank" rel="noopener noreferrer">Repository</a><a href="https://github.com/buffedlizard55-lab/SCORINGDISCREPNFL/blob/main/README.md" target="_blank" rel="noopener noreferrer">Project charter</a><a href="#top">Back to top ↑</a></div>
+    </div>
+    <div class="footer-bottom"><span>Research dataset last reviewed October 7, 2026.</span><span>Informational research only. Not betting advice.</span></div>
+  </footer>
+</body>
+</html>

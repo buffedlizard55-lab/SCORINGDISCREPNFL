@@ -1,0 +1,70 @@
+name: NFL stat correction watch
+
+on:
+  schedule:
+    # Poll every six hours in season and daily in the offseason to catch late corrections.
+    - cron: "17 */6 * 1-2,9-12 *"
+    - cron: "17 12 * 3-8 *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Poll the source without creating issues (use this to verify source access)."
+        required: false
+        type: boolean
+        default: true
+      season:
+        description: "Optional base NFL season year, e.g. 2026. Leave blank to infer the active/most recently completed season."
+        required: false
+        type: string
+      lookback_seasons:
+        description: "Number of recent seasons to poll, including the base season (1-5)."
+        required: false
+        type: string
+        default: "2"
+      max_week:
+        description: "Last regular-season week to poll (1-18)."
+        required: false
+        type: string
+        default: "18"
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: nfl-stat-correction-watch
+  cancel-in-progress: false
+
+jobs:
+  poll:
+    name: Poll correction pages and publish candidate alerts
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_REPOSITORY: ${{ github.repository }}
+      DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || false }}
+      INPUT_SEASON: ${{ github.event_name == 'workflow_dispatch' && inputs.season || '' }}
+      INPUT_LOOKBACK_SEASONS: ${{ github.event_name == 'workflow_dispatch' && inputs.lookback_seasons || '2' }}
+      INPUT_MAX_WEEK: ${{ github.event_name == 'workflow_dispatch' && inputs.max_week || '18' }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Poll the legacy NFL Fantasy correction archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          args=(--max-week "$INPUT_MAX_WEEK" --lookback-seasons "$INPUT_LOOKBACK_SEASONS")
+          if [[ -n "$INPUT_SEASON" ]]; then
+            args+=(--season "$INPUT_SEASON")
+          fi
+          if [[ "$DRY_RUN" == "true" ]]; then
+            args+=(--dry-run)
+          fi
+          python scripts/poll_official_corrections.py "${args[@]}"

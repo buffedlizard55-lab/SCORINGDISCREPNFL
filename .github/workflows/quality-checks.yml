@@ -1,0 +1,29 @@
+name: Quality checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Validate JSON datasets
+        run: |
+          python -m json.tool data/historical-cases.json >/dev/null
+          python -m json.tool data/reported-downstream-effects.json >/dev/null
+      - name: Run unit and data-integrity tests
+        run: python -m unittest discover -s tests -v
+      - name: Check browser JavaScript syntax
+        run: node --check app.js

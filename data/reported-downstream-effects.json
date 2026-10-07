@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "scope_note": "Secondary reports of downstream fantasy-platform consequences. These are not sportsbook wagers or settlements and are not counted as independently audited historical market outcomes.",
+  "effects": [
+    {
+      "id": "2011-ap-bills-defense-sack-fantasy-flip",
+      "reported_on": "2011-12-31",
+      "game": "Buffalo Bills defense vs. Washington Redskins; the AP story does not state the exact game date or week.",
+      "correction_reported": "The Bills defense was credited with an additional sack. The AP story does not give the original or corrected sack total.",
+      "reported_effect": "AP reported that fantasy participant Adam Gizelbach's matchup changed from a win by just over one point to a loss by less than one point; he said the two-point change cost him money.",
+      "classification": "reported_actual_fantasy_matchup_change",
+      "sportsbook_impact": "not a sportsbook; no wager, book line, or book settlement was documented",
+      "verification_limit": "The named participant and direction of the fantasy result are reported by AP, but the league scoreboard, exact game/week, exact sack totals, and correction timestamp were not independently recovered.",
+      "source": {
+        "label": "Associated Press via ESPN — Stats-taking at NFL games more art than science",
+        "url": "https://www.espn.com/espn/wire?id=7399087",
+        "source_type": "contemporary_secondary_report"
+      }
+    }
+  ]
+}
