@@ -46,6 +46,7 @@ class ProjectTests(unittest.TestCase):
         build(); before = (ROOT/'research-seed/index.html').read_bytes(); build()
         self.assertEqual(before, (ROOT/'research-seed/index.html').read_bytes())
         self.assertNotIn(b'<!-- CASES -->', before)
+        self.assertNotIn(b'..</p>', before)
         self.assertEqual(before.count(b'<article '), 12)
 
     def test_baseline_repeat_and_change(self):

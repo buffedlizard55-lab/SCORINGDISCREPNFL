@@ -103,3 +103,11 @@ run below, before PR creation.
 No automated browser interaction/screenshot test or exhaustive public-link crawl
 was available. This review is not a guarantee against later source changes or
 publisher corrections; the case cards preserve their source and evidence caveats.
+
+### Post-deployment copy review
+
+After PR #7's Pages deployment, the live supplemental card text exposed a
+double-period where a fully punctuated timing note met the builder's sentence
+suffix. The generator now appends punctuation only when needed, and the
+rebuild regression test rejects `..</p>`. Rebuilt the 12-card page and reran
+all 44 tests, Node syntax checks, JSON parsing and whitespace validation.
