@@ -42,3 +42,64 @@ deterministic; diff against current main has no new whitespace errors.
 PR #4 subsequently merged (`9a96509`) to restore root Pages and add validation.
 Kept its root site, validation workflow and sync script intact. Re-ran all **42
 integrated tests** successfully. Supplemental code still never overwrites root.
+
+## Follow-up three-pass review — 2026-10-07
+
+The fixed Arena branch was initially 16 commits behind the current `origin/main`.
+Fast-forwarded **the same required branch** to current main before integrating
+new research. Preserved the existing root Pages deployment, 36-row correction
+database, mirror study, pipeline, validation workflow and README charter; did
+not apply the stale parallel `docs/` draft over those files.
+
+### Pass 1 — implement and verify
+Added five source-linked case studies to the supplemental `data/events.json`
+seed and `data/sources.json` evidence register: Cutler (2008), Fitzpatrick and
+Parrish (2010), Manning and Nicks (2011), Brees and Snead (2015), and Elliott
+(2018). Regenerated the supplemental static case library; updated the root site
+link and README. These are separate from the 36-row archived-official-correction
+database. No sportsbook line or settlement is claimed.
+
+### Pass 2 — review and fix
+Compared each new case against the available official NFL gamebook, contemporaneous
+team reporting and/or independent contemporaneous reports. Retained explicit
+conflicts: Cutler's accessible NFL PDF says 299 while the Denver Post footnote
+and MyFantasyLeague report 300; the Denver Post page also shows a 2016 update,
+so the footnote's original publication time is not established. Bills reporting
+says 373 then 374 before 382; NJ.com says Brees 504 while
+the final NFL book says 505. Recorded the Nicks play at 6:37 Q1 and the FleaFlicker
+report time without treating it as an NFL timestamp. For Elliott, the final NFL
+book confirms one fumble, zero lost and one own recovery; corrected the stale
+candidate wording that could imply the fumble itself disappeared. Kept the
+initial Sheard attribution and correction rationale labeled secondary, and the
+legacy NFL Fantasy correction route labeled inaccessible. Changed the seed UI
+to say “reported correction / decision date” rather than imply exact system time.
+
+### Pass 3 — complete requirements audit
+Kept the original full governing brief and Core Values in README; linked the
+supplemental case library; recorded timing, reasons, possible markets, score
+outcomes and settlement caveats for all five added events. Rechecked that the
+sample is not used as a frequency estimate, the market impacts are hypothetical,
+source conflicts are visible, and the project still clearly states its retired
+official-feed, licensing, odds, persistent-storage and notification blockers.
+The existing Pages root-build setting remains unchanged; no competing Pages
+workflow was added. Final local test/build results are recorded after the final
+run below, before PR creation.
+
+### Final verification
+
+- `python3 -m unittest discover -s tests -v`: **44 passed** (35 pipeline tests,
+  9 supplemental tests).
+- `python3 scripts/build.py`: deterministic supplemental page with **12 cards**;
+  source IDs, HTTPS links, numeric deltas, and the five re-review caveats validate.
+- `./pipeline/sync_site_data.sh`: root Pages copies synchronized with canonical
+  `docs/` copies; the site-contract tests confirm no drift.
+- `node --check app.js`, `node --check docs/app.js`, and
+  `node --check research-seed/site.js`: passed.
+- JSON parsing for the case seed, source register, correction database, score
+  study and market-sensitivity data passed; `git diff --check` passed.
+- The local root preview returned HTTP 200 for `/`, the root CSS and JS, the
+  supplemental case page, and `/data/events.json` (12 events).
+
+No automated browser interaction/screenshot test or exhaustive public-link crawl
+was available. This review is not a guarantee against later source changes or
+publisher corrections; the case cards preserve their source and evidence caveats.

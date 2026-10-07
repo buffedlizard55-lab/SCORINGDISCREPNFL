@@ -1,6 +1,6 @@
 {
   "as_of": "2026-10-07",
-  "coverage": "Evidence-backed seed; not exhaustive. No season has been fully audited.",
+  "coverage": "Evidence-backed supplemental seed, including five re-reviewed historical case studies; not exhaustive. No season has been fully audited.",
   "events": [
     {
       "id": "2012-10-07-pit-phi",
@@ -265,7 +265,7 @@
           ]
         }
       ],
-      "impact": "Apparent Baltimore 30\u201327 win became 30\u201330; subsequent overtime play produced Cleveland 33\u201330. The correction itself added 3, not 6 points. Winner, spread, total, team total and kicking markets potentially affected.",
+      "impact": "Apparent Baltimore 30–27 win became 30–30; subsequent overtime play produced Cleveland 33–30. The correction itself added 3, not 6 points. Winner, spread, total, team total and kicking markets potentially affected.",
       "sources": [
         "ap-dawson",
         "cle-dawson"
@@ -311,7 +311,7 @@
           ]
         }
       ],
-      "impact": "Apparent touchdown was removed before final adjudication. Six potential points affect spread/total arithmetic, but Monday statement did not restore them. Official final remained 11\u201310.",
+      "impact": "Apparent touchdown was removed before final adjudication. Six potential points affect spread/total arithmetic, but Monday statement did not restore them. Official final remained 11–10.",
       "sources": [
         "nfl-pola"
       ],
@@ -360,6 +360,347 @@
         "espn-manning"
       ],
       "flags": [],
+      "settlement": "No sportsbook settlement independently verified",
+      "reviewed": "2026-10-07"
+    },
+    {
+      "id": "2008-09-08-den-oak",
+      "date": "2008-09-08",
+      "game": "Denver Broncos at Oakland Raiders — Broncos 41–14",
+      "players": [
+        "Jay Cutler",
+        "Nate Jackson"
+      ],
+      "kind": "Reported post-game correction",
+      "correction_date": "2008-09-10",
+      "timing_precision": "The Denver Post page is dated Sept. 10, 2008 but also shows Updated May 7, 2016; the footnote version time is not separately shown. MyFantasyLeague posted its correction explainer Sept. 11, 2008. Exact NFL system timestamp unavailable.",
+      "reason": "The Denver Post says official review of game footage credited one additional passing yard on a fourth-quarter completion to Nate Jackson. The accessible NFL gamebook still lists 299.",
+      "changes": [
+        {
+          "subject": "Jay Cutler",
+          "stat": "Passing yards",
+          "before": 299,
+          "after": 300,
+          "delta": 1,
+          "scope": "game total; reported correction versus accessible gamebook snapshot",
+          "evidence": [
+            "cutler-gamebook",
+            "cutler-denverpost",
+            "cutler-mfl"
+          ]
+        }
+      ],
+      "impact": "A one-yard change could cross a Cutler passing-yard prop or 300-yard threshold and potentially Nate Jackson’s receiving-yard line if offered; Jackson’s exact before/after total was not established. Denver beat Oakland 41–14; the final score did not change. No sportsbook line or settlement is verified.",
+      "sources": [
+        "cutler-gamebook",
+        "cutler-denverpost",
+        "cutler-mfl"
+      ],
+      "flags": [
+        "Material version conflict: the accessible official NFL gamebook lists 299 while the Denver Post footnote and MyFantasyLeague report give 300. The Denver Post page shows a 2016 update, so the footnote’s original publication time is not independently established. The PDF has no visible update date; exact provenance and official correction notice remain unresolved."
+      ],
+      "settlement": "No sportsbook settlement independently verified",
+      "reviewed": "2026-10-07"
+    },
+    {
+      "id": "2010-10-24-buf-bal",
+      "date": "2010-10-24",
+      "game": "Buffalo Bills at Baltimore Ravens — Ravens 37–34 (OT)",
+      "players": [
+        "Ryan Fitzpatrick",
+        "Roscoe Parrish"
+      ],
+      "kind": "Reported post-game correction",
+      "correction_date": "2010-10-29",
+      "timing_precision": "A secondary correction thread discussed the changes around Oct. 27–28; the Bills used 382 passing yards on Oct. 29. Exact NFL/Elias correction timestamp not located.",
+      "reason": "The correction thread reports that a statistic changed but does not identify the play. No official NFL explanation or specific play was located. The Bills’ own Oct. 24 and Oct. 25 reports disagree by one yard before the later 382 figure.",
+      "changes": [
+        {
+          "subject": "Ryan Fitzpatrick",
+          "stat": "Passing yards",
+          "before": 373,
+          "after": 382,
+          "delta": 9,
+          "scope": "Bills Oct. 24 report compared with later total",
+          "evidence": [
+            "bills-oct24",
+            "bills-oct29",
+            "bills-gamebook"
+          ]
+        },
+        {
+          "subject": "Ryan Fitzpatrick",
+          "stat": "Passing yards",
+          "before": 374,
+          "after": 382,
+          "delta": 8,
+          "scope": "Bills Oct. 25 / correction-thread starting point compared with final line",
+          "evidence": [
+            "bills-oct25",
+            "bills-correction-thread",
+            "bills-gamebook"
+          ]
+        },
+        {
+          "subject": "Roscoe Parrish",
+          "stat": "Receiving yards",
+          "before": 49,
+          "after": 57,
+          "delta": 8,
+          "scope": "Bills Oct. 26 report compared with final line",
+          "evidence": [
+            "bills-oct26",
+            "bills-correction-thread",
+            "bills-gamebook"
+          ]
+        }
+      ],
+      "impact": "Passing- and receiving-yard props or thresholds could be affected if the relevant lines were offered. Baltimore won 37–34 in overtime and the game score stayed unchanged. No sportsbook line or settlement is verified.",
+      "sources": [
+        "bills-gamebook",
+        "bills-oct24",
+        "bills-oct25",
+        "bills-oct26",
+        "bills-oct29",
+        "bills-correction-thread",
+        "bills-espn-final"
+      ],
+      "flags": [
+        "The initial Fitzpatrick total is unresolved: official Bills reports say 373 and 374 on consecutive days. The reported +8 starts from 374; from 373 the difference is +9. Exact play, reason and official correction timestamp remain unknown."
+      ],
+      "settlement": "No sportsbook settlement independently verified",
+      "reviewed": "2026-10-07"
+    },
+    {
+      "id": "2011-09-19-ram-nyg",
+      "date": "2011-09-19",
+      "game": "St. Louis Rams at New York Giants — Giants 28–16",
+      "players": [
+        "Eli Manning",
+        "Hakeem Nicks"
+      ],
+      "kind": "Reported post-game correction",
+      "correction_date": "2011-09-21",
+      "timing_precision": "A Fleaflicker forum post at 8:11 p.m. on Sept. 21 reported the NFL credit; that is not an NFL-system timestamp.",
+      "reason": "Contemporaneous reports describe the fourth-down play as initially called incomplete with defensive pass interference. The final NFL gamebook credits Nicks with a 23-yard catch at 6:37 of Q1, fourth-and-four at the Rams 32, with PI declined. The official notice and review rationale were not located.",
+      "changes": [
+        {
+          "subject": "Eli Manning",
+          "stat": "Completions",
+          "before": 18,
+          "after": 19,
+          "delta": 1,
+          "scope": "game total",
+          "evidence": [
+            "nicks-giants",
+            "nicks-gamebook"
+          ]
+        },
+        {
+          "subject": "Eli Manning",
+          "stat": "Passing yards",
+          "before": 200,
+          "after": 223,
+          "delta": 23,
+          "scope": "game total",
+          "evidence": [
+            "nicks-giants",
+            "nicks-gamebook"
+          ]
+        },
+        {
+          "subject": "Hakeem Nicks",
+          "stat": "Receptions",
+          "before": 3,
+          "after": 4,
+          "delta": 1,
+          "scope": "game total",
+          "evidence": [
+            "nicks-herald",
+            "nicks-gamebook"
+          ]
+        },
+        {
+          "subject": "Hakeem Nicks",
+          "stat": "Receiving yards",
+          "before": 15,
+          "after": 38,
+          "delta": 23,
+          "scope": "game total",
+          "evidence": [
+            "nicks-herald",
+            "nicks-gamebook"
+          ]
+        }
+      ],
+      "impact": "Manning completion/passing-yard and Nicks reception/receiving-yard markets could be affected if offered. The same drive ended in a Giants touchdown; final score remained 28–16. Fleaflicker declined to retroactively rescore its Tuesday-finalized Week 2 fantasy results; no sportsbook settlement is verified.",
+      "sources": [
+        "nicks-gamebook",
+        "nicks-giants",
+        "nicks-herald",
+        "nicks-fleaflicker"
+      ],
+      "flags": [
+        "The exact NFL correction timestamp and internal review notice were not found. The forum records a provider’s report of the correction and its own fantasy rescore decision, not a sportsbook outcome."
+      ],
+      "settlement": "No sportsbook settlement independently verified",
+      "reviewed": "2026-10-07"
+    },
+    {
+      "id": "2015-11-01-nyg-no",
+      "date": "2015-11-01",
+      "game": "New York Giants at New Orleans Saints — Saints 52–49",
+      "players": [
+        "Drew Brees",
+        "Willie Snead",
+        "Trumaine McBride"
+      ],
+      "kind": "Reported post-game correction",
+      "correction_date": "2015-11-02",
+      "timing_precision": "ESPN reported the Elias correction on Monday, Nov. 2 and followed up Nov. 4. The exact NFL database timestamp was not located.",
+      "reason": "ESPN reports that Elias reclassified Snead’s fourth-quarter catch/fumble as an interception because he never had full control. The same 63-yard Giants return remained a touchdown; only the turnover type changed.",
+      "changes": [
+        {
+          "subject": "Drew Brees",
+          "stat": "Completions",
+          "before": 40,
+          "after": 39,
+          "delta": -1,
+          "scope": "game total",
+          "evidence": [
+            "brees-saints",
+            "brees-espn-correction",
+            "brees-gamebook"
+          ]
+        },
+        {
+          "subject": "Drew Brees",
+          "stat": "Passing yards",
+          "before": 511,
+          "after": 505,
+          "delta": -6,
+          "scope": "game total",
+          "evidence": [
+            "brees-saints",
+            "brees-espn-correction",
+            "brees-gamebook"
+          ]
+        },
+        {
+          "subject": "Drew Brees",
+          "stat": "Interceptions",
+          "before": 1,
+          "after": 2,
+          "delta": 1,
+          "scope": "game total",
+          "evidence": [
+            "brees-saints",
+            "brees-espn-correction",
+            "brees-gamebook"
+          ]
+        },
+        {
+          "subject": "Willie Snead",
+          "stat": "Receptions",
+          "before": 7,
+          "after": 6,
+          "delta": -1,
+          "scope": "game total",
+          "evidence": [
+            "brees-saints",
+            "brees-espn-correction",
+            "brees-gamebook"
+          ]
+        },
+        {
+          "subject": "Willie Snead",
+          "stat": "Receiving yards",
+          "before": 76,
+          "after": 70,
+          "delta": -6,
+          "scope": "game total",
+          "evidence": [
+            "brees-saints",
+            "brees-espn-correction",
+            "brees-gamebook"
+          ]
+        }
+      ],
+      "impact": "Brees completion, passing-yard and interception markets; Snead reception, receiving-yard and fumble markets; and Giants defensive-interception/return markets could be affected if offered. ESPN reported a two-point fantasy deduction for Brees in many standard scoring formats; that is not sportsbook settlement evidence. Final score stayed Saints 52, Giants 49, and the same 63-yard return TD remained.",
+      "sources": [
+        "brees-gamebook",
+        "brees-saints",
+        "brees-espn-correction",
+        "brees-espn-followup",
+        "brees-nj-conflict"
+      ],
+      "flags": [
+        "NJ.com reported 504 passing yards; the NFL final gamebook and ESPN’s final box score list 505. This record uses 505 and preserves the conflict. No sportsbook line or settlement was verified."
+      ],
+      "settlement": "No sportsbook settlement independently verified",
+      "reviewed": "2026-10-07"
+    },
+    {
+      "id": "2018-12-16-dal-ind",
+      "date": "2018-12-16",
+      "game": "Dallas Cowboys at Indianapolis Colts — Colts 23–0",
+      "players": [
+        "Ezekiel Elliott",
+        "Jabaal Sheard",
+        "Pierre Desir"
+      ],
+      "kind": "Reported post-game correction",
+      "correction_date": "2018-12-19",
+      "timing_precision": "The legacy NFL Fantasy correction entry is indexed with a Dec. 19 date; contemporary coverage appeared Dec. 20. The exact internal review time is not established.",
+      "reason": "At 14:15 of Q2, on fourth-and-1 at IND 3, final NFL play-by-play records Elliott for −2 yards to IND 5, fumbles after a P. Desir hit, and recovers at IND 5. Secondary reports say the initial box score credited Jabaal Sheard with the recovery; no primary public explanation for the re-attribution was located.",
+      "changes": [
+        {
+          "subject": "Ezekiel Elliott",
+          "stat": "Fumbles (game total)",
+          "before": 1,
+          "after": 1,
+          "delta": 0,
+          "scope": "game total; the fumble remains in the final NFL book",
+          "evidence": [
+            "elliott-actionnetwork",
+            "elliott-gamebook"
+          ]
+        },
+        {
+          "subject": "Ezekiel Elliott",
+          "stat": "Fumbles lost",
+          "before": 1,
+          "after": 0,
+          "delta": -1,
+          "scope": "game total",
+          "evidence": [
+            "elliott-nflfantasy",
+            "elliott-gamebook"
+          ]
+        },
+        {
+          "subject": "Ezekiel Elliott",
+          "stat": "Own fumble recoveries",
+          "before": 0,
+          "after": 1,
+          "delta": 1,
+          "scope": "game total",
+          "evidence": [
+            "elliott-nflfantasy",
+            "elliott-gamebook"
+          ]
+        }
+      ],
+      "impact": "Elliott fumbles-lost/own-recovery, potential defensive recovery and fantasy outcomes could be affected if offered. The fourth-down attempt failed either way, so possession and the Colts 23–0 final score did not change. Contemporary fantasy coverage reports some league matchups changed; no sportsbook line or settlement is verified.",
+      "sources": [
+        "elliott-gamebook",
+        "elliott-nflfantasy",
+        "elliott-actionnetwork",
+        "elliott-wolfsports"
+      ],
+      "flags": [
+        "The fumble itself was not removed: the final NFL book lists 1 FUM, 0 LOST, 1 OWN-REC. The official correction route now redirects; its Dec. 19 date comes from the indexed entry. The rationale for changing the recovery attribution remains secondary reporting, not a located NFL explanation."
+      ],
       "settlement": "No sportsbook settlement independently verified",
       "reviewed": "2026-10-07"
     }

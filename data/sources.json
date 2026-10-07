@@ -72,14 +72,14 @@
   "gsis": {
     "publisher": "NFL Guide for Statisticians, 2025, p.4",
     "url": "https://www.nflgsis.com/gsis/documentation/stadiumguides/guide_for_statisticians.pdf",
-    "excerpt": "subject to review by the NFL and the League\u2019s official statistician",
+    "excerpt": "subject to review by the NFL and the League’s official statistician",
     "tier": "official",
     "reviewed": "2026-10-07"
   },
   "espn-policy": {
     "publisher": "ESPN Fan Support",
     "url": "https://support.espn.com/hc/en-us/articles/360000099732-Scoring-Stat-Corrections",
-    "excerpt": "Only official stat corrections made by the NFL after a game\u2019s conclusion will appear on the stat correction page",
+    "excerpt": "Only official stat corrections made by the NFL after a game’s conclusion will appear on the stat correction page",
     "tier": "platform",
     "reviewed": "2026-10-07"
   },
@@ -95,6 +95,167 @@
     "url": "https://myfantasyleague.wordpress.com/2008/09/11/official-nfl-stat-corrections/",
     "excerpt": "there is no set date or deadline for corrections to be made",
     "tier": "platform",
+    "reviewed": "2026-10-07"
+  },
+  "cutler-gamebook": {
+    "publisher": "NFL official gamebook PDF (2008; conflicting version)",
+    "url": "https://static.www.nfl.com/image/upload/v1677631577/gamecenter/10012008-0908-017d-37f0-43ac2a5d3356.pdf",
+    "excerpt": "The accessible gamebook lists Jay Cutler at 16/24 for 299 passing yards.",
+    "tier": "official primary record; version conflict",
+    "reviewed": "2026-10-07"
+  },
+  "cutler-denverpost": {
+    "publisher": "The Denver Post (page dated 2008; updated 2016)",
+    "url": "https://www.denverpost.com/2008/09/10/marshall-roots-on-his-teammates-in-rout-of-raiders/",
+    "excerpt": "Reports the official film-review yard change; the article page shows published Sep. 10, 2008 and updated May 7, 2016.",
+    "tier": "newspaper report; footnote version timestamp not separately established",
+    "reviewed": "2026-10-07"
+  },
+  "cutler-mfl": {
+    "publisher": "MyFantasyLeague, correction explainer",
+    "url": "https://myfantasyleague.wordpress.com/2008/09/11/official-nfl-stat-corrections/",
+    "excerpt": "Reports the 299-to-300-yard correction after film review.",
+    "tier": "contemporaneous fantasy-provider report",
+    "reviewed": "2026-10-07"
+  },
+  "bills-gamebook": {
+    "publisher": "NFL official gamebook PDF (2010 final record)",
+    "url": "https://static.www.nfl.com/image/upload/v1677630445/gamecenter/10012010-1024-0234-93cd-3a0ced0bcaef.pdf",
+    "excerpt": "Final lines list Fitzpatrick at 382 passing yards and Parrish at eight catches for 57 yards.",
+    "tier": "official primary record",
+    "reviewed": "2026-10-07"
+  },
+  "bills-oct24": {
+    "publisher": "Buffalo Bills, game-day recap (Oct. 24)",
+    "url": "https://www.buffalobills.com/news/bills-drop-heartbreaker-in-overtime-2955291",
+    "excerpt": "Reports Fitzpatrick at 29/43 for 373 yards.",
+    "tier": "official team report; pre-correction report",
+    "reviewed": "2026-10-07"
+  },
+  "bills-oct25": {
+    "publisher": "Buffalo Bills, next-day report (Oct. 25)",
+    "url": "https://www.buffalobills.com/news/fitz-flourishing-in-bills-offense-2960204",
+    "excerpt": "Reports Fitzpatrick at 29/43 for 374 yards.",
+    "tier": "official team report; pre-correction report",
+    "reviewed": "2026-10-07"
+  },
+  "bills-oct26": {
+    "publisher": "Buffalo Bills, receiver report (Oct. 26)",
+    "url": "https://www.buffalobills.com/news/bills-wideouts-emerging-2964915",
+    "excerpt": "Reports Roscoe Parrish at eight catches for 49 yards.",
+    "tier": "official team report; pre-correction report",
+    "reviewed": "2026-10-07"
+  },
+  "bills-oct29": {
+    "publisher": "Buffalo Bills, Week 8 game-day tipsheet (Oct. 29)",
+    "url": "https://www.buffalobills.com/news/gameday-tipsheet-week-8-2974315",
+    "excerpt": "Uses 382 as Fitzpatrick’s passing-yard total at Baltimore.",
+    "tier": "official team report; later total",
+    "reviewed": "2026-10-07"
+  },
+  "bills-correction-thread": {
+    "publisher": "Footballguys, Week 7 stat-corrections thread",
+    "url": "https://forums.footballguys.com/threads/week-7-stat-corrections.566261/",
+    "excerpt": "Reports Fitzpatrick 374 to 382 and Parrish 49 to 57, citing BuffaloBills.com.",
+    "tier": "contemporaneous secondary report; not an NFL notice",
+    "reviewed": "2026-10-07"
+  },
+  "bills-espn-final": {
+    "publisher": "ESPN final game matchup",
+    "url": "https://www.espn.com/nfl/matchup/_/gameId/301024033",
+    "excerpt": "Final/OT box score lists Fitzpatrick at 382 passing yards; Buffalo lost 34–37.",
+    "tier": "independent final-box-score cross-check",
+    "reviewed": "2026-10-07"
+  },
+  "nicks-gamebook": {
+    "publisher": "NFL official gamebook PDF (2011 final record)",
+    "url": "https://static.www.nfl.com/image/upload/v1677630557/gamecenter/10012011-0919-0023-8cee-29d60bd5ad04.pdf",
+    "excerpt": "Final lines list Manning 19/30 for 223 and Nicks 4/38; the 6:37 Q1 play is a 23-yard catch with PI declined.",
+    "tier": "official primary record",
+    "reviewed": "2026-10-07"
+  },
+  "nicks-giants": {
+    "publisher": "New York Giants postgame notes (game-night line)",
+    "url": "https://www.giants.com/news/postgame-notes-anecdotes-5860212",
+    "excerpt": "Reports Manning at 18 completions on 29 attempts for 200 yards.",
+    "tier": "official team report; pre-correction report",
+    "reviewed": "2026-10-07"
+  },
+  "nicks-herald": {
+    "publisher": "Boston Herald, contemporaneous report",
+    "url": "https://www.bostonherald.com/2011/09/20/hakeem-nicks-not-only-plays-he-amazes/",
+    "excerpt": "Describes the fourth-down play as initially incomplete with PI and gives Nicks three catches for 15 yards.",
+    "tier": "contemporaneous independent reporting",
+    "reviewed": "2026-10-07"
+  },
+  "nicks-fleaflicker": {
+    "publisher": "Fleaflicker, contemporaneous correction discussion",
+    "url": "https://www.fleaflicker.com/forums/help/topics/hakeem-nicks-scoring-mistake-19338",
+    "excerpt": "A Sept. 21 post says the NFL credited a 23-yard Nicks catch; the administrator says Week 2 scoring would not be retroactively changed.",
+    "tier": "contemporaneous fantasy-provider report",
+    "reviewed": "2026-10-07"
+  },
+  "brees-gamebook": {
+    "publisher": "NFL official gamebook PDF (2015 final record)",
+    "url": "https://static.www.nfl.com/image/upload/v1677630285/gamecenter/10012015-1101-0689-ea3a-3c00d2dacd59.pdf",
+    "excerpt": "Final lines list Brees 39/50 for 505 yards, seven TD and two INT; Snead 6/70/2 TD; McBride’s 63-yard interception return TD.",
+    "tier": "official primary record",
+    "reviewed": "2026-10-07"
+  },
+  "brees-saints": {
+    "publisher": "New Orleans Saints, game-night recap (initial line)",
+    "url": "https://www.neworleanssaints.com/news/new-orleans-saints-beat-new-york-giants-52-49-in-wild-game-16198607",
+    "excerpt": "Reports Brees at 511 yards and Snead at seven catches for 76 yards before the correction.",
+    "tier": "official team report; pre-correction report",
+    "reviewed": "2026-10-07"
+  },
+  "brees-espn-correction": {
+    "publisher": "ESPN, contemporaneous report quoting the Elias correction",
+    "url": "https://www.espn.com/blog/new-orleans-saints/post/_/id/19086/stat-correction-takes-small-bite-out-of-drew-brees-big-day",
+    "excerpt": "Elias changed Snead’s fourth-quarter catch/fumble to an interception; Brees lost a six-yard completion and finished 39/50 for 505.",
+    "tier": "contemporaneous reporting",
+    "reviewed": "2026-10-07"
+  },
+  "brees-espn-followup": {
+    "publisher": "ESPN, follow-up on Brees correction",
+    "url": "https://www.espn.com/blog/new-orleans-saints/post/_/id/19142/drew-brees-fine-with-stat-correction-but-not-sold-on-nfl-catch-rule",
+    "excerpt": "Reports Snead never had full control and the same 63-yard return touchdown remained.",
+    "tier": "contemporaneous reporting",
+    "reviewed": "2026-10-07"
+  },
+  "brees-nj-conflict": {
+    "publisher": "NJ.com, conflicting 504-yard report",
+    "url": "https://www.nj.com/giants/2015/11/new_orleans_saints_drew_brees_was_a_smidge_less_sp.html",
+    "excerpt": "A contemporaneous secondary report gives Brees 504 passing yards; final NFL gamebook gives 505.",
+    "tier": "contemporaneous secondary report; conflicts with final NFL book",
+    "reviewed": "2026-10-07"
+  },
+  "elliott-gamebook": {
+    "publisher": "NFL official gamebook PDF (2018 final record)",
+    "url": "https://static.www.nfl.com/image/upload/v1677629584/gamecenter/10012018-1216-057f-4029-67fe30f4ed02.pdf",
+    "excerpt": "Final table lists Elliott with one fumble, zero lost, and one own recovery; Q2 14:15 play-by-play records him recovering at IND 5.",
+    "tier": "official primary record",
+    "reviewed": "2026-10-07"
+  },
+  "elliott-nflfantasy": {
+    "publisher": "NFL Fantasy Week 15 correction route (legacy; now redirects)",
+    "url": "https://fantasy.nfl.com/research/statcorrections?position=2&statCategory=stats&statSeason=2018&statType=weekStats&statWeek=15",
+    "excerpt": "The indexed entry dated Dec. 19 reports Fumbles Lost 1→0 and Fumbles Recovery 0→1; the live route redirects.",
+    "tier": "official archive result as indexed; inaccessible live route",
+    "reviewed": "2026-10-07"
+  },
+  "elliott-actionnetwork": {
+    "publisher": "The Action Network, later reconstruction of the play text",
+    "url": "https://www.actionnetwork.com/nfl/ezekiel-elliott-stat-correction-fantasy-football-fumble",
+    "excerpt": "Quotes the initial Sheard-recovery box-score text and the revised text: Elliott fumbles and recovers at IND 5.",
+    "tier": "later secondary reporting",
+    "reviewed": "2026-10-07"
+  },
+  "elliott-wolfsports": {
+    "publisher": "Wolf Sports, contemporary fantasy coverage (Dec. 20)",
+    "url": "https://wolfsports.com/fantasy/ezekiel-elliott-stat-correction-turns-many-fantasy-football-playoff-matchups/",
+    "excerpt": "Reports an official correction after a failed fourth down; notes the play was a turnover on downs either way and disputes the recovery evidence.",
+    "tier": "contemporary secondary reporting",
     "reviewed": "2026-10-07"
   }
 }
