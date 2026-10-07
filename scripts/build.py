@@ -33,7 +33,17 @@ def build():
         flags = ''.join(f'<p class="flag">Review note: {esc(f)}</p>' for f in e['flags'])
         cards.append(f'''<article data-kind="{esc(e['kind'])}" id="{e['id']}"><div class="meta">{e['date']} <span>{esc(e['kind'])}</span></div><h3>{esc(e['game'])}</h3><p class="players">{esc(' · '.join(e['players']))}</p><div class="table-wrap"><table><caption>Original → corrected / retained record</caption><thead><tr><th>Subject / scope</th><th>Statistic</th><th>Before</th><th>After</th><th>Δ</th></tr></thead><tbody>{rows}</tbody></table></div><p>{esc(e['impact'])}</p><details><summary>Evidence, timing & review notes</summary><p><b>Correction / decision date:</b> {e['correction_date']} — {esc(e['timing_precision'])}.</p><p><b>Reason:</b> {esc(e['reason'])}</p><p>{esc(e['settlement'])}.</p>{flags}<ul class="sources">{links}</ul><p><small>Evidence reviewed {e['reviewed']}. Numerical evidence mappings and derivations are in the JSON download.</small></p></details></article>''')
     template = (ROOT/'site.html').read_text()
-    (ROOT/'index.html').write_text(template.replace('<!-- CASES -->','\n'.join(cards)))
+    rendered = template.replace('<!-- CASES -->','\n'.join(cards))
+    (ROOT/'index.html').write_text(rendered)
+    # Existing Actions workflow publishes site/; legacy Pages publishes root.
+    (ROOT/'site').mkdir(exist_ok=True)
+    (ROOT/'site/index.html').write_text(rendered)
+    for name in ('style.css', 'site.js'):
+        (ROOT/'site'/name).write_bytes((ROOT/name).read_bytes())
+    import shutil
+    for name in ('data', 'docs'):
+        shutil.copytree(ROOT/name, ROOT/'site'/name, dirs_exist_ok=True)
+    (ROOT/'site/README.md').write_bytes((ROOT/'README.md').read_bytes())
 
 
 if __name__ == '__main__':
