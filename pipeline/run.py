@@ -101,6 +101,28 @@ def cmd_diff(args: argparse.Namespace) -> int:
     return 10 if report["total_alerts"] else 0
 
 
+def cmd_health(args: argparse.Namespace) -> int:
+    """
+    Record the outcome of one scheduled detection ATTEMPT.
+
+    This exists because the comparison feed records completed comparisons only.
+    If the schedule breaks, no new entry appears and the site keeps showing the
+    last successful run as though it were current. Recording attempts separately
+    makes a dead monitor visible instead of silently reassuring.
+    """
+    h = feed.record_attempt(args.health, args.status, args.detail)
+    age = feed.health_age_hours(h)
+    print(json.dumps({
+        "status": h["status"],
+        "last_attempt": h.get("last_attempt"),
+        "last_success": h.get("last_success"),
+        "last_failure": h.get("last_failure"),
+        "consecutive_failures": h.get("consecutive_failures", 0),
+        "age_hours": age,
+    }, indent=2))
+    return 0
+
+
 def summarize_evidence_baselines(results: list[dict]) -> dict:
     """Summarize selected baseline diffs without treating failed fetches as zeroes."""
     failed = [r for r in results if "error" in r]
@@ -301,6 +323,14 @@ def main() -> int:
     c.set_defaults(fn=cmd_corrections)
 
     sc = sub.add_parser("selfcheck"); sc.set_defaults(fn=cmd_selfcheck)
+
+    h = sub.add_parser("health", help="record the outcome of one scheduled attempt")
+    h.add_argument("--status", required=True,
+                   choices=list(feed.VALID_STATUSES),
+                   help="ok | baseline | failed | unknown")
+    h.add_argument("--detail", default="", help="free-text context for the run log")
+    h.add_argument("--health", default=os.path.join(REPO_ROOT, "data", "alerts", "health.json"))
+    h.set_defaults(fn=cmd_health)
 
     args = p.parse_args()
     return args.fn(args)

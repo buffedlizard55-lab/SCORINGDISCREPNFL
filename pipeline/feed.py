@@ -127,3 +127,93 @@ def append_run(report: dict, old_path: str, new_path: str, feed_path: str | os.P
         json.dumps(feed, indent=1, ensure_ascii=False) + "\n", encoding="utf-8"
     )
     return feed
+
+
+# ---------------------------------------------------------------------------
+# Monitor health — the failure mode where "nothing to report" means "we never
+# looked".
+#
+# WHY THIS EXISTS
+# ---------------
+# The feed above records COMPLETED comparisons. If the scheduled workflow is
+# disabled, delayed, lacks write permission, cannot fetch the source, or fails
+# to publish, no entry appears and the page keeps showing the last successful
+# run as though it were current. A monitoring system whose failure mode is
+# "looks fine" is the worst kind, so attempt outcomes are recorded separately
+# and the site renders them.
+# ---------------------------------------------------------------------------
+
+HEALTH_META = {
+    "what_this_is": (
+        "Outcome of the most recent scheduled detection ATTEMPT, whether it "
+        "succeeded or failed. The comparison feed records completed comparisons "
+        "only; this file records attempts, so a broken schedule is visible "
+        "instead of silently showing a stale result as current."
+    ),
+    "how_to_read_status": {
+        "ok": "the last attempt collected, compared and published successfully",
+        "baseline": "the last attempt collected a first snapshot; nothing to compare yet",
+        "failed": "the last attempt did not complete; the displayed result may be stale",
+        "unknown": "no attempt has been recorded yet",
+    },
+    "see": ["LIMITATIONS.md", "RECOMMENDATIONS.md"],
+}
+
+VALID_STATUSES = ("ok", "baseline", "failed", "unknown")
+
+
+def load_health(health_path: str | os.PathLike) -> dict:
+    p = pathlib.Path(health_path)
+    if not p.exists():
+        return {"meta": HEALTH_META, "status": "unknown", "last_attempt": None,
+                "last_success": None, "last_failure": None, "consecutive_failures": 0}
+    return json.loads(p.read_text(encoding="utf-8"))
+
+
+def record_attempt(
+    health_path: str | os.PathLike,
+    status: str,
+    detail: str = "",
+    attempted_at: str | None = None,
+) -> dict:
+    """
+    Record the outcome of one scheduled attempt.
+
+    `status` must be one of VALID_STATUSES; anything else is a programming
+    error and is rejected rather than written, because a misspelled status
+    would silently read as "nothing wrong" on the page.
+    """
+    if status not in VALID_STATUSES:
+        raise ValueError(f"status must be one of {VALID_STATUSES}, got {status!r}")
+
+    h = load_health(health_path)
+    h["meta"] = HEALTH_META
+    h["status"] = status
+    h["last_attempt"] = attempted_at or _now()
+    h["detail"] = detail
+
+    if status == "ok":
+        h["last_success"] = h["last_attempt"]
+        h["consecutive_failures"] = 0
+    elif status == "failed":
+        h["last_failure"] = h["last_attempt"]
+        h["consecutive_failures"] = int(h.get("consecutive_failures", 0)) + 1
+
+    pathlib.Path(health_path).parent.mkdir(parents=True, exist_ok=True)
+    pathlib.Path(health_path).write_text(
+        json.dumps(h, indent=1, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
+    return h
+
+
+def health_age_hours(health: dict, now: _dt.datetime | None = None) -> float | None:
+    """Hours since the last recorded attempt, or None if there has never been one."""
+    stamp = health.get("last_attempt") or health.get("last_success")
+    if not stamp:
+        return None
+    try:
+        then = _dt.datetime.strptime(stamp, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=_dt.timezone.utc)
+    except ValueError:
+        return None
+    now = now or _dt.datetime.now(_dt.timezone.utc)
+    return round((now - then).total_seconds() / 3600.0, 2)

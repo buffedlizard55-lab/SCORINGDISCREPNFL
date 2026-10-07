@@ -1,5 +1,13 @@
 # Three-pass review — 2026-10-07
 
+> **PERIOD DOCUMENT — do not read as current.** This file records a three-pass review
+> performed on 2026-10-07 against the repository as it stood at that time. It describes
+> a 36-row and then 74-row database; the database has since been expanded to **141 rows
+> across 13 seasons and 16 season-weeks from 22 evidence artefacts**. Row counts,
+> severity splits, test counts and latency ranges quoted below are historical. For
+> current numbers see the root [`README.md`](../README.md), [`FINDINGS.md`](../FINDINGS.md)
+> and [`LIMITATIONS.md`](../LIMITATIONS.md).
+
 ## Pass 1 — repository, evidence, implementation
 Repository was a single 19-byte README, no application or tests. Pages already configured for main/root. Built source register, seven-case seed with original/corrected values and per-stat evidence, static responsive site, README charter, agent startup instructions, research/limitations report and a local SQLite snapshot detector. Sources reviewed through web search and page retrieval; article excerpts preserved, not full copyrighted archives.
 
