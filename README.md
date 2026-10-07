@@ -275,12 +275,7 @@ python3 pipeline/run.py selfcheck     # reconciles the parser against real HTML 
 
 ## Supplemental evidence seed and review (PR #3)
 
-A concurrent contribution adds seven narrative cases in `data/events.json` with
-per-stat source mappings in `data/sources.json`. These supplement, and do not
-replace or automatically merge into, the broader main database. The seed includes
-Dawson's apparent-final reversal, Polamalu's unchanged final result, the Manning
-non-change, and Mendenhall/Gray/Watt post-game changes. It highlights a 31-day
-Watt reporting gap and the conflicting identity of Gray's penalized defender.
+A supplemental research pass expands the narrative seed to **12 case studies** in `data/events.json`, with per-stat source mappings and excerpts in `data/sources.json`. They supplement, and do not replace or automatically merge into, the broader official-corrections database. The seed includes the original seven cases (Dawson's apparent-final reversal, Polamalu's unchanged final result, the Manning non-change, and Mendenhall/Gray/Watt post-game changes) plus five re-reviewed reports: Cutler (2008), Fitzpatrick/Parrish (2010), Manning/Nicks (2011), Brees/Snead (2015), and Elliott (2018). See the [supplemental case library](https://buffedlizard55-lab.github.io/SCORINGDISCREPNFL/research-seed/index.html), where each card links to its source trail. Source conflicts, inaccessible correction history, and imprecise timestamps remain explicit; no sportsbook settlement is claimed. The Elliott final NFL gamebook confirms one fumble, zero lost, and one own recovery—the fumble itself was not removed.
 
 - [Supplemental findings & next steps](docs/RESEARCH.md)
 - [Three-pass review](docs/REVIEW.md)

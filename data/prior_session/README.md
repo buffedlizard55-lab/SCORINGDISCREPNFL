@@ -1,4 +1,4 @@
-# Prior-session candidate cases — PRESERVED, NOT YET RE-VERIFIED
+# Prior-session candidate cases — preserved, not automatically verified
 
 These files came from an earlier, parallel effort on the same brief
 (branch `arena/838ce80a-scoringdiscrepnfl`, merged to `main` as PR #1). They are
@@ -88,3 +88,26 @@ in the whole project if they verify:
 > replay reversal is not a post-final revision, and a scoring change corrected
 > *before* the record was finalised would never appear as a diff either. The two
 > bodies of evidence are consistent; they are measuring different things.
+
+## Re-review notes — 2026-10-07
+
+Two entries were examined in more depth and are now described in the separate
+supplemental case seed at [`../events.json`](../events.json). Their original
+candidate rows in `discrepancies.json` and `DATABASE.md` remain preserved as
+provenance, but the following caveats supersede any broader wording there:
+
+- **`DEN-2008-W01-CUTLER`:** contemporaneous Denver Post and MyFantasyLeague
+  the Denver Post page and MyFantasyLeague report support 299→300 after film
+  review. The Denver Post page is dated 2008 but also shows a 2016 update, so
+  the footnote's original version time is not established. The accessible
+  official NFL gamebook still lists 299 and has no visible version date. Keep
+  the conflict; do not claim the gamebook confirms 300.
+- **`DAL-IND-2018-W15-ELLIOTT`:** the final official NFL gamebook lists Elliott
+  with one fumble, zero lost, and one own recovery. The fumble itself was not
+  removed. The indexed NFL Fantasy correction route now redirects, while the
+  initial Sheard attribution and rationale rely on secondary reporting. Do not
+  repeat “non-fumble” as the final NFL ruling.
+
+These case studies remain outside the 36-row archived-official-correction
+corpus. Their source-level certainty and settlement limits are recorded on the
+case cards; no sportsbook outcome is inferred.
