@@ -1059,7 +1059,7 @@ class TestShippedDatabase(unittest.TestCase):
                 f"{len(matches)} records — it must match exactly one",
             )
 
-    def test_health_records_attempts_and_survives_failures(self):
+    def test_attempt_ledger_records_attempts_and_survives_failures(self):
         """
         The feed records completed comparisons. If the schedule breaks, no new
         row appears and the page would keep showing the last success as current.
@@ -1074,9 +1074,9 @@ class TestShippedDatabase(unittest.TestCase):
         import feed
 
         with tempfile.TemporaryDirectory() as td:
-            hp = os.path.join(td, "health.json")
+            hp = os.path.join(td, "attempts.json")
 
-            fresh = feed.load_health(hp)
+            fresh = feed.load_attempts(hp)
             self.assertEqual(fresh["status"], "unknown")
             self.assertIsNone(fresh["last_attempt"])
 
@@ -1111,27 +1111,27 @@ class TestShippedDatabase(unittest.TestCase):
             on_disk = _json.loads(pathlib.Path(hp).read_text())
             self.assertEqual(on_disk["status"], "baseline")
 
-    def test_health_age_is_computed_and_none_when_never_attempted(self):
+    def test_attempt_age_is_computed_and_none_when_never_attempted(self):
         import datetime as _dt
 
         import feed
 
         now = _dt.datetime(2026, 10, 8, 3, 0, tzinfo=_dt.timezone.utc)
-        self.assertIsNone(feed.health_age_hours({"last_attempt": None}, now=now))
+        self.assertIsNone(feed.attempt_age_hours({"last_attempt": None}, now=now))
         self.assertAlmostEqual(
-            feed.health_age_hours({"last_attempt": "2026-10-08T00:00:00Z"}, now=now), 3.0
+            feed.attempt_age_hours({"last_attempt": "2026-10-08T00:00:00Z"}, now=now), 3.0
         )
-        self.assertIsNone(feed.health_age_hours({"last_attempt": "not-a-date"}, now=now))
+        self.assertIsNone(feed.attempt_age_hours({"last_attempt": "not-a-date"}, now=now))
 
-    def test_monitor_health_is_published_alongside_the_site(self):
-        """A health file that never reaches docs/ renders nothing on the page."""
-        src = os.path.join(DATA_DIR, "alerts", "health.json")
-        dst = os.path.join(ROOT, "docs", "data", "alerts", "health.json")
+    def test_attempt_ledger_is_published_alongside_the_site(self):
+        """An attempt ledger that never reaches docs/ renders nothing on the page."""
+        src = os.path.join(DATA_DIR, "alerts", "attempts.json")
+        dst = os.path.join(ROOT, "docs", "data", "alerts", "attempts.json")
         if not os.path.exists(src):
-            self.skipTest("no health recorded yet")
+            self.skipTest("no attempt recorded yet")
         self.assertTrue(os.path.exists(dst), "run ./pipeline/sync_site_data.sh")
         with open(src, "rb") as a, open(dst, "rb") as b:
-            self.assertEqual(a.read(), b.read(), "published health has drifted from data/")
+            self.assertEqual(a.read(), b.read(), "published attempt ledger has drifted from data/")
 
     def test_live_feed_is_published_alongside_the_site(self):
         """The site renders data/alerts/feed.json; it must be copied like the rest."""

@@ -13,8 +13,14 @@ Commands
   corrections         Pull archived official NFL stat-correction pages from the
                       Wayback Machine and parse them into structured rows.
   selfcheck           Validate the corrections parser against archived pages.
+  deliver             Send the last alert report via webhook, with receipts.
+  health              Assess whether the monitor itself is working.
+  atom                Regenerate the subscribable Atom feeds for the site.
+  churn               Measure how the mirrored source revises finished games.
 
-Exit codes: 0 = clean, 10 = alerts at/above --min-severity found, 1 = error.
+Exit codes: 0 = clean, 10 = alerts at/above --min-severity found,
+            3 = monitor unhealthy (health), 11 = notification dead-lettered
+            (deliver), 1 = error.
 """
 
 from __future__ import annotations
@@ -30,6 +36,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import detect  # noqa: E402
 import feed  # noqa: E402
 import fetch  # noqa: E402
+import notify  # noqa: E402
 from parse_corrections import parse_official_page  # noqa: E402
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -55,6 +62,11 @@ def cmd_snapshot(args: argparse.Namespace) -> int:
     data = fetch.nfldata_snapshot_head(ref=args.ref)
     raw_sha = detect.sha256_bytes(data)
 
+    # SOURCE WATERMARK: which upstream commit this snapshot came from, and when
+    # that commit landed. Without it a snapshot is bytes of unknown age, and
+    # pipeline/health.py has to report source freshness as "unknown".
+    head = fetch.nfldata_head_commit(ref=args.ref) or {}
+
     # The full file is recorded by hash only; the slim frozen-field form is what
     # gets committed, so the snapshot store stays small enough to version daily.
     path = fetch.write_snapshot(
@@ -63,9 +75,19 @@ def cmd_snapshot(args: argparse.Namespace) -> int:
         "games.slim.csv",
         detect.slim_frozen_csv(detect.load_csv_rows(data)),
         {"repo": fetch.NFLDATA_REPO, "ref": args.ref, "source_file_sha256": raw_sha,
-         "source_bytes": len(data), "note": "slim = final games only, frozen fields only"},
+         "source_bytes": len(data), "note": "slim = final games only, frozen fields only",
+         "upstream_commit_sha": head.get("sha"),
+         "upstream_commit_date": head.get("date"),
+         "upstream_commit_message": head.get("message"),
+         "upstream_commit_url": head.get("url"),
+         "codeload_url": f"https://codeload.github.com/{fetch.NFLDATA_REPO}/tar.gz/{head.get('sha')}"
+         if head.get("sha") else None},
     )
     print(f"full source: {len(data)} bytes, sha256 {raw_sha}")
+    if head.get("sha"):
+        print(f"upstream watermark: {head['sha'][:10]} committed {head.get('date')}")
+    else:
+        print("upstream watermark: UNKNOWN (commit listing unavailable; freshness cannot be asserted)")
     print(f"stored slim snapshot -> {path} ({os.path.getsize(path)} bytes)")
     return 0
 
@@ -101,7 +123,110 @@ def cmd_diff(args: argparse.Namespace) -> int:
     return 10 if report["total_alerts"] else 0
 
 
+def cmd_deliver(args: argparse.Namespace) -> int:
+    """Send the last alert report through the notification layer, with receipts.
+
+    Exit codes are deliberately distinct so CI can tell *why* a run failed:
+      0  delivered, or nothing to deliver / no webhook configured
+      11 the webhook exhausted its retries and is dead-lettered
+
+    A dead-letter is a failure of the notification system, not of the detector,
+    and it must not be allowed to look like a quiet week.
+    """
+    import os as _os
+
+    report_path = args.report or os.path.join(REPO_ROOT, "alerts", "latest.json")
+    if not _os.path.exists(report_path):
+        print(f"no alert report at {report_path}; nothing to deliver")
+        return 0
+    with open(report_path, encoding="utf-8") as f:
+        report = json.load(f)
+
+    url = _os.environ.get(args.webhook_env) or None
+    deliveries = args.deliveries or os.path.join(REPO_ROOT, "data", "alerts", "deliveries.json")
+    receipt = notify.deliver(report, url, deliveries, max_attempts=args.max_attempts, force=args.force)
+    print(json.dumps({k: v for k, v in receipt.items() if k != "url"}, indent=2))
+    print(f"delivery receipt appended -> {deliveries}")
+    if receipt["outcome"] == "failed":
+        print("::error::notification dead-lettered after "
+              f"{receipt['attempts']} attempt(s): {receipt['detail']}")
+        return 11
+    return 0
+
+
 def cmd_health(args: argparse.Namespace) -> int:
+    """Assess whether the monitor itself is working (see pipeline/health.py)."""
+    import health
+
+    report = health.assess(root=args.root, stale_after_hours=args.stale_after_hours)
+    out = args.out or os.path.join(args.root, "data", "alerts", "health.json")
+    os.makedirs(os.path.dirname(out), exist_ok=True)
+    with open(out, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=1, ensure_ascii=False)
+        f.write("\n")
+    print(health.render_markdown(report))
+    print(f"wrote {out}")
+    bad = {"none": (), "warn": ("warn", "fail"), "fail": ("fail",)}[args.fail_on]
+    return 3 if report["status"] in bad else 0
+
+
+def cmd_atom(args: argparse.Namespace) -> int:
+    """Regenerate the subscribable Atom feeds published alongside the site."""
+    import atom
+
+    written = []
+    feed_path = args.feed or os.path.join(REPO_ROOT, "data", "alerts", "feed.json")
+    db_path = args.database or os.path.join(REPO_ROOT, "data", "discrepancies.json")
+    site = args.site_url if args.site_url.endswith("/") else args.site_url + "/"
+
+    data = {"runs": []}
+    if os.path.exists(feed_path):
+        with open(feed_path, encoding="utf-8") as f:
+            data = json.load(f)
+    else:
+        print(f"note: no feed at {feed_path}; publishing an explicit 'no comparison recorded' feed")
+    p = os.path.join(args.outdir, "alerts", "feed.atom")
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    with open(p, "w", encoding="utf-8") as f:
+        f.write(atom.build_detection_feed(data, site))
+    written.append(p)
+
+    if os.path.exists(db_path):
+        with open(db_path, encoding="utf-8") as f:
+            db = json.load(f)
+        p = os.path.join(args.outdir, "corrections.atom")
+        with open(p, "w", encoding="utf-8") as f:
+            f.write(atom.build_corrections_feed(db, site))
+        written.append(p)
+
+    import xml.etree.ElementTree as ET
+    for path in written:
+        ET.parse(path)  # a malformed feed breaks every subscriber silently
+        print(f"wrote {path} ({os.path.getsize(path)} bytes, well-formed)")
+    return 0
+
+
+def cmd_churn(args: argparse.Namespace) -> int:
+    """Measure how the mirrored source revises already-final games (vintage study)."""
+    import vintage_study
+
+    commits = vintage_study.collect_commits(total=args.commits, until=args.until)
+    if len(commits) < 2:
+        print("::error::fewer than two upstream commits were enumerable; no comparison is possible.")
+        return 1
+    study = vintage_study.run_study(commits, stride=args.stride, cache=args.cache)
+    os.makedirs(os.path.dirname(args.out), exist_ok=True)
+    with open(args.out, "w", encoding="utf-8") as f:
+        json.dump(study, f, indent=1)
+        f.write("\n")
+    print(json.dumps({"sampling": study["sampling"], "totals": {
+        k: v for k, v in study["totals"].items()
+        if k not in ("revisions_of_already_published_values",
+                     "slim_changes_not_explained_by_frozen_or_row_count")},
+        "unexplained": study["totals"]["slim_changes_not_explained_by_frozen_or_row_count"],
+    }, indent=2))
+    print(f"wrote {args.out}")
+def cmd_attempt(args: argparse.Namespace) -> int:
     """
     Record the outcome of one scheduled detection ATTEMPT.
 
@@ -109,9 +234,15 @@ def cmd_health(args: argparse.Namespace) -> int:
     If the schedule breaks, no new entry appears and the site keeps showing the
     last successful run as though it were current. Recording attempts separately
     makes a dead monitor visible instead of silently reassuring.
+
+    It is called `attempt` and writes `data/alerts/attempts.json` because
+    `health` / `health.json` means the wider self-assessment produced by
+    pipeline/health.py — which reads this ledger as one of its checks, so a
+    failed attempt is escalated by the watchdog instead of living only in a
+    banner. Both features are kept; only the ambiguous name was removed.
     """
-    h = feed.record_attempt(args.health, args.status, args.detail)
-    age = feed.health_age_hours(h)
+    h = feed.record_attempt(args.attempts, args.status, args.detail)
+    age = feed.attempt_age_hours(h)
     print(json.dumps({
         "status": h["status"],
         "last_attempt": h.get("last_attempt"),
@@ -120,6 +251,9 @@ def cmd_health(args: argparse.Namespace) -> int:
         "consecutive_failures": h.get("consecutive_failures", 0),
         "age_hours": age,
     }, indent=2))
+    return 0
+
+
     return 0
 
 
@@ -324,13 +458,45 @@ def main() -> int:
 
     sc = sub.add_parser("selfcheck"); sc.set_defaults(fn=cmd_selfcheck)
 
-    h = sub.add_parser("health", help="record the outcome of one scheduled attempt")
-    h.add_argument("--status", required=True,
-                   choices=list(feed.VALID_STATUSES),
-                   help="ok | baseline | failed | unknown")
-    h.add_argument("--detail", default="", help="free-text context for the run log")
-    h.add_argument("--health", default=os.path.join(REPO_ROOT, "data", "alerts", "health.json"))
+    dl = sub.add_parser("deliver", help="send the last alert report, with receipts")
+    dl.add_argument("--report", default=None)
+    dl.add_argument("--deliveries", default=None)
+    dl.add_argument("--webhook-env", default="ALERT_WEBHOOK_URL")
+    dl.add_argument("--max-attempts", type=int, default=3)
+    dl.add_argument("--force", action="store_true",
+                    help="re-deliver even if this comparison was already delivered")
+    dl.set_defaults(fn=cmd_deliver)
+
+    h = sub.add_parser("health", help="is the monitor itself working?")
+    h.add_argument("--root", default=REPO_ROOT)
+    h.add_argument("--stale-after-hours", type=float, default=40.0)
+    h.add_argument("--out", default=None)
+    h.add_argument("--fail-on", choices=("none", "fail", "warn"), default="fail")
     h.set_defaults(fn=cmd_health)
+
+    at = sub.add_parser("atom", help="regenerate the subscribable Atom feeds")
+    at.add_argument("--feed", default=None)
+    at.add_argument("--database", default=None)
+    at.add_argument("--outdir", default=os.path.join(REPO_ROOT, "data"))
+    at.add_argument("--site-url", default="https://buffedlizard55-lab.github.io/SCORINGDISCREPNFL/")
+    at.set_defaults(fn=cmd_atom)
+
+    ch = sub.add_parser("churn", help="measure upstream revision behaviour of the mirror")
+    ch.add_argument("--commits", type=int, default=2200)
+    ch.add_argument("--stride", type=int, default=50)
+    ch.add_argument("--until", default=None)
+    ch.add_argument("--cache", default=None)
+    ch.add_argument("--out", default=os.path.join(REPO_ROOT, "data", "evidence", "upstream_churn_study.json"))
+    ch.set_defaults(fn=cmd_churn)
+
+    am = sub.add_parser("attempt", help="record the outcome of one scheduled attempt")
+    am.add_argument("--status", required=True,
+                    choices=list(feed.VALID_STATUSES),
+                    help="ok | baseline | failed | unknown")
+    am.add_argument("--detail", default="", help="free-text context for the run log")
+    am.add_argument("--attempts",
+                    default=os.path.join(REPO_ROOT, "data", "alerts", "attempts.json"))
+    am.set_defaults(fn=cmd_attempt)
 
     args = p.parse_args()
     return args.fn(args)

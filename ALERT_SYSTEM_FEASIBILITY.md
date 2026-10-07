@@ -1,10 +1,28 @@
 # Alert detection & notification feasibility
 
+**Reviewed:** 2026-10-07 (UTC) · **Notification layer rebuilt the same day — see §"What changed in the notification review"**
+
 **Question asked:** can we build an alert-detection notification system that detects
 NFL scoring discrepancies? What are the limitations, and is it even possible?
 
 **Reviewed:** 2026-10-07 (UTC). Every "verified" row below is the outcome of an actual
 request made during this review, not an assumption carried over from a previous session.
+
+**A narrow scoreboard-mirror detector, a public comparison feed, subscribable Atom feeds, receipted webhook delivery and an independent health watchdog are implemented. The full requested system is not yet complete.** The current monitor does not detect player-stat revisions end to end, cannot attribute mirror changes to the NFL/Elias, does not verify historical sportsbook/fantasy settlements, cannot prove a notification was read, and cannot see a schedule that GitHub itself disabled.
+
+**Is an alert-detection notification system possible here?** Split the question, because the halves have different answers:
+
+| Half | Possible? | Evidence |
+|---|---|---|
+| *Detect* a post-final scoreboard change in a mirror | **Yes — shipped and dry-run on 44 genuine vintage pairs** | §1.1b of the README: 321,009 already-final record comparisons, 0 frozen-field changes, 179 non-frozen changes |
+| *Detect* it reliably enough to alert on | **Only because the scope is narrow** | A naive any-field detector would have fired 179 times in 59 days for zero scoreboard changes |
+| *Notify* a person with no configuration | **Yes — shipped** | Atom feeds published on Pages; no secret, no account, no endpoint to own |
+| *Notify* a person by push | **Yes, opt-in** | Webhook transport with idempotency, bounded retries, receipts and dead letters; never enabled by default |
+| *Know the monitor is still alive* | **Yes — shipped** | Independent watchdog workflow; "unknown" is never reported as "ok" |
+| *Know a notification was read* | **No** | Slack/Discord webhooks return no read receipt; a 2xx proves acceptance only |
+| *Attribute a change to the NFL/Elias* | **No** | The official corrections channel was retired in 2026; a mirror diff cannot tell a correction from a provider repair |
+| *Detect player-stat corrections* | **Not yet** | Needs a validated vintage adapter and a backtest against known corrections (P0-3) |
+| *Say a correction flipped a settled market* | **No** | Requires offered lines, timing and operator rules this project does not hold |
 
 ---
 
@@ -31,6 +49,18 @@ These are measurements, not recollections. Re-run them with the commands in §9.
 
 | Route | Result | What it means |
 |---|---|---|
+| Final-game scoreboard diff | `pipeline/detect.py` compares five frozen fields (`away_score`, `home_score`, `result`, `total`, `overtime`) for games already final in the older snapshot. Tests cover unfinished games, volatile lines, missing records and alerts. | Input is the versioned `nflverse/nfldata` third-party mirror. Differences are not official NFL/Elias attribution and only persist if present at a poll. |
+| Scheduled collection | `.github/workflows/detect.yml` is configured for daily runs during Sep–Feb plus an additional Wednesday poll. It snapshots the mirror and diffs successive slim snapshots. | GitHub Actions scheduling is best-effort, not a freshness SLA. It does not monitor player stats. A clean run only speaks to the compared snapshot fields. |
+| Public comparison feed | `pipeline/feed.py` appends completed comparisons—including clean ones—to `data/alerts/feed.json`; `docs/index.html` renders the published copy. Entries retain input paths/hashes, comparison counts, rules and candidate alerts. | It is not a workflow-health log. Baseline-only, failed or aborted attempts may not create a row; check Actions for the latest attempt. The checked-in feed has two `clean` entries (2026-10-07 16:58:20 and 18:11:31 UTC), each comparing **7,340** final records, but the old/new SHA-256 values are identical in both. They are no-op comparisons, not evidence of a newly changed source payload. |
+| Optional webhook push | `pipeline/detect.py` formats Slack-compatible or Discord-compatible payloads; `pipeline/notify.py` orchestrates delivery and `run.py deliver` is the workflow entry point. Unit tests cover payload shape, content and review links. | No live webhook delivery was performed. It is opt-in. There is no email/SMS channel, no user accounts and no read receipt. |
+| Delivery receipts, idempotency, dead letters | Every attempt is appended to `data/alerts/deliveries.json` with an idempotency key derived from the compared snapshot hashes and alert ids (never the timestamp), attempt count, HTTP outcome and a dead-letter flag. Retries are bounded with backoff. Exhaustion exits 11 and fails the run so the baseline is not advanced. | At-least-once, not exactly-once: an endpoint can accept a message and lose the response, so a retry can duplicate. The webhook URL is never stored — only its host and a SHA-256. |
+| Subscribable Atom feeds | `pipeline/atom.py` publishes `data/alerts/feed.atom` (one entry per completed comparison, clean runs included) and `data/corrections.atom` (one entry per verified correction, each linking its archived source page). Both are linked from the page head and validated as well-formed with unique entry ids by the merge gate. | Pull-based: someone still has to poll. Correction-entry timestamps are the database build time, because the archived pages print a calendar date with no time and none is invented. |
+| Independent health watchdog | `pipeline/health.py` + `.github/workflows/health.yml` assess feed freshness, source movement, the snapshot store and its upstream commit watermark, dead letters, Atom consistency and published-copy drift. Each check reports ok/warn/fail/**unknown**, with a plain-language next action. | It cannot see a workflow GitHub disabled or delayed, a runner outage, or whether a delivered message was read. It reads this repository's artefacts, not the league's records. |
+| Player-stat prototype and source helpers | `scripts/monitor.py` is a local CSV/SQLite prototype. `pipeline/fetch.py` includes release-metadata and asset-download helpers for potential sources. | Neither is an automated production player-stat detector. There is no validated vintage adapter, stable identity normalization, persisted before/after player-stat dataset or correction backtest. |
+| Historical correction evidence | 141 correction rows are parsed from 22 stored archived page artefacts. The page-level evidence can be re-ingested (`ingest_rendered.py --check`), validated against an explicit contract (`pipeline/schema.py`), and re-read against a fresh rendering row by row (`pipeline/verify_artefact.py`). 137 rows join to a game; 4 lack a source-printed team code and remain flagged. | Sixteen sampled season-weeks across 13 seasons are a verified seed, not a comprehensive historical denominator. The archived notices generally give changed values, not the rationale; missing reasons remain unstated. One artefact was independently re-read this session (11/11 rows identical); the other 21 were not. |
+| Source-movement measurement | `pipeline/vintage_study.py` downloads genuine upstream vintages pinned to commit SHAs and diffs them with the shipped detector: 45 vintages, 44 intervals, 59 days, 321,009 already-final record comparisons, 0 frozen-field changes, 179 other changes across 91 games. | It measures a mirror, and sampling at a stride cannot see a change made and reverted inside one interval. Zero frozen-field changes is a bounded observation, not a law. |
+| Market sensitivity | The 2025–26 screen checks 349 mirror records with scores and closing-line values. 82 (23.5%) are within the configured one-point distance threshold; 10 have zero absolute-margin/spread-magnitude distance; 0 have zero total-line distance. The JSON summary records the exact input size and SHA-256. | This is numeric proximity only. It does not show that a book offered the line, that a correction happened, or that a bet pushed, won, lost or settled. The full source file is not retained. |
+
 | `api.github.com` — nfldata commit list, nflverse release metadata | **200 OK** | Vintage discovery and scheduling work |
 | `codeload.github.com` — full repo tarball (2.6 MB) | **200 OK in 0.65 s** | Historical `games.csv` vintages are retrievable |
 | `raw.githubusercontent.com` | **fails** (curl exit 35/000) | The tarball route is mandatory, not a preference |
@@ -44,6 +74,12 @@ These are measurements, not recollections. Re-run them with the commands in §9.
 ---
 
 ## 3. The structural blocker
+
+The detector distinguishes return code `10` (alerts found) from `0` (clean comparison) and treats other diff errors as failures. Delivery adds `11` (dead-lettered) and the watchdog adds `3` (unhealthy). The workflow does not advance the baseline after a failed comparison or a dead-lettered delivery, so the next run retries the same alert. This is not exactly-once delivery: a webhook can accept a message while its response is lost, so duplicates remain possible. No live webhook or end-to-end scheduled delivery has been verified in this review.
+
+**The out-of-band monitor that this document previously listed as missing now exists.** `health.yml` runs on its own schedule (daily 06:00 UTC) and after every detection run, so a detector that stops writing anything still gets judged: the watchdog reads the artefacts on disk and fails when the newest completed comparison is older than the staleness threshold (40 h for a daily in-season schedule), when a published copy has drifted from its canonical source, when the Atom feed is malformed or out of step with the JSON feed, when the snapshot store has nothing to diff against, or when a notification is dead-lettered. Its residual blind spots are GitHub-side (a disabled or queued workflow, a runner outage, a rejected push) and human-side (whether a delivered message was read).
+
+One conflation was found and fixed while building this: the feed's `identical_inputs` flag describes the *compared projection*, and an earlier revision of both the site and the documentation read it as "the source did not move". The snapshot manifests disprove that — the whole upstream file changed in all three recorded comparisons. Runs now carry `source_file_changed` alongside `identical_inputs`, the site renders both, and a test asserts every recorded run states source movement explicitly.
 
 A differential detector needs two genuine vintages: the "before" bytes and the "after"
 bytes. What exists:
@@ -67,6 +103,14 @@ system without first solving source retention is not a plan.
 
 ---
 
+1. **Secure a permitted, versioned source.** Prefer an official corrections feed or a vendor/source whose specific product documents NFL/Elias provenance, revisions, timestamps, retention, field coverage and redistribution rights. Do not assume a paid product is official or independent without evidence.
+2. **Build a player-stat adapter.** Preserve each genuine vintage’s raw bytes and SHA-256, validate schema, normalize stable game/player IDs, separate additions/removals/nulls from value changes, and produce reviewable source links.
+3. **Backtest before alerting.** Recover known archived corrections from genuine before/after vintages. Report tested, detected, missed, false-positive and unavailable cases separately.
+4. ~~**Make system health visible.**~~ — **DONE 2026-10-07.** `pipeline/health.py` publishes `data/alerts/health.json` with per-check statuses, a latest-success timestamp, an upstream commit watermark and a next action; `health.yml` sends failures through a separate operational channel and cannot be silenced by the detector.
+5. **Harden delivery.** — **PARTLY DONE 2026-10-07.** Idempotency keys, bounded retries with backoff, HTTP-outcome receipts and dead-letter visibility are shipped in `pipeline/notify.py`, and the merge gate asserts the URL is never stored. Still open: an end-to-end Slack/Discord delivery test against a real (disposable) endpoint. Delivery acknowledgements beyond the HTTP status do not exist — no platform offers a read receipt for an incoming webhook.
+6. **Only then evaluate settlements.** Obtain timestamped offered lines and applicable platform/book rules before asserting that a correction changed a wager or fantasy outcome.
+7. **Expand the historical database with a reviewable manifest.** Enumerate observed archive captures, retain exact served timestamps and source artefacts, back off on rate limits, and report coverage without treating unobserved weeks as zero corrections.
+
 ## 4. What is implemented today
 
 | Capability | State | Boundary |
@@ -82,6 +126,18 @@ system without first solving source retention is not a plan.
 
 The two feed entries inherited from earlier in the day were **no-op comparisons**: both
 pairs of input hashes were identical, so they prove nothing about source bytes.
+
+## What changed in the notification review (2026-10-07)
+
+1. **Delivery became a system, not a POST.** `pipeline/notify.py` adds idempotency, bounded retries, receipts and dead letters; `run.py deliver` is the workflow entry point and exits 11 on exhaustion so the baseline is not advanced.
+2. **A zero-configuration channel shipped.** Atom feeds for comparisons and for the verified database, published on Pages, validated for well-formedness and unique ids by the merge gate.
+3. **The watchdog gap closed.** `pipeline/health.py` + `health.yml` assess freshness, source movement, watermark, dead letters, Atom consistency and copy drift, and never fold "unknown" into "ok".
+4. **Source freshness became a recorded fact.** Every snapshot now carries the upstream commit SHA, date and codeload URL, and every feed run records whether the whole source file changed.
+5. **The scoping rule got an evidence base.** The source-movement study measured the noise floor a naive detector would have produced (179 alerts / 59 days) against the signal it would have caught (0 scoreboard changes).
+6. **Two data-integrity bugs were fixed.** `record_id` is now content-derived rather than positional (an insertion used to silently re-point external citations), and the fact layer is validated against an explicit contract (`pipeline/schema.py`) in the merge gate.
+7. **A verification path was made mechanical.** `pipeline/verify_artefact.py` re-reads a stored artefact against a fresh rendering and reports row-level drift; it was mutation-checked, and the results of this session's checks are in `data/evidence/verification_log.json`. The re-read inputs are committed under `data/evidence/verification/`, so the check repeats from the repository alone (exit 0, 11/11 rows identical; the mutated inputs exit 2).
+
+## Review links added by the notification pass
 
 This session ran a genuine 15-day comparison:
 
@@ -166,20 +222,32 @@ reverted inside one polling interval leaves no trace.
 The feed records completed comparisons, not attempts, so a broken schedule used to
 leave the page showing the last successful run as though it were current.
 
-**Mitigation shipped.** `data/alerts/health.json` records the outcome of the most
+**Mitigation shipped.** `data/alerts/attempts.json` records the outcome of the most
 recent *attempt* (`ok` / `baseline` / `failed` / `unknown`), written by an
-`if: always()` workflow step and rendered as a banner at the top of the feed. A
-failure does not erase `last_success`, and the banner states the age of the last
-attempt with an explicit warning past 48 hours.
+`if: always()` workflow step (`python3 pipeline/run.py attempt --status …`) and rendered
+as a banner at the top of the feed. A failure does not erase `last_success`, and the
+banner states the age of the last attempt with an explicit warning past 48 hours. The
+ledger is no longer banner-only: `pipeline/health.py` reads it as its `attempt_ledger`
+check, so a failed attempt turns the monitor assessment FAIL, `health.yml` fails loudly
+and posts its own webhook notice, and `validate.yml` rejects a ledger with an unusable
+status string.
 
-**Still open.** No out-of-band alert on silence, and the live scheduled path has not
-been observed completing end to end on GitHub Actions.
+> Naming note: this ledger was originally published as `data/alerts/health.json`. That
+> filename now belongs to the wider monitor self-assessment, which *consumes* the ledger.
+> Both features are shipped; only the ambiguous name changed.
 
-### L9 — LOW: `record_id` is positional
-`record_id` is assigned `SC-{i:04d}` in build order. Adding rows re-points every ID
-below the insertion point. The site's case cards now select by natural key, so the page
-is safe, but any external citation of an ID (issue, email, bookmark) breaks on the next
-insert. Fix is in `RECOMMENDATIONS.md` P1-4.
+**Still open.** A workflow that GitHub never starts writes nothing at all, so it is
+visible only as an ageing ledger and an ageing feed (WARN), never as an explicit failure.
+And the live scheduled path has not been observed completing end to end on GitHub
+Actions with a real webhook configured (P2-5).
+
+### L9 — RESOLVED (2026-10-07): `record_id` was positional
+`record_id` used to be assigned `SC-{i:04d}` in build order, so adding rows re-pointed
+every ID below the insertion point — exactly what happened when the database grew from
+74 to 141 rows. It is now derived from the row's own content (`pipeline/build_database.py`:
+`stable_record_id()` over the identity fields), which means an external citation of an ID
+survives insertions, reordering and rebuilds. A test asserts the IDs are stable across a
+rebuild and unique within one. `RECOMMENDATIONS.md` P1-4 is DONE.
 
 ### L10 — LOW: `spread_line` sign convention is ambiguous
 `market_sensitivity.py` uses only `|spread_line|`, which is correct under either
@@ -289,6 +357,15 @@ curl -s "https://api.github.com/repos/nflverse/nflverse-data/releases/tags/stats
 Code and evidence:
 
 - [Scheduled detection workflow](.github/workflows/detect.yml)
+- [Independent health watchdog](.github/workflows/health.yml)
+- [Weekly source-movement study](.github/workflows/source-churn.yml)
+- [Delivery orchestration and receipts](pipeline/notify.py)
+- [Monitor health assessment](pipeline/health.py)
+- [Atom feed generation](pipeline/atom.py)
+- [Source-movement study](pipeline/vintage_study.py)
+- [Artefact re-read verification](pipeline/verify_artefact.py)
+- [Fact-layer contract](pipeline/schema.py)
+- [Verification log with review URLs](data/evidence/verification_log.json)
 - [Diff engine and webhook formatter](pipeline/detect.py)
 - [Comparison feed](pipeline/feed.py)
 - [Source adapters](pipeline/fetch.py)

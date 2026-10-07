@@ -57,6 +57,55 @@ MONTHS = {m: i + 1 for i, m in enumerate(
     ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"])}
 
 
+# ---------------------------------------------------------------------------
+# CONTENT-STABLE RECORD IDS (fixes the P1-4 bug)
+# ---------------------------------------------------------------------------
+# `record_id` used to be `SC-{i:04d}` — a positional ordinal in build order.
+# Adding 38 rows once silently re-pointed every external citation at a different
+# correction: an issue, an email or a bookmark that said SC-0034 started meaning
+# something else, and nothing failed. The id is now derived from the row's own
+# identity, so inserting a row can never change an existing id.
+#
+# Identity fields are chosen to be exactly the things that make two correction
+# rows the same correction on the same page. `correction_date` is required
+# because the official page sometimes lists the same correction on two
+# consecutive days (LIMITATIONS §13).
+RECORD_IDENTITY_FIELDS = (
+    "source_id", "season", "week", "player", "position", "stat",
+    "original_value", "corrected_value", "correction_date", "published_points_delta",
+)
+
+
+def stable_record_id(correction: dict, tie_break: int = 0) -> str:
+    """`SC-` + 10 hex chars of the SHA-256 of the row's identity.
+
+    `tie_break` is only ever non-zero for rows whose identity is *identical* to
+    another row on the same page. It counts among those duplicates, so it cannot
+    be disturbed by unrelated insertions elsewhere in the corpus.
+    """
+    ident = "|".join(repr(correction.get(f)) for f in RECORD_IDENTITY_FIELDS)
+    if tie_break:
+        ident += f"|#dup{tie_break}"
+    digest = hashlib.sha256(ident.encode("utf-8")).hexdigest()[:10].upper()
+    return f"SC-{digest}"
+
+
+def assign_record_ids(corrections: list[dict]) -> list[str]:
+    """Assign ids, de-duplicating exact identity collisions deterministically."""
+    seen: dict[str, int] = {}
+    ids: list[str] = []
+    for c in corrections:
+        base = stable_record_id(c)
+        n = seen.get(base, 0)
+        seen[base] = n + 1
+        ids.append(base if n == 0 else stable_record_id(c, tie_break=n))
+    if len(set(ids)) != len(ids):
+        # Unreachable by construction, but a duplicate id would silently merge two
+        # different corrections in every downstream index. Fail loudly instead.
+        raise ValueError("record_id collision could not be resolved; identity fields are too weak")
+    return ids
+
+
 def norm_team(code: str) -> str:
     if not code:
         return ""
@@ -147,12 +196,14 @@ def find_game(idx: dict, season: int, week: int, team: str) -> dict | None:
 
 
 def build(raw_path: str, games_path: str) -> tuple[dict, list[dict]]:
-    raw = json.load(open(raw_path, encoding="utf-8"))
+    with open(raw_path, encoding="utf-8") as f:
+        raw = json.load(f)
     sources = {s["source_id"]: s for s in raw["sources"]}
     idx = load_games(games_path)
 
     out_rows: list[dict] = []
-    for i, c in enumerate(raw["corrections"], start=1):
+    record_ids = assign_record_ids(raw["corrections"])
+    for i, (c, record_id) in enumerate(zip(raw["corrections"], record_ids), start=1):
         src = sources[c["source_id"]]
         # `team` is exactly what the official page printed. On a defensive-unit row
         # the page prints a franchise nickname and NO code, so any code on such a
@@ -229,7 +280,11 @@ def build(raw_path: str, games_path: str) -> tuple[dict, list[dict]]:
         markets = market_outcomes(c["stat"], c["original_value"], c["corrected_value"])
 
         row = {
-            "record_id": f"SC-{i:04d}",
+            # Content-derived and stable under insertion. `record_ordinal` keeps a
+            # human-friendly build-order number without letting anything depend on
+            # position for identity.
+            "record_id": record_id,
+            "record_ordinal": i,
             "season": c["season"],
             "week": c["week"],
             **game_info,

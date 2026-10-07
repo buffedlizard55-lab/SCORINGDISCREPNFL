@@ -11,9 +11,24 @@ name: Detect scoring discrepancies
 #
 # NOTIFICATION IS OFF BY DEFAULT.
 #   Set the repository secret ALERT_WEBHOOK_URL to receive alerts (Slack or
-#   Discord compatible incoming webhook). Without it, alerts are written to the
-#   job summary and uploaded as an artefact. This is deliberate: a fork of this
-#   repo must never be able to spam a third party.
+#   Discord compatible incoming webhook). Without it, alerts are still written to
+#   the job summary, uploaded as an artefact, appended to the comparison feed and
+#   published as a subscribable Atom feed at data/alerts/feed.atom — a
+#   zero-configuration pull channel that needs no secret at all. Push being off
+#   by default is deliberate: a fork of this repo must never be able to spam a
+#   third party.
+#
+# EVERY DELIVERY ATTEMPT IS RECORDED.
+#   `run.py deliver` writes data/alerts/deliveries.json: idempotency key, retry
+#   count, HTTP outcome, dead-letter flag. A webhook that exhausts its retries
+#   exits 11 and fails this job, so the baseline is not advanced and the next run
+#   retries the same alert. The URL itself is never stored — only its host and a
+#   SHA-256, so the channel is auditable without publishing a secret.
+#
+# THIS WORKFLOW CANNOT REPORT ITS OWN DEATH.
+#   .github/workflows/health.yml is the independent watchdog. It judges the
+#   artefacts this job leaves behind and fails when they are stale, drifted,
+#   malformed or contradictory.
 
 on:
   schedule:
@@ -105,13 +120,13 @@ jobs:
             echo "No alert report exists even though comparison did not fail; investigate the run." >> "$GITHUB_STEP_SUMMARY"
           fi
 
-      # HEALTH: record the ATTEMPT, not just completed comparisons.
+      # ATTEMPT LEDGER: record the ATTEMPT, not just completed comparisons.
       #   The feed only records completed diffs. If collection, comparison or
       #   publication fails, no feed row appears and the site would keep showing
       #   the last successful run as though it were current. Writing an attempt
       #   outcome on every run — including failures — makes a dead monitor
       #   visible. This step must stay `if: always()`.
-      - name: Record monitoring health
+      - name: Record the monitoring attempt
         if: always()
         run: |
           STATUS="ok"
@@ -126,45 +141,48 @@ jobs:
             STATUS="baseline"
             DETAIL="first snapshot collected; no previous snapshot to compare"
           fi
-          echo "health=$STATUS ($DETAIL)"
-          python3 pipeline/run.py health --status "$STATUS" --detail "$DETAIL"
+          echo "attempt=$STATUS ($DETAIL)"
+          python3 pipeline/run.py attempt --status "$STATUS" --detail "$DETAIL"
           {
-            echo "### Monitoring health: $STATUS"
+            echo "### Monitoring attempt: $STATUS"
             echo ""
             echo "$DETAIL"
             echo ""
             echo '```json'
-            cat data/alerts/health.json
+            cat data/alerts/attempts.json
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Notify configured webhook
-        if: steps.diff.outputs.alerts == '10'
+      - name: Notify configured webhook (with receipts, idempotency and retries)
+        # `run.py deliver` records every attempt in data/alerts/deliveries.json:
+        # an idempotency key derived from the compared snapshot hashes and alert
+        # ids (so a re-run does not notify twice for one change), bounded
+        # retries with backoff, and the HTTP outcome. A webhook that exhausts its
+        # retries becomes a dead letter and exits 11, which fails this job so the
+        # baseline is NOT advanced and the next run retries the same alert.
+        # The URL itself is never written to the log.
+        # Never deliver on a baseline run: alerts/latest.json is a committed
+        # artefact, so without this guard a first run would re-send a previous
+        # run's report. (Idempotency would usually catch it, but a newly
+        # configured webhook would not have a prior receipt to match.)
+        if: always() && steps.diff.outcome == 'success' && steps.diff.outputs.baseline != 'true'
         env:
           WEBHOOK: ${{ secrets.ALERT_WEBHOOK_URL }}
         run: |
-          if [ -z "$WEBHOOK" ]; then
-            echo "ALERT_WEBHOOK_URL is not configured; report remains in the job summary and artefact."
-            exit 0
+          if [ -n "$WEBHOOK" ]; then
+            export ALERT_WEBHOOK_URL="$WEBHOOK"
           fi
-          python3 - <<'PY'
-          import json, os, sys
-          sys.path.insert(0, "pipeline")
-          import detect
-          with open("alerts/latest.json", encoding="utf-8") as f:
-              report = json.load(f)
-          server = os.environ.get("GITHUB_SERVER_URL", "https://github.com").rstrip("/")
-          repo = os.environ.get("GITHUB_REPOSITORY", "")
-          run_id = os.environ.get("GITHUB_RUN_ID", "")
-          if repo and run_id:
-              report["review_url"] = f"{server}/{repo}/actions/runs/{run_id}"
-              with open("alerts/latest.json", "w", encoding="utf-8") as f:
-                  json.dump(report, f, indent=2)
-          ok, msg = detect.notify_webhook(report, os.environ["WEBHOOK"])
-          print("webhook:", ok, msg)
-          if not ok:
-              raise SystemExit(1)
-          PY
+          set +e
+          python3 pipeline/run.py deliver \
+            --report alerts/latest.json \
+            --deliveries data/alerts/deliveries.json
+          CODE=$?
+          set -e
+          if [ "$CODE" -eq 11 ]; then
+            echo "::error::Notification dead-lettered. Detection may have succeeded while nobody was told."
+            exit 11
+          fi
+          exit "$CODE"
 
       - name: Upload evidence artefact
         if: always()
@@ -174,15 +192,42 @@ jobs:
           path: |
             snapshots/nfldata_games/**/*.manifest.json
             alerts/
+            data/alerts/
           retention-days: 90
           if-no-files-found: ignore
 
       # A successful comparison updates the feed. Re-copy it into the published
       # docs layout even on failures so the site stays internally synchronized;
       # the last successful feed timestamp still reveals staleness.
+      # Regenerate the subscribable Atom feeds from the feed that was just
+      # written, then re-sync. Order matters: an Atom file generated before the
+      # new comparison is appended would publish a stale "latest" entry, and the
+      # health watchdog would (correctly) fail the run for it.
+      - name: Regenerate subscribable Atom feeds
+        if: always()
+        run: python3 pipeline/run.py atom
+
       - name: Sync published data copies
         if: always()
         run: ./pipeline/sync_site_data.sh
+
+      - name: Assess and publish monitor health
+        # Runs after the sync so it judges the state the site will actually
+        # serve. Deliberately NON-FATAL here: failing this job would stop the
+        # persist step and discard a good snapshot, which makes the next run
+        # repeat the same comparison. The dedicated watchdog (health.yml) is the
+        # job that fails loudly; this one publishes the evidence it reads.
+        if: always()
+        run: |
+          set +e
+          python3 pipeline/run.py health --fail-on none
+          CODE=$?
+          set -e
+          ./pipeline/sync_site_data.sh > /dev/null
+          if [ "$CODE" -ne 0 ]; then
+            echo "::warning::monitor health reported a problem; see data/alerts/health.json and the health workflow"
+          fi
+          exit 0
 
       # The snapshot store is the system's memory: without it there is nothing
       # to diff against on the next run.
@@ -195,7 +240,7 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -f snapshots/ alerts/ data/alerts/ docs/data/
+          git add -f snapshots/ alerts/ data/alerts/ data/corrections.atom docs/data/
           if git diff --cached --quiet; then
             echo "nothing to commit"
           else

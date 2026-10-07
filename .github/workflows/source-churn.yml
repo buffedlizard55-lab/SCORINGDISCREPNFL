@@ -1,0 +1,112 @@
+name: Source movement study
+
+# WHAT THIS MEASURES
+#   Whether the third-party mirror this project polls actually revises games that
+#   are ALREADY FINAL, and if so which columns. That is the empirical basis for
+#   two claims the project makes:
+#     * a diff-based detector can see post-final edits at all (it can: the mirror
+#       backfills weather/officials metadata and renumbers provider id columns),
+#     * and the frozen-field scoping rule is what keeps those edits from becoming
+#       false alerts (measured noise floor: 179 non-scoreboard edits on finished
+#       games over 59 days, against 0 scoreboard edits).
+#
+# WHY IT IS NOT IN detect.yml
+#   It downloads dozens of full upstream tarballs (~2.6 MB each) pinned to exact
+#   commit SHAs. That is evidence collection, not monitoring, and it must not slow
+#   down or jeopardise the daily detection path. It runs weekly.
+#
+# REPRODUCIBILITY
+#   Every vintage in the artefact records its commit SHA, byte count, SHA-256 and
+#   a codeload URL. A tarball at a commit SHA is immutable, so anyone can
+#   re-download the identical bytes and re-verify every number without trusting
+#   this workflow.
+
+on:
+  schedule:
+    # Sundays 09:00 UTC: after a full week of upstream commits exists to sample.
+    - cron: '0 9 * * 0'
+  workflow_dispatch:
+    inputs:
+      commits:
+        description: 'Upstream commits to enumerate'
+        required: false
+        default: '2200'
+      stride:
+        description: 'Download every Nth commit'
+        required: false
+        default: '50'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: churn
+  cancel-in-progress: false
+
+jobs:
+  churn:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Unit tests first
+        run: python3 -m unittest discover -s tests
+
+      - name: Sample genuine upstream vintages and diff them with the shipped detector
+        run: |
+          python3 pipeline/run.py churn \
+            --commits "${{ github.event.inputs.commits || 2200 }}" \
+            --stride "${{ github.event.inputs.stride || 50 }}" \
+            --out data/evidence/upstream_churn_study.json
+
+      - name: Report the measurement
+        run: |
+          python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json, pathlib
+          d = json.loads(pathlib.Path("data/evidence/upstream_churn_study.json").read_text())
+          t, sp = d["totals"], d["sampling"]
+          print("## Source movement study")
+          print()
+          print(f"* Window: **{sp['window_start']} → {sp['window_end']}** ({sp['window_hours']} h)")
+          print(f"* Vintages downloaded: **{sp['vintages_downloaded']}** "
+                f"({sp['vintages_failed']} failed), intervals compared: **{sp['intervals_compared']}**")
+          print(f"* Intervals where the mirrored file's bytes changed: "
+                f"**{t['intervals_where_full_file_bytes_changed']}**")
+          print(f"* Frozen scoreboard changes on already-final games: "
+                f"**{t['frozen_field_changes_on_final_games']}**")
+          print(f"* Other changes on already-final games: "
+                f"**{t['non_frozen_field_changes_on_final_games']}** "
+                f"({t['change_kinds_on_final_games']}) across "
+                f"{t['distinct_final_games_touched']} games")
+          print(f"* Columns observed: {t['non_frozen_fields_observed']}")
+          unexplained = t["slim_changes_not_explained_by_frozen_or_row_count"]
+          print(f"* Slim-projection changes not explained by a frozen change or a row-count "
+                f"change: **{len(unexplained)}**" + (" — INVESTIGATE" if unexplained else ""))
+          print()
+          print("> " + d["interpretation"])
+          print()
+          print("This measures a third-party mirror, not the NFL's own record. Sampling at a "
+                "stride is a blind spot by construction: a value changed and changed back inside "
+                "one interval cannot be observed.")
+          PY
+
+      - name: Sync and publish
+        run: |
+          python3 pipeline/run.py atom
+          ./pipeline/sync_site_data.sh
+
+      - name: Commit the refreshed evidence
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -f data/evidence/upstream_churn_study.json docs/data/ data/alerts/ data/corrections.atom
+          if git diff --cached --quiet; then
+            echo "nothing to commit"
+          else
+            git commit -m "chore: refresh source-movement study $(date -u +%Y-%m-%d) [skip ci]"
+            git push
+          fi

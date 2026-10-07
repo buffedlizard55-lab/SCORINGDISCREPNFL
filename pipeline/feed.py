@@ -61,6 +61,39 @@ def _now() -> str:
     return _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+def source_meta(snapshot_path: str | os.PathLike) -> dict:
+    """Read the snapshot manifest that sits next to a slim snapshot file.
+
+    WHY THIS MATTERS (a real error this corrected)
+    ----------------------------------------------
+    The differ compares the SLIM frozen-field projection, and two snapshots can
+    have byte-identical slim files while the upstream source file changed — the
+    churn study measured exactly that: 44 of 44 sampled upstream intervals
+    changed the source bytes while zero changed a frozen scoreboard field.
+    An early revision of this project's documentation read `identical_inputs`
+    as "the source did not move", which the manifests disprove. Recording the
+    source-file hash alongside the compared hash makes that mistake impossible
+    to repeat: the feed now says what was compared AND what it came from.
+
+    Returns {} when no manifest exists, so a missing manifest degrades to
+    "unknown" rather than to a fabricated value.
+    """
+    manifest = pathlib.Path(str(snapshot_path) + ".manifest.json")
+    if not manifest.exists():
+        return {}
+    try:
+        data = json.loads(manifest.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+    return {
+        "source_file_sha256": data.get("source_file_sha256"),
+        "source_bytes": data.get("source_bytes"),
+        "upstream_commit_sha": data.get("upstream_commit_sha"),
+        "upstream_commit_date": data.get("upstream_commit_date"),
+        "manifest": str(manifest),
+    }
+
+
 def run_entry(report: dict, old_path: str, new_path: str) -> dict:
     """Flatten one detection report into a compact, self-describing feed entry."""
     inputs = report.get("inputs", {})
@@ -77,6 +110,22 @@ def run_entry(report: dict, old_path: str, new_path: str) -> dict:
         "old_sha256": old_meta.get("sha256"),
         "new_sha256": new_meta.get("sha256"),
         "identical_inputs": old_meta.get("sha256") == new_meta.get("sha256"),
+        # What the differ saw vs where it came from. These are different facts
+        # and must never be conflated again.
+        "old_source": source_meta(old_path),
+        "new_source": source_meta(new_path),
+        "source_file_changed": (
+            None
+            if not (source_meta(old_path).get("source_file_sha256")
+                    and source_meta(new_path).get("source_file_sha256"))
+            else source_meta(old_path)["source_file_sha256"]
+            != source_meta(new_path)["source_file_sha256"]
+        ),
+        "identical_inputs_note": (
+            "The COMPARED projection (final games, frozen scoreboard fields only) was "
+            "byte-identical. This says nothing by itself about whether the upstream "
+            "source file changed; see source_file_changed."
+        ),
         "min_severity": report.get("min_severity"),
         "rules_applied": report.get("rules_applied", []),
         "alerts": report.get("alerts", []),
@@ -85,6 +134,39 @@ def run_entry(report: dict, old_path: str, new_path: str) -> dict:
         ),
         "actually_changed_outcome": None,
     }
+
+
+def backfill_source_hashes(feed: dict) -> int:
+    """Fill in source-file hashes for entries recorded before this field existed.
+
+    Values come from the manifest written next to each snapshot at capture time —
+    they are read, never invented. Every backfilled entry is marked so a reviewer
+    can tell a contemporaneous record from a later annotation. Returns the number
+    of entries touched.
+    """
+    touched = 0
+    for r in feed.get("runs", []):
+        changed = False
+        for side, key in (("old_snapshot", "old_source"), ("new_snapshot", "new_source")):
+            path = r.get(side)
+            if not path or r.get(key):
+                continue
+            meta = source_meta(path)
+            if meta:
+                r[key] = {**meta, "backfilled_from_manifest": True}
+                changed = True
+        if changed:
+            o, n = r.get("old_source") or {}, r.get("new_source") or {}
+            if o.get("source_file_sha256") and n.get("source_file_sha256"):
+                r["source_file_changed"] = o["source_file_sha256"] != n["source_file_sha256"]
+                r["identical_inputs_note"] = (
+                    "The COMPARED projection (final games, frozen scoreboard fields only) was "
+                    "byte-identical, while the upstream source file "
+                    + ("did" if r["source_file_changed"] else "did not")
+                    + " change between the two snapshots."
+                )
+            touched += 1
+    return touched
 
 
 def load(feed_path: str | os.PathLike) -> dict:
@@ -121,6 +203,9 @@ def append_run(report: dict, old_path: str, new_path: str, feed_path: str | os.P
         "last_run": feed["last_checked_at"],
     }
     feed["latest"] = feed["runs"][0] if feed["runs"] else None
+    # Older entries may predate the source-hash fields; fill them from the
+    # manifests that already exist rather than leaving an ambiguous record.
+    backfill_source_hashes(feed)
 
     pathlib.Path(feed_path).parent.mkdir(parents=True, exist_ok=True)
     pathlib.Path(feed_path).write_text(
@@ -130,8 +215,13 @@ def append_run(report: dict, old_path: str, new_path: str, feed_path: str | os.P
 
 
 # ---------------------------------------------------------------------------
-# Monitor health — the failure mode where "nothing to report" means "we never
+# Attempt ledger — the failure mode where "nothing to report" means "we never
 # looked".
+#
+# NAME NOTE: this used to be called "health" and wrote data/alerts/health.json.
+# pipeline/health.py now owns that name for the wider self-assessment (seven
+# checks, one of which reads THIS ledger), so the attempt record lives in
+# data/alerts/attempts.json. Nothing was dropped in the rename.
 #
 # WHY THIS EXISTS
 # ---------------
@@ -143,7 +233,7 @@ def append_run(report: dict, old_path: str, new_path: str, feed_path: str | os.P
 # and the site renders them.
 # ---------------------------------------------------------------------------
 
-HEALTH_META = {
+ATTEMPT_META = {
     "what_this_is": (
         "Outcome of the most recent scheduled detection ATTEMPT, whether it "
         "succeeded or failed. The comparison feed records completed comparisons "
@@ -162,16 +252,16 @@ HEALTH_META = {
 VALID_STATUSES = ("ok", "baseline", "failed", "unknown")
 
 
-def load_health(health_path: str | os.PathLike) -> dict:
-    p = pathlib.Path(health_path)
+def load_attempts(attempts_path: str | os.PathLike) -> dict:
+    p = pathlib.Path(attempts_path)
     if not p.exists():
-        return {"meta": HEALTH_META, "status": "unknown", "last_attempt": None,
+        return {"meta": ATTEMPT_META, "status": "unknown", "last_attempt": None,
                 "last_success": None, "last_failure": None, "consecutive_failures": 0}
     return json.loads(p.read_text(encoding="utf-8"))
 
 
 def record_attempt(
-    health_path: str | os.PathLike,
+    attempts_path: str | os.PathLike,
     status: str,
     detail: str = "",
     attempted_at: str | None = None,
@@ -186,8 +276,8 @@ def record_attempt(
     if status not in VALID_STATUSES:
         raise ValueError(f"status must be one of {VALID_STATUSES}, got {status!r}")
 
-    h = load_health(health_path)
-    h["meta"] = HEALTH_META
+    h = load_attempts(attempts_path)
+    h["meta"] = ATTEMPT_META
     h["status"] = status
     h["last_attempt"] = attempted_at or _now()
     h["detail"] = detail
@@ -199,16 +289,16 @@ def record_attempt(
         h["last_failure"] = h["last_attempt"]
         h["consecutive_failures"] = int(h.get("consecutive_failures", 0)) + 1
 
-    pathlib.Path(health_path).parent.mkdir(parents=True, exist_ok=True)
-    pathlib.Path(health_path).write_text(
+    pathlib.Path(attempts_path).parent.mkdir(parents=True, exist_ok=True)
+    pathlib.Path(attempts_path).write_text(
         json.dumps(h, indent=1, ensure_ascii=False) + "\n", encoding="utf-8"
     )
     return h
 
 
-def health_age_hours(health: dict, now: _dt.datetime | None = None) -> float | None:
+def attempt_age_hours(attempts: dict, now: _dt.datetime | None = None) -> float | None:
     """Hours since the last recorded attempt, or None if there has never been one."""
-    stamp = health.get("last_attempt") or health.get("last_success")
+    stamp = attempts.get("last_attempt") or attempts.get("last_success")
     if not stamp:
         return None
     try:

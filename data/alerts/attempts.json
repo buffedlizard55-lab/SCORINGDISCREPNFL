@@ -1,0 +1,21 @@
+{
+ "meta": {
+  "what_this_is": "Outcome of the most recent scheduled detection ATTEMPT, whether it succeeded or failed. The comparison feed records completed comparisons only; this file records attempts, so a broken schedule is visible instead of silently showing a stale result as current.",
+  "how_to_read_status": {
+   "ok": "the last attempt collected, compared and published successfully",
+   "baseline": "the last attempt collected a first snapshot; nothing to compare yet",
+   "failed": "the last attempt did not complete; the displayed result may be stale",
+   "unknown": "no attempt has been recorded yet"
+  },
+  "see": [
+   "LIMITATIONS.md",
+   "RECOMMENDATIONS.md"
+  ]
+ },
+ "status": "ok",
+ "last_attempt": "2026-10-07T21:41:37Z",
+ "last_success": "2026-10-07T21:41:37Z",
+ "last_failure": null,
+ "consecutive_failures": 0,
+ "detail": "15-day vintage comparison 2026-09-22 -> 2026-10-07 completed; 7,308 already-final games compared, 0 frozen-field differences"
+}

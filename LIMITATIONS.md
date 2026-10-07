@@ -280,6 +280,16 @@ not continuously. A change-and-revert between snapshots is therefore invisible;
 the cadence is best-effort and is not a feed or Actions SLA. No verified example
 of this exact failure mode is included in the evidence database.
 
+**Now quantified rather than assumed.** The source-movement study
+(`data/evidence/upstream_churn_study.json`) sampled 45 genuine upstream vintages
+across 59 days. The mirrored file's bytes changed in **44 of 44** sampled
+intervals, so the blind spot is real and frequently exercised: between any two
+polls the source moves many times. What it did *not* do in that window is change
+a frozen scoreboard field on an already-final game (0 of 321,009 comparisons),
+while changing 179 other fields on 91 finished games. Reducing the polling
+interval shrinks the blind spot; it cannot close it. Upstream Git history is the
+only way to look inside an interval, and that is what the study does.
+
 ---
 
 ## 10. LOW — exact publication latency and any general deadline remain unknown
@@ -341,6 +351,97 @@ is why the site's case cards are keyed on `season|week|player|stat|correction_da
 
 ---
 
+## 14. MEDIUM — a notification can be delivered and never read
+
+`pipeline/notify.py` records an HTTP outcome per attempt. A 2xx from a Slack or
+Discord incoming webhook means the endpoint **accepted a payload**. Neither
+platform returns a read receipt, a delivery guarantee to a device, or any signal
+that a human saw the message. There is no email or SMS channel, no user account
+model and no subscription database in this repository.
+
+**Consequence.** "The alert was sent" is the strongest claim the system can make.
+Anything stronger would be invented.
+
+**Workaround shipped.** The pull-based Atom feeds (`data/alerts/feed.atom`,
+`data/corrections.atom`) need no secret and no endpoint, so a reader can verify
+independently what was published and when. Delivery receipts, idempotency keys
+and dead letters make the push path auditable after the fact, and a dead letter
+fails the run instead of passing silently.
+
+---
+
+## 15. MEDIUM — the watchdog cannot see GitHub-side or human-side failure
+
+`health.yml` exists because a detector cannot report its own death, and it reads
+artefacts that the detector writes. It therefore cannot distinguish:
+
+* a workflow **disabled, queued, throttled or cancelled by GitHub** from one that
+  ran and found nothing — the artefacts simply stop advancing, which the watchdog
+  reports as stale, but the cause is invisible to it;
+* a **runner outage** or a rejected `git push` from a source that went quiet;
+* a delivered notification that nobody read (see §14).
+
+**Partially narrowed since.** `data/alerts/attempts.json` is written by an
+`if: always()` step in `detect.yml`, so a run that *starts and fails* is now recorded
+and escalated: `pipeline/health.py` reads the ledger as its `attempt_ledger` check, a
+`failed` status makes the whole assessment FAIL, and `health.yml` then fails loudly and
+posts its own webhook notice. What remains invisible is a run that **never starts** —
+that writes nothing at all, and shows up only as an ageing ledger and an ageing feed
+(WARN, never OK). P3-5 (an out-of-band dead-man's switch) is the only way to close it.
+
+**Consequence.** Health statuses are statements about this repository's
+artefacts, not about GitHub's scheduler or about people. The Actions history
+remains the authority on whether an attempt happened.
+
+**Workaround shipped.** Every check reports `unknown` rather than `ok` when the
+evidence needed to decide is absent, and the report carries a plain-language next
+action pointing at the Actions history. Staleness is a hard failure (exit 3).
+
+---
+
+## 16. MEDIUM — archive verification uses one channel on both sides
+
+`web.archive.org` is not reachable from this project's sandbox over plain HTTP
+(TLS handshake fails; `curl` returns 000). Archived pages are obtained through a
+document-render channel, so `pipeline/verify_artefact.py` compares a stored
+artefact against a fresh rendering **obtained the same way**.
+
+**Consequence.** The re-read catches transcription drift, dropped rows, changed
+values and a wrong capture timestamp — it was mutation-checked to prove that —
+but it is not two independent observations of the archive. A systematic
+rendering error would appear on both sides and pass.
+
+**Workaround shipped.** Every artefact records its retrieval channel, both the
+requested and served Wayback timestamps, and a SHA-256; the verification log
+(`data/evidence/verification_log.json`) states which artefacts were re-read and
+which were not, and the re-read inputs themselves are committed under
+`data/evidence/verification/` (fresh rendering, verifier result, and the two
+mutation-check inputs), so the check is repeatable from the repository alone:
+`python3 pipeline/verify_artefact.py --artefact data/evidence/pages/2018-W14-O.md
+--fetched data/evidence/verification/2018-W14-O-fresh-rendering.md` → exit 0,
+11/11 identical. `run.py selfcheck` remains the path for reconciling byte-exact
+HTML on a runner that can reach the archive directly.
+
+---
+
+## 17. LOW — provider identifier columns are renumbered long after a game ends
+
+The source-movement study observed 34 revisions of already-published values on
+finished games. Most were wholesale renumbering of the `ftn` and `pff` columns —
+which sit in the mirrored file's block of provider game-identifier columns
+alongside `gsis`, `nfl_detail`, `nflverse`, `espn` and `pfr` — on 2024 games,
+observed in September 2026, roughly 21 months after those games were played.
+
+**Consequence.** Anything keyed on a provider identifier rather than on the
+mirror's own `game_id` can silently re-point at a different game. This is a
+concrete instance of the general identity-join risk in `RECOMMENDATIONS.md` P1-2.
+
+**Workaround shipped.** This project keys on `game_id` (`season_week_away_home`)
+and never on `ftn`/`pff`/`espn`. Both columns are outside the frozen set, so they
+cannot generate an alert.
+
+---
+
 ## Summary — what is genuinely blocked vs merely unfinished
 
 | Limitation | Blocked, or unfinished? |
@@ -355,12 +456,22 @@ is why the site's case cards are keyed on `season|week|player|stat|correction_da
 | 11. Archive serves another timestamp | **Inherent.** Both timestamps recorded per artefact. |
 | 12. No team code printed | **Inherent to the source.** Flagged, never inferred. |
 | 13. Duplicate published rows | **Inherent to the source.** Date is part of every key. |
-| 8–10. Convention/edge cases | **Unfinished or inherent.** Mitigations shipped. |
+| 8–10. Convention/edge cases | **Unfinished or inherent.** Mitigations shipped. §9 is now quantified by the source-movement study. |
+| 14. Delivery ≠ read | **Inherent to the platforms.** No webhook offers a read receipt; receipts and dead letters are the ceiling. |
+| 15. Watchdog blind spots | **Inherent.** It reads artefacts, not GitHub's scheduler or people. Reports unknown, never ok-by-default. |
+| 16. One-channel archive verification | **Environmental.** Strong consistency check, not independent observation; both timestamps and hashes recorded. |
+| 17. Provider id renumbering | **Inherent to the mirror.** Avoided by keying on `game_id` only. |
 
-**Bottom line.** A narrow scoreboard-mirror diff and a published run feed are
-implemented and one genuine 15-day comparison has been recorded; they do not solve
-the broader player-stat correction problem. Player-stat alerting is blocked on data
-that upstream does not publish, not on code — and mirror-only alerts cannot
-establish official NFL/Elias attribution. The retired correction channel is an
-external blocker; alternatives require product-specific evidence, rights and
-provenance review.
+**Bottom line.** A narrow scoreboard-mirror diff, a published run feed (four
+recorded comparisons, including one genuine 15-day vintage window), subscribable
+Atom feeds, receipted webhook delivery, an attempt ledger that records failed runs
+as well as clean ones, and an independent health watchdog that reads it are all
+implemented and tested; they do not solve the broader player-stat correction
+problem. Player-stat alerting is blocked on data that upstream does not publish,
+not on code — and mirror-only alerts cannot establish official NFL/Elias
+attribution. Delivery can be proven accepted but never proven read. The retired
+correction channel is an external blocker; alternatives require product-specific
+evidence, rights and provenance review. The source-movement study supplies a
+measured noise floor — 179 non-scoreboard edits on finished games in 59 days
+against 0 scoreboard edits — which is why the detector's scope is narrow on
+purpose.
