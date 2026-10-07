@@ -373,16 +373,48 @@ def notify_file(report: dict, path: str) -> None:
         json.dump(report, f, indent=2)
 
 
-def notify_webhook(report: dict, url: str, timeout: int = 15) -> tuple[bool, str]:
-    """POST a compact summary to Slack or Discord without storing the URL.
+def webhook_payload(text: str, url: str) -> dict:
+    """Shape a message for the endpoint's own convention.
 
-    Slack incoming webhooks require a ``text`` field; Discord incoming
-    webhooks require ``content``. A generic endpoint defaults to Slack's
-    documented ``text`` shape. Callers must read ``url`` from configuration or
-    a secret and must treat a failed response as a delivery failure.
+    Slack incoming webhooks require a ``text`` field; Discord incoming webhooks
+    require ``content``. A generic endpoint defaults to Slack's documented
+    ``text`` shape. Separated from the HTTP call so a *non-alert* message (for
+    example "the monitor itself is unhealthy") can reuse the exact same transport
+    without being dressed up as a scoring-discrepancy alert.
+    """
+    from urllib.parse import urlparse
+
+    host = (urlparse(url).hostname or "").lower()
+    if host in ("discord.com", "discordapp.com"):
+        return {"content": text}
+    return {"text": text}
+
+
+def post_text(text: str, url: str, timeout: int = 15) -> tuple[bool, str]:
+    """POST plain text to a Slack/Discord-compatible webhook. Never stores the URL.
+
+    Returns (ok, detail). A non-2xx or a transport error is a delivery failure;
+    callers must record it rather than assume the message arrived.
     """
     import urllib.request
-    from urllib.parse import urlparse
+
+    req = urllib.request.Request(
+        url,
+        data=json.dumps(webhook_payload(text, url)).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+    )
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
+        status = getattr(resp, "status", None) or resp.getcode()
+        return 200 <= status < 300, f"http {status}"
+
+
+def notify_webhook(report: dict, url: str, timeout: int = 15) -> tuple[bool, str]:
+    """POST a compact summary of an alert report to a configured webhook.
+
+    Callers must read ``url`` from configuration or a secret and must treat a
+    failed response as a delivery failure (see pipeline/notify.py, which adds
+    idempotency, retries and receipts around this transport).
+    """
 
     if report["total_alerts"] == 0:
         return True, "skipped: no alerts"
@@ -412,16 +444,4 @@ def notify_webhook(report: dict, url: str, timeout: int = 15) -> tuple[bool, str
     if len(alerts) > 5:
         text += f"…and {len(alerts) - 5} more; see the report link above.\n"
 
-    host = (urlparse(url).hostname or "").lower()
-    if host == "discord.com" or host == "discordapp.com":
-        payload = {"content": text}
-    else:
-        payload = {"text": text}
-    req = urllib.request.Request(
-        url,
-        data=json.dumps(payload).encode("utf-8"),
-        headers={"Content-Type": "application/json"},
-    )
-    with urllib.request.urlopen(req, timeout=timeout) as resp:
-        status = getattr(resp, "status", None) or resp.getcode()
-        return 200 <= status < 300, f"http {status}"
+    return post_text(text, url, timeout=timeout)

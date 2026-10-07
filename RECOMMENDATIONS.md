@@ -121,9 +121,25 @@ and cases that could not be tested. Each classification remains reviewable.
 
 ---
 
-### P1-4. Make `record_id` content-stable instead of positional
+### P1-4. ~~Make `record_id` content-stable instead of positional~~ — **DONE 2026-10-07**
 
-**The bug.** `record_id` is assigned as `SC-{i:04d}` in build order. On 2026-10-07,
+`record_id` is now `SC-` + 10 hex characters of the SHA-256 of the row's identity
+(`source_id, season, week, player, position, stat, original_value, corrected_value,
+correction_date, published_points_delta`), assigned by
+`build_database.assign_record_ids()`. Inserting a row can no longer change an
+existing id. A human-friendly build-order number is kept separately as
+`record_ordinal`, and rows whose identity is *exactly* duplicated on the same page
+get a deterministic tie-break counter that unrelated insertions cannot disturb.
+
+**Verified how.** `TestStableRecordIds` builds the database twice — once with one
+row, once with an extra row inserted *before* it — and asserts the surviving id is
+unchanged; that ids are unique and match `^SC-[0-9A-F]{10}$`; that three identical
+rows still get three distinct ids; and that every shipped id can be recomputed
+from the fact layer alone. The shipped database was rebuilt from the byte-identical
+`games.csv` vintage it was originally built from, and the only differences were
+`record_id`, the new `record_ordinal` and the build timestamp.
+
+**The original bug report, kept because it is the reason the rule exists.** `record_id` is assigned as `SC-{i:04d}` in build order. On 2026-10-07,
 adding 38 rows silently re-pointed **all six** of the site's case cards at different
 records — `SC-0034` went from Michael Clark's 0 → 36 receiving yards to an unrelated
 Roethlisberger row. Nothing failed; the page simply showed the wrong evidence under a
@@ -134,19 +150,23 @@ plausible-looking heading.
 exactly one record. Note the date is required: the official page sometimes lists the
 same correction on two consecutive days (LIMITATIONS §13).
 
-**Still open.** `record_id` itself is still positional, so anything *external* that
-cites one (an issue, an email, a bookmarked row) breaks on the next insert.
-
-**Work.** Derive `record_id` from a hash of the row's identity
-(`source_id|player|stat|original|corrected|correction_date`) so IDs are stable under
-insertion.
-
-**Done when.** Adding a row never changes an existing `record_id`, asserted by a test
-that builds the database twice with an extra artefact present.
+**Still open.** Nothing structural. Note that any external citation made *before*
+2026-10-07 used the old positional ids (`SC-0001`…`SC-0074`) and no longer resolves;
+prefer the natural key (`season|week|player|stat|correction_date`) in prose, which is
+what the site's case cards use.
 
 ## P2 — Coverage and product
 
-### P2-1. ~~Publish a public alert archive~~ — **DONE 2026-10-07**
+### P2-1. ~~Publish a public alert archive~~ — **DONE 2026-10-07; extended the same day**
+
+**Added since.** Two subscribable **Atom feeds** (`data/alerts/feed.atom`,
+`data/corrections.atom`) give a reader a zero-configuration channel — no secret, no
+account, no endpoint to own — and both are gated on well-formedness and unique entry
+ids. **Delivery receipts** (`data/alerts/deliveries.json`) record every push attempt
+with an idempotency key, retry count, HTTP outcome and dead-letter flag, and a dead
+letter fails the run. A **health watchdog** (`health.yml`) publishes
+`data/alerts/health.json` and fails on staleness, drift, malformed feeds or dead
+letters, so "the monitor went quiet" is now a detectable event.
 
 `pipeline/feed.py` records each completed snapshot comparison passed to it,
 including clean comparisons, in `data/alerts/feed.json`; the site renders the
@@ -154,10 +174,11 @@ feed with per-run SHA-256 hashes. The scheduled workflow publishes the updated
 feed after a successful comparison.
 
 **Still open.** Baseline-only, failed and aborted workflow attempts do not
-necessarily create a feed row; users must check Actions for latest attempt
-status. History is capped at 200 runs with no retention/export strategy, and
-the feed records comparisons, not a human-readable "this week's corrections"
-digest. No webhook delivery was exercised in this review.
+necessarily create a feed row; the watchdog reports the resulting staleness but
+cannot see the cause (LIMITATIONS §15). History is capped at 200 runs with no
+retention/export strategy. The feed records comparisons, not a human-readable
+"this week's corrections" digest. **No live webhook delivery has been exercised**,
+so the push path is unit-tested but not end-to-end proven.
 
 ### P2-2. Fantasy-platform re-scoring impact
 
@@ -182,13 +203,38 @@ evidence.
 
 ---
 
+### P2-5. Prove the push path end to end against a disposable endpoint
+
+**Work.** Create a throwaway Slack or Discord webhook, set it as
+`ALERT_WEBHOOK_URL`, trigger `detect.yml` with `workflow_dispatch` against a
+deliberately doctored snapshot pair (so an alert is real), and record the receipt,
+the retry behaviour on a forced 500, and the dead-letter path. Then delete the
+endpoint and scrub the receipt's `url_sha256` from any published copy if the hash
+could be correlated.
+
+**Why.** Every claim about push delivery is currently derived from unit tests with a
+mocked transport. LIMITATIONS §14 says delivery can be proven *accepted* but never
+*read*; we have not even proven accepted.
+
+**Done when.** `data/alerts/deliveries.json` contains one real `delivered` receipt
+and one real `failed`/dead-letter receipt from a controlled test, with the test
+procedure written down so it can be repeated.
+
+---
+
 ## P3 — Engineering hygiene
 
 - **P3-1.** Keep full `unittest` discovery as the no-dependency CI gate. Add
   coverage reporting only if it improves diagnostics without weakening that path.
-- **P3-2.** Add schema validation (e.g. JSON Schema) for
-  `verified_corrections_raw.json`, so a malformed contribution fails loudly
-  rather than producing a plausible-looking wrong row.
+- **P3-2.** ~~Add schema validation for `verified_corrections_raw.json`~~ —
+  **DONE 2026-10-07.** `pipeline/schema.py` validates structure, cross-file
+  consistency (every row's `source_id` exists; every page's declared `rows_parsed`
+  equals the rows carrying it; every artefact exists on disk), provenance (every URL
+  is a `web.archive.org` capture whose timestamp matches the recorded one) and
+  plausibility (season/week ranges, numeric values, original ≠ corrected, the page's
+  own date format, no `View Videos` parser leak, no duplicate rows). It runs in the
+  merge gate and each rule is mutation-tested. It cannot check *truth* — a perfectly
+  well-formed mis-transcription still needs `verify_artefact.py` against the archive.
 - **P3-3.** The database and market-sensitivity JSON now record the byte count
   and SHA-256 of their exact `--games` input, but neither builder retains the
   full source file or a retrieval timestamp/Git commit. Preserve an immutable
@@ -196,7 +242,23 @@ evidence.
   rebuilt from it. Do not call a moving upstream file pinned.
 - **P3-4.** Terminate the `fantasy.nfl.com` retirement watch: a small scheduled
   probe that alerts us if the official corrections endpoint comes back, or if a
-  documented successor appears.
+  documented successor appears. **Not done.** This is the single highest-value
+  remaining automation, because it is the only thing that could un-block
+  LIMITATIONS §1 — attribution. Implementation note: the probe must record the HTTP
+  status, the final URL after redirects and a SHA-256 of the body, and must report
+  `unreachable` distinctly from `still retired`, so a network failure can never be
+  read as "nothing changed". It also cannot run from this project's sandbox
+  (`nfl.com` is not on the egress allowlist); it must be validated on an Actions
+  runner before it is trusted.
+- **P3-5.** Add an out-of-band heartbeat to close the watchdog's blind spot
+  (LIMITATIONS §15). The cheapest honest version is a dead-man's-switch service that
+  the health workflow pings on success and that alerts *itself* when the ping stops —
+  which is the only way to detect a schedule GitHub never ran. Requires a third-party
+  account, so it must be opt-in and documented, never silently added.
+- **P3-6.** Keep the source-movement study honest as it ages: `source-churn.yml`
+  refreshes it weekly, but the README and site quote its numbers as prose. Any change
+  to the measured figures must be reflected in both, and the merge gate already
+  asserts the artefact's internal consistency (no unexplained projection changes).
 
 ---
 

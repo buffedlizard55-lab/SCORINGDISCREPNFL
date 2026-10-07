@@ -1,0 +1,100 @@
+{
+ "meta": {
+  "what_this_is": "Self-assessment of the monitoring artefacts in this repository: the comparison feed, the snapshot store, the delivery log and the published site copies. It answers 'is the monitor running?', not 'did the NFL change anything?'.",
+  "status_values": {
+   "ok": "every check passed",
+   "warn": "the monitor is working but at least one check is degraded",
+   "fail": "the monitor cannot currently be trusted; see checks[]",
+   "unknown": "the evidence needed to decide is absent; never reported as ok"
+  },
+  "what_it_cannot_see": "A workflow that is disabled, queued or cancelled by GitHub, a runner outage, or a notification that was accepted by an endpoint and never read. Check the Actions history for attempt-level truth.",
+  "see": [
+   "ALERT_SYSTEM_FEASIBILITY.md",
+   "LIMITATIONS.md",
+   ".github/workflows/health.yml"
+  ]
+ },
+ "generated_at": "2026-10-07T21:54:23Z",
+ "status": "warn",
+ "headline": "Monitor degraded: it is running, but at least one check needs attention.",
+ "last_successful_comparison_at": "2026-10-07T21:22:14+00:00",
+ "hours_since_last_comparison": 0.54,
+ "stale_after_hours": 40.0,
+ "identical_input_streak": 3,
+ "source_watermark": {
+  "upstream_commit_sha": "b8a4c3931e3f85a7b6d9056198354ff5aadc8da4",
+  "upstream_commit_date": "2026-10-07T21:15:15Z",
+  "upstream_commit_url": "https://github.com/nflverse/nfldata/commit/b8a4c3931e3f85a7b6d9056198354ff5aadc8da4",
+  "source_file_sha256": "460f01c5e8273d85249032077d95ba921f6ee4613e13eb55ea88e324b744f1f3",
+  "snapshot_dir": "2026-10-07T211802Z"
+ },
+ "checks": [
+  {
+   "check": "comparison_feed",
+   "status": "ok",
+   "detail": "3 completed comparison(s) recorded",
+   "runs_recorded": 3
+  },
+  {
+   "check": "freshness",
+   "status": "ok",
+   "detail": "newest completed comparison is 0.54h old (threshold 40.0h)",
+   "last_comparison_at": "2026-10-07T21:22:14+00:00",
+   "age_hours": 0.54,
+   "threshold_hours": 40.0
+  },
+  {
+   "check": "source_movement",
+   "status": "ok",
+   "detail": "the upstream source file changed in 3 of the last 3 comparisons; the frozen-field projection changed in none of them (identical-input streak 3), which is the expected state for a scoreboard-only monitor",
+   "identical_input_streak": 3,
+   "comparisons_inspected": 3,
+   "source_file_changed_in": 3
+  },
+  {
+   "check": "snapshot_store",
+   "status": "ok",
+   "detail": "5 snapshot(s); newest is pinned to upstream commit b8a4c3931e (0.65h old)",
+   "snapshots": 5,
+   "watermark": {
+    "upstream_commit_sha": "b8a4c3931e3f85a7b6d9056198354ff5aadc8da4",
+    "upstream_commit_date": "2026-10-07T21:15:15Z",
+    "upstream_commit_url": "https://github.com/nflverse/nfldata/commit/b8a4c3931e3f85a7b6d9056198354ff5aadc8da4",
+    "source_file_sha256": "460f01c5e8273d85249032077d95ba921f6ee4613e13eb55ea88e324b744f1f3",
+    "snapshot_dir": "2026-10-07T211802Z"
+   },
+   "watermark_age_hours": 0.65
+  },
+  {
+   "check": "push_notification",
+   "status": "unknown",
+   "detail": "all 1 recorded attempt(s) found no webhook configured, so no alert would currently reach a person; delivery is opt-in via the ALERT_WEBHOOK_URL secret, and the Atom feed is the zero-configuration alternative",
+   "summary": {
+    "attempts_recorded": 1,
+    "by_outcome": {
+     "not_configured": 1
+    },
+    "delivered": 0,
+    "failed": 0,
+    "dead_letter": 0,
+    "last_delivery_attempt": "2026-10-07T21:22:14Z",
+    "last_dead_letter": null
+   }
+  },
+  {
+   "check": "atom_feed",
+   "status": "ok",
+   "detail": "3 subscribable entr(ies), unique ids, <updated> 2026-10-07T21:22:14Z",
+   "entries": 3
+  },
+  {
+   "check": "published_copies",
+   "status": "ok",
+   "detail": "every published copy of the feed matches its canonical source"
+  }
+ ],
+ "irregularities": [
+  "notification is not configured; alerts reach nobody"
+ ],
+ "next_action": "Push notification is not configured, so a detected candidate would reach nobody unless they poll. Either set the ALERT_WEBHOOK_URL repository secret (Slack or Discord compatible) or subscribe to the Atom feed at data/alerts/feed.atom. Until then the honest state is: detection works, notification does not."
+}

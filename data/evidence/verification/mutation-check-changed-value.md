@@ -1,0 +1,25 @@
+# url: https://web.archive.org/web/20181219090041/https://fantasy.nfl.com/research/statcorrections?leagueId=0&statWeek=14
+# snapshot_timestamp: 20181219090041
+# season: 2018
+# week: 14
+# page_title: Stat Corrections - Free Fantasy Football - NFL.com
+# obtained: 2026-10-07 via document-render channel, independent re-read of the same capture
+# publisher_header_verbatim: View official stat corrections as released by the NFL
+#   League Office and the official statistician of the NFL, Elias Sports Bureau.
+#   Fantasy points values are based on default NFL-Managed scoring.
+
+|  |  |  |  |
+| --- | --- | --- | --- |
+| Player | Date | Stat | Points |
+| --- | --- | --- | --- |
+| [Darrius Heyward-Bey](https://web.archive.org/web/20181219090041/https://fantasy.nfl.com/players/card?leagueId=0&playerId=80427) _WR - PIT_ | Dec 12 | Tackle changed from **0** to **1**. | 0.00 |
+| [Case Keenum](https://web.archive.org/web/20181219090041/https://fantasy.nfl.com/players/card?leagueId=0&playerId=2532888) _QB - DEN_ [View Videos](https://web.archive.org/web/20181219090041/https://fantasy.nfl.com/players/card?leagueId=0&playerId=2532888&video=1 "View Player Videos") | Dec 12 | Fumble changed from **1** to **2**. | 0.00 |
+| [Mohamed Sanu](https://web.archive.org/web/20181219090041/https://fantasy.nfl.com/players/card?leagueId=0&playerId=2533040) _WR - ATL_ | Dec 12 | Fumble changed from **0** to **1**. | 0.00 |
+| [Mohamed Sanu](https://web.archive.org/web/20181219090041/https://fantasy.nfl.com/players/card?leagueId=0&playerId=2533040) _WR - ATL_ | Dec 12 | Fumbles Recovery changed from **0** to **1**. | 0.00 |
+| [Cole Beasley](https://web.archive.org/web/20181219090041/https://fantasy.nfl.com/players/card?leagueId=0&playerId=2535698) _WR - DAL_ [View Videos](https://web.archive.org/web/20181219090041/https://fantasy.nfl.com/players/card?leagueId=0&playerId=2535698&video=1 "View Player Videos") | Dec 12 | Kickoff and Punt Return Yards changed from **23** to **22**. | 0.00 |
+| [Marvin Hall](https://web.archive.org/web/20181219090041/https://fantasy.nfl.com/players/card?leagueId=0&playerId=2557034) _WR - ATL_ | Dec 12 | Kickoff and Punt Return Yards changed from **112** to **109**. | 0.00 |
+| [Marvin Hall](https://web.archive.org/web/20181219090041/https://fantasy.nfl.com/players/card?leagueId=0&playerId=2557034) _WR - ATL_ | Dec 12 | Fumble changed from **1** to **0**. | 0.00 |
+| [Marvin Hall](https://web.archive.org/web/20181219090041/https://fantasy.nfl.com/players/card?leagueId=0&playerId=2557034) _WR - ATL_ | Dec 12 | Fumbles Recovery changed from **1** to **0**. | 0.00 |
+| [Lamar Jackson](https://web.archive.org/web/20181219090041/https://fantasy.nfl.com/players/card?leagueId=0&playerId=2560757) _QB - BAL_ [View Videos](https://web.archive.org/web/20181219090041/https://fantasy.nfl.com/players/card?leagueId=0&playerId=2560757&video=1 "View Player Videos") | Dec 12 | Every Time Sacked changed from **3** to **2**. | 0.00 |
+| [Lamar Jackson](https://web.archive.org/web/20181219090041/https://fantasy.nfl.com/players/card?leagueId=0&playerId=2560757) _QB - BAL_ [View Videos](https://web.archive.org/web/20181219090041/https://fantasy.nfl.com/players/card?leagueId=0&playerId=2560757&video=1 "View Player Videos") | Dec 12 | Rushing Attempts changed from **13** to **14**. | 0.00 |
+| [Lamar Jackson](https://web.archive.org/web/20181219090041/https://fantasy.nfl.com/players/card?leagueId=0&playerId=2560757) _QB - BAL_ [View Videos](https://web.archive.org/web/20181219090041/https://fantasy.nfl.com/players/card?leagueId=0&playerId=2560757&video=1 "View Player Videos") | Dec 12 | Rushing Yards changed from **71** to **68**. | -0.40 |

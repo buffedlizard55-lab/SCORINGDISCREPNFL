@@ -1,0 +1,16 @@
+{
+ "identical": true,
+ "stored_rows": 11,
+ "fresh_rows": 11,
+ "rows_matching": 11,
+ "rows_only_in_stored": [],
+ "rows_only_in_fresh": [],
+ "header_differences": [],
+ "stored_sha256": "8b3e6933738d31835512cf11e24469cd58d21290d6a5fe638a59a76623a2442b",
+ "fresh_sha256": "ef8c1ec97f3c1be44635f92e7324d588e00a07e7437282d8f711c1baff61162f",
+ "artefact": "data/evidence/pages/2018-W14-O.md",
+ "source_url": "https://web.archive.org/web/20181219090041/https://fantasy.nfl.com/research/statcorrections?leagueId=0&statWeek=14",
+ "snapshot_timestamp": "20181219090041",
+ "verified_at": "2026-10-07T21:45:21Z",
+ "channel": "document-render (HTML-to-markdown) on both sides"
+}

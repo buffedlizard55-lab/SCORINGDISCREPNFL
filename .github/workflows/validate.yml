@@ -36,6 +36,14 @@ jobs:
         # must run as the merge gate.
         run: python3 -m unittest discover -s tests -v
 
+      - name: Validate the fact layer against its contract
+        # A malformed correction row does not crash anything: it flows into a
+        # plausible-looking record on the public site. Fail the merge instead.
+        run: python3 pipeline/schema.py
+
+      - name: Verify the fact layer still regenerates from the stored evidence
+        run: python3 pipeline/ingest_rendered.py --check
+
       - name: Every published copy must match the canonical docs/ copy
         run: |
           ./pipeline/sync_site_data.sh > /dev/null
@@ -66,9 +74,37 @@ jobs:
                   and all(k in d["meta"] for k in
                           ("what_this_is", "what_a_recorded_alert_is", "what_a_clean_run_means"))
               ),
+              # Monitor health: must be well formed and must never fold "unknown"
+              # into "ok". Its status is NOT gated: a quiet fork is allowed to be
+              # stale, but it is not allowed to be silent about it.
+              "data/alerts/health.json": lambda d: (
+                  d.get("status") in ("ok", "warn", "fail", "unknown")
+                  and isinstance(d.get("checks"), list) and d["checks"]
+                  and all(c.get("status") in ("ok", "warn", "fail", "unknown") for c in d["checks"])
+                  and "next_action" in d and "meta" in d
+              ),
+              "docs/data/alerts/health.json": lambda d: d.get("status") in ("ok", "warn", "fail", "unknown"),
+              # Source-movement study: the internal-consistency guard is the point.
+              # If the slim frozen projection changed while no frozen value changed
+              # and no row was added or removed, our understanding of the
+              # projection is wrong and the detector cannot be trusted.
+              "data/evidence/upstream_churn_study.json": lambda d: (
+                  "totals" in d and "vintages" in d and d["vintages"]
+                  and d["sampling"]["vintages_downloaded"] >= 2
+                  and d["totals"]["slim_changes_not_explained_by_frozen_or_row_count"] == []
+                  and all(v.get("codeload_url", "").startswith("https://codeload.github.com/")
+                          for v in d["vintages"] if "error" not in v)
+              ),
+              "docs/data/upstream_churn_study.json": lambda d: "totals" in d and d["vintages"],
           }
 
-          OPTIONAL = {"data/alerts/feed.json"}
+          OPTIONAL = {
+              "data/alerts/feed.json",
+              "data/alerts/health.json",
+              "docs/data/alerts/health.json",
+              "data/evidence/upstream_churn_study.json",
+              "docs/data/upstream_churn_study.json",
+          }
 
           failed = False
           for path, check in required.items():
@@ -92,6 +128,53 @@ jobs:
               else:
                   print(f"ok {path} ({p.stat().st_size} bytes)")
 
+          sys.exit(1 if failed else 0)
+          PY
+
+      - name: Subscribable Atom feeds must be well formed, with unique entry ids
+        # A malformed feed breaks every subscriber silently, and duplicate ids
+        # make a reader treat new entries as already-read. Both were real risks:
+        # the first generated feed had colliding ids for two clean runs that
+        # compared byte-identical snapshots.
+        run: |
+          python3 - <<'PY'
+          import pathlib, sys
+          import xml.etree.ElementTree as ET
+
+          ns = {"a": "http://www.w3.org/2005/Atom"}
+          paths = [
+              "data/alerts/feed.atom", "docs/data/alerts/feed.atom",
+              "data/corrections.atom", "docs/data/corrections.atom",
+          ]
+          failed = False
+          for p in paths:
+              f = pathlib.Path(p)
+              if not f.exists():
+                  print(f"MISSING {p}")
+                  failed = True
+                  continue
+              try:
+                  root = ET.parse(f).getroot()
+              except Exception as e:
+                  print(f"NOT WELL FORMED {p}: {e}")
+                  failed = True
+                  continue
+              entries = root.findall("a:entry", ns)
+              ids = [e.findtext("a:id", default="", namespaces=ns) for e in entries]
+              if len(set(ids)) != len(ids):
+                  print(f"DUPLICATE ENTRY IDS in {p}")
+                  failed = True
+                  continue
+              if not root.findtext("a:title", default="", namespaces=ns):
+                  print(f"MISSING TITLE in {p}")
+                  failed = True
+                  continue
+              for e in entries:
+                  if not e.findtext("a:updated", default="", namespaces=ns):
+                      print(f"ENTRY WITHOUT <updated> in {p}")
+                      failed = True
+                      break
+              print(f"ok {p}: {len(entries)} entries, unique ids")
           sys.exit(1 if failed else 0)
           PY
 

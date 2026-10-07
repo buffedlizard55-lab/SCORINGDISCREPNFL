@@ -1,0 +1,11 @@
+{
+  "source": "nfldata_games",
+  "file": "games.slim.csv",
+  "bytes": 413238,
+  "sha256": "341417dee2d4cb58938e4b483f9029d184b03b9e52f94949806afed1eedb0498",
+  "repo": "nflverse/nfldata",
+  "ref": "master",
+  "source_file_sha256": "d3a4878d4a63ac400b8501e6e313a5715b4b4973a4fb9244332751cef6d5c497",
+  "source_bytes": 2183215,
+  "note": "slim = final games only, frozen fields only"
+}

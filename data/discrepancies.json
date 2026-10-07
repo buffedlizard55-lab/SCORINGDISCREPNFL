@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generated_at": "2026-10-07T20:49:33Z",
+    "generated_at": "2026-10-07T21:21:20Z",
     "generator": "pipeline/build_database.py",
     "official_statistician": "Elias Sports Bureau (official statistician of the NFL)",
     "official_release_channel_used": "NFL.com Fantasy 'Stat Corrections' page, published by the NFL League Office and Elias Sports Bureau",
@@ -76,7 +76,8 @@
   },
   "records": [
     {
-      "record_id": "SC-0001",
+      "record_id": "SC-DE7A037E35",
+      "record_ordinal": 1,
       "season": 2010,
       "week": 1,
       "game_id": "2010_01_GB_PHI",
@@ -128,7 +129,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0002",
+      "record_id": "SC-6773B09CA5",
+      "record_ordinal": 2,
       "season": 2010,
       "week": 1,
       "game_id": "2010_01_GB_PHI",
@@ -180,7 +182,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0006",
+      "record_id": "SC-E36AEE6899",
+      "record_ordinal": 6,
       "season": 2012,
       "week": 1,
       "game_id": "2012_01_SEA_ARI",
@@ -232,7 +235,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0007",
+      "record_id": "SC-8BF0C28B47",
+      "record_ordinal": 7,
       "season": 2012,
       "week": 1,
       "game_id": "2012_01_WAS_NO",
@@ -283,7 +287,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0008",
+      "record_id": "SC-4D40850F4F",
+      "record_ordinal": 8,
       "season": 2012,
       "week": 1,
       "game_id": "2012_01_WAS_NO",
@@ -335,7 +340,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0003",
+      "record_id": "SC-B7E9640155",
+      "record_ordinal": 3,
       "season": 2012,
       "week": 1,
       "game_id": "2012_01_STL_DET",
@@ -386,7 +392,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0004",
+      "record_id": "SC-BA3420AB31",
+      "record_ordinal": 4,
       "season": 2012,
       "week": 1,
       "game_id": "2012_01_STL_DET",
@@ -437,7 +444,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0005",
+      "record_id": "SC-3EE40DA744",
+      "record_ordinal": 5,
       "season": 2012,
       "week": 1,
       "game_id": "2012_01_STL_DET",
@@ -489,7 +497,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0016",
+      "record_id": "SC-09D85C641D",
+      "record_ordinal": 16,
       "season": 2013,
       "week": 1,
       "game_id": "2013_01_KC_JAX",
@@ -541,7 +550,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0017",
+      "record_id": "SC-24E99E0AD8",
+      "record_ordinal": 17,
       "season": 2013,
       "week": 1,
       "game_id": "2013_01_KC_JAX",
@@ -593,7 +603,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0018",
+      "record_id": "SC-240ADED607",
+      "record_ordinal": 18,
       "season": 2013,
       "week": 1,
       "game_id": "2013_01_TEN_PIT",
@@ -644,7 +655,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0019",
+      "record_id": "SC-1C60048AF6",
+      "record_ordinal": 19,
       "season": 2013,
       "week": 1,
       "game_id": "2013_01_TEN_PIT",
@@ -695,7 +707,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0013",
+      "record_id": "SC-06431F2C4D",
+      "record_ordinal": 13,
       "season": 2013,
       "week": 1,
       "game_id": "2013_01_KC_JAX",
@@ -746,7 +759,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0014",
+      "record_id": "SC-17B698162A",
+      "record_ordinal": 14,
       "season": 2013,
       "week": 1,
       "game_id": "2013_01_KC_JAX",
@@ -798,7 +812,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0021",
+      "record_id": "SC-C4A66C4004",
+      "record_ordinal": 21,
       "season": 2013,
       "week": 1,
       "player": "Isaac Redman",
@@ -840,7 +855,8 @@
       ]
     },
     {
-      "record_id": "SC-0022",
+      "record_id": "SC-6429A24F4A",
+      "record_ordinal": 22,
       "season": 2013,
       "week": 1,
       "player": "Isaac Redman",
@@ -883,7 +899,8 @@
       ]
     },
     {
-      "record_id": "SC-0023",
+      "record_id": "SC-917E67EF7A",
+      "record_ordinal": 23,
       "season": 2013,
       "week": 1,
       "player": "Isaac Redman",
@@ -925,7 +942,8 @@
       ]
     },
     {
-      "record_id": "SC-0010",
+      "record_id": "SC-31C4F4D742",
+      "record_ordinal": 10,
       "season": 2013,
       "week": 1,
       "game_id": "2013_01_MIN_DET",
@@ -976,7 +994,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0011",
+      "record_id": "SC-55C9EAA54C",
+      "record_ordinal": 11,
       "season": 2013,
       "week": 1,
       "game_id": "2013_01_MIN_DET",
@@ -1027,7 +1046,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0012",
+      "record_id": "SC-AE5C232E55",
+      "record_ordinal": 12,
       "season": 2013,
       "week": 1,
       "game_id": "2013_01_MIN_DET",
@@ -1079,7 +1099,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0026",
+      "record_id": "SC-3604326DA9",
+      "record_ordinal": 26,
       "season": 2015,
       "week": 1,
       "game_id": "2015_01_DET_SD",
@@ -1130,7 +1151,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0041",
+      "record_id": "SC-C149C6D3F2",
+      "record_ordinal": 41,
       "season": 2015,
       "week": 16,
       "game_id": "2015_16_JAX_NO",
@@ -1182,7 +1204,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0034",
+      "record_id": "SC-224549673C",
+      "record_ordinal": 34,
       "season": 2015,
       "week": 16,
       "game_id": "2015_16_PIT_BAL",
@@ -1234,7 +1257,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0035",
+      "record_id": "SC-67106AC890",
+      "record_ordinal": 35,
       "season": 2015,
       "week": 16,
       "game_id": "2015_16_PIT_BAL",
@@ -1286,7 +1310,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0032",
+      "record_id": "SC-97CD9334C9",
+      "record_ordinal": 32,
       "season": 2015,
       "week": 16,
       "game_id": "2015_16_PIT_BAL",
@@ -1337,7 +1362,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0038",
+      "record_id": "SC-EEFF7A9CFD",
+      "record_ordinal": 38,
       "season": 2015,
       "week": 16,
       "game_id": "2015_16_JAX_NO",
@@ -1389,7 +1415,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0043",
+      "record_id": "SC-9900F6CDCE",
+      "record_ordinal": 43,
       "season": 2015,
       "week": 16,
       "game_id": "2015_16_PIT_BAL",
@@ -1440,7 +1467,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0044",
+      "record_id": "SC-ECDE8FE6D0",
+      "record_ordinal": 44,
       "season": 2015,
       "week": 16,
       "game_id": "2015_16_PIT_BAL",
@@ -1492,7 +1520,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0036",
+      "record_id": "SC-768B0BDD09",
+      "record_ordinal": 36,
       "season": 2015,
       "week": 16,
       "game_id": "2015_16_STL_SEA",
@@ -1544,7 +1573,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0039",
+      "record_id": "SC-E0FDD7F883",
+      "record_ordinal": 39,
       "season": 2015,
       "week": 16,
       "game_id": "2015_16_PIT_BAL",
@@ -1595,7 +1625,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0040",
+      "record_id": "SC-8FB3DB7169",
+      "record_ordinal": 40,
       "season": 2015,
       "week": 16,
       "game_id": "2015_16_PIT_BAL",
@@ -1647,7 +1678,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0042",
+      "record_id": "SC-1ED62ACA41",
+      "record_ordinal": 42,
       "season": 2015,
       "week": 16,
       "game_id": "2015_16_STL_SEA",
@@ -1699,7 +1731,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0045",
+      "record_id": "SC-D4E282239B",
+      "record_ordinal": 45,
       "season": 2017,
       "week": 1,
       "game_id": "2017_01_ARI_DET",
@@ -1751,7 +1784,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0048",
+      "record_id": "SC-907C20DDBC",
+      "record_ordinal": 48,
       "season": 2017,
       "week": 1,
       "game_id": "2017_01_ARI_DET",
@@ -1803,7 +1837,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0055",
+      "record_id": "SC-8197052F5A",
+      "record_ordinal": 55,
       "season": 2017,
       "week": 16,
       "game_id": "2017_16_SEA_DAL",
@@ -1855,7 +1890,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0056",
+      "record_id": "SC-C9ED7BD834",
+      "record_ordinal": 56,
       "season": 2017,
       "week": 16,
       "game_id": "2017_16_SEA_DAL",
@@ -1907,7 +1943,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0052",
+      "record_id": "SC-660DAE9BB3",
+      "record_ordinal": 52,
       "season": 2017,
       "week": 16,
       "game_id": "2017_16_SEA_DAL",
@@ -1959,7 +1996,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0057",
+      "record_id": "SC-F7A18A9EE5",
+      "record_ordinal": 57,
       "season": 2017,
       "week": 16,
       "game_id": "2017_16_CLE_CHI",
@@ -2011,7 +2049,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0059",
+      "record_id": "SC-AB405DC6C6",
+      "record_ordinal": 59,
       "season": 2017,
       "week": 16,
       "game_id": "2017_16_MIN_GB",
@@ -2063,7 +2102,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0060",
+      "record_id": "SC-34DB0B508D",
+      "record_ordinal": 60,
       "season": 2017,
       "week": 16,
       "game_id": "2017_16_MIN_GB",
@@ -2115,7 +2155,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0062",
+      "record_id": "SC-902B043394",
+      "record_ordinal": 62,
       "season": 2018,
       "week": 1,
       "game_id": "2018_01_SF_MIN",
@@ -2166,7 +2207,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0068",
+      "record_id": "SC-309B1EA80F",
+      "record_ordinal": 68,
       "season": 2018,
       "week": 14,
       "game_id": "2018_14_PHI_DAL",
@@ -2218,7 +2260,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0072",
+      "record_id": "SC-6A215D67C3",
+      "record_ordinal": 72,
       "season": 2018,
       "week": 14,
       "game_id": "2018_14_BAL_KC",
@@ -2269,7 +2312,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0073",
+      "record_id": "SC-59A17354E1",
+      "record_ordinal": 73,
       "season": 2018,
       "week": 14,
       "game_id": "2018_14_BAL_KC",
@@ -2320,7 +2364,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0074",
+      "record_id": "SC-9476A82FB0",
+      "record_ordinal": 74,
       "season": 2018,
       "week": 14,
       "game_id": "2018_14_BAL_KC",
@@ -2372,7 +2417,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0069",
+      "record_id": "SC-9FAFF94313",
+      "record_ordinal": 69,
       "season": 2018,
       "week": 14,
       "game_id": "2018_14_ATL_GB",
@@ -2424,7 +2470,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0071",
+      "record_id": "SC-AA12BC4BC0",
+      "record_ordinal": 71,
       "season": 2018,
       "week": 14,
       "game_id": "2018_14_ATL_GB",
@@ -2475,7 +2522,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0067",
+      "record_id": "SC-CC5C341AE8",
+      "record_ordinal": 67,
       "season": 2018,
       "week": 14,
       "game_id": "2018_14_ATL_GB",
@@ -2526,7 +2574,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0015",
+      "record_id": "SC-82C579F723",
+      "record_ordinal": 15,
       "season": 2013,
       "week": 1,
       "game_id": "2013_01_KC_JAX",
@@ -2576,7 +2625,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0027",
+      "record_id": "SC-1451A21BE5",
+      "record_ordinal": 27,
       "season": 2015,
       "week": 1,
       "game_id": "2015_01_PHI_ATL",
@@ -2626,7 +2676,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0030",
+      "record_id": "SC-3D812A177A",
+      "record_ordinal": 30,
       "season": 2015,
       "week": 1,
       "game_id": "2015_01_NO_ARI",
@@ -2676,7 +2727,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0025",
+      "record_id": "SC-A4A895213B",
+      "record_ordinal": 25,
       "season": 2015,
       "week": 1,
       "game_id": "2015_01_SEA_STL",
@@ -2726,7 +2778,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0029",
+      "record_id": "SC-E4E58F9DFC",
+      "record_ordinal": 29,
       "season": 2015,
       "week": 1,
       "game_id": "2015_01_SEA_STL",
@@ -2776,7 +2829,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0031",
+      "record_id": "SC-076E5A646D",
+      "record_ordinal": 31,
       "season": 2015,
       "week": 16,
       "game_id": "2015_16_CAR_ATL",
@@ -2826,7 +2880,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0037",
+      "record_id": "SC-583348C215",
+      "record_ordinal": 37,
       "season": 2015,
       "week": 16,
       "game_id": "2015_16_DAL_BUF",
@@ -2876,7 +2931,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0049",
+      "record_id": "SC-73B0013AD4",
+      "record_ordinal": 49,
       "season": 2017,
       "week": 1,
       "game_id": "2017_01_ARI_DET",
@@ -2926,7 +2982,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0050",
+      "record_id": "SC-B978B1825C",
+      "record_ordinal": 50,
       "season": 2017,
       "week": 1,
       "game_id": "2017_01_ARI_DET",
@@ -2976,7 +3033,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0053",
+      "record_id": "SC-99A006874D",
+      "record_ordinal": 53,
       "season": 2017,
       "week": 16,
       "game_id": "2017_16_PIT_HOU",
@@ -3026,7 +3084,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0054",
+      "record_id": "SC-68849A8675",
+      "record_ordinal": 54,
       "season": 2017,
       "week": 16,
       "game_id": "2017_16_IND_BAL",
@@ -3076,7 +3135,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0058",
+      "record_id": "SC-1D70F083C5",
+      "record_ordinal": 58,
       "season": 2017,
       "week": 16,
       "game_id": "2017_16_MIN_GB",
@@ -3126,7 +3186,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0063",
+      "record_id": "SC-FBD0646D14",
+      "record_ordinal": 63,
       "season": 2018,
       "week": 1,
       "game_id": "2018_01_DAL_CAR",
@@ -3176,7 +3237,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0064",
+      "record_id": "SC-BEBE6243EF",
+      "record_ordinal": 64,
       "season": 2018,
       "week": 14,
       "game_id": "2018_14_PIT_OAK",
@@ -3226,7 +3288,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0009",
+      "record_id": "SC-0A8D82A3FB",
+      "record_ordinal": 9,
       "season": 2012,
       "week": 1,
       "game_id": "2012_01_WAS_NO",
@@ -3274,7 +3337,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0020",
+      "record_id": "SC-E14643A372",
+      "record_ordinal": 20,
       "season": 2013,
       "week": 1,
       "game_id": "2013_01_TEN_PIT",
@@ -3322,7 +3386,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0024",
+      "record_id": "SC-3566212268",
+      "record_ordinal": 24,
       "season": 2013,
       "week": 1,
       "player": "Isaac Redman",
@@ -3361,7 +3426,8 @@
       ]
     },
     {
-      "record_id": "SC-0028",
+      "record_id": "SC-FB78BD3659",
+      "record_ordinal": 28,
       "season": 2015,
       "week": 1,
       "game_id": "2015_01_PHI_ATL",
@@ -3409,7 +3475,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0033",
+      "record_id": "SC-B0AB5ED559",
+      "record_ordinal": 33,
       "season": 2015,
       "week": 16,
       "game_id": "2015_16_PIT_BAL",
@@ -3457,7 +3524,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0047",
+      "record_id": "SC-51BEE69CB8",
+      "record_ordinal": 47,
       "season": 2017,
       "week": 1,
       "game_id": "2017_01_OAK_TEN",
@@ -3505,7 +3573,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0046",
+      "record_id": "SC-53F52807FD",
+      "record_ordinal": 46,
       "season": 2017,
       "week": 1,
       "game_id": "2017_01_OAK_TEN",
@@ -3553,7 +3622,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0051",
+      "record_id": "SC-711DFDE113",
+      "record_ordinal": 51,
       "season": 2017,
       "week": 1,
       "game_id": "2017_01_JAX_HOU",
@@ -3601,7 +3671,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0061",
+      "record_id": "SC-48A2384A93",
+      "record_ordinal": 61,
       "season": 2018,
       "week": 1,
       "game_id": "2018_01_SF_MIN",
@@ -3649,7 +3720,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0065",
+      "record_id": "SC-C258525CF8",
+      "record_ordinal": 65,
       "season": 2018,
       "week": 14,
       "game_id": "2018_14_DEN_SF",
@@ -3697,7 +3769,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0070",
+      "record_id": "SC-9DC5FCBB97",
+      "record_ordinal": 70,
       "season": 2018,
       "week": 14,
       "game_id": "2018_14_ATL_GB",
@@ -3745,7 +3818,8 @@
       "review_flags": []
     },
     {
-      "record_id": "SC-0066",
+      "record_id": "SC-B5BD8984BD",
+      "record_ordinal": 66,
       "season": 2018,
       "week": 14,
       "game_id": "2018_14_ATL_GB",

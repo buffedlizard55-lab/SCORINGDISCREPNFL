@@ -1,0 +1,34 @@
+{
+ "meta": {
+  "what_this_is": "Append-only log of alert delivery attempts. Every attempt is recorded, including skipped, suppressed and failed ones, so 'nobody was notified' is distinguishable from 'notification was not attempted'.",
+  "what_a_receipt_proves": "Only that the configured endpoint returned an HTTP status. A 2xx means the endpoint accepted the payload; it is not a read receipt and not proof a human saw the alert.",
+  "privacy": "The webhook URL is never stored. Only the host and a SHA-256 of the URL are recorded, so a channel can be audited without publishing a secret.",
+  "delivery_semantics": "at-least-once; a retry after a lost response can duplicate a message"
+ },
+ "deliveries": [
+  {
+   "delivery_id": "12a998eb3b39ace1ae642a858bb670a7-20261007T212214Z",
+   "idempotency_key": "12a998eb3b39ace1ae642a858bb670a7",
+   "attempted_at": "2026-10-07T21:22:14Z",
+   "alert_count": 0,
+   "report_digest": "1ddbbf8917a1cc5d",
+   "review_url": null,
+   "attempts": 0,
+   "outcome": "not_configured",
+   "detail": "no webhook URL configured; report remains in the feed and artefact",
+   "dead_letter": false
+  }
+ ],
+ "summary": {
+  "attempts_recorded": 1,
+  "by_outcome": {
+   "not_configured": 1
+  },
+  "delivered": 0,
+  "failed": 0,
+  "dead_letter": 0,
+  "last_delivery_attempt": "2026-10-07T21:22:14Z",
+  "last_dead_letter": null
+ },
+ "generated_at": "2026-10-07T21:22:14Z"
+}

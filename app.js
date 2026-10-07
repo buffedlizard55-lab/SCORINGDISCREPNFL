@@ -40,6 +40,133 @@ async function loadFirst(candidates) {
 }
 
 /* ------------------------------------------------------------- live feed */
+/* One cell, two facts: did the whole upstream file change, and which commit did
+   the newer snapshot come from. Unknown is rendered as unknown. */
+function srcCell(r) {
+  const changed = r.source_file_changed;
+  const pill = changed === true
+    ? '<span class="pill sev-1">changed</span>'
+    : changed === false
+      ? '<span class="pill sev-2">unchanged</span>'
+      : '<span class="pill sev-0">unknown</span>';
+  const commit = (r.new_source || {}).upstream_commit_sha;
+  const when = (r.new_source || {}).upstream_commit_date;
+  const link = commit
+    ? ` <a class="src" href="https://github.com/nflverse/nfldata/commit/${esc(commit)}">${esc(String(commit).slice(0, 10))}</a>`
+    : '';
+  const backfilled = (r.new_source || {}).backfilled_from_manifest ? ' <span class="src">(hash read from the snapshot manifest)</span>' : '';
+  return `${pill}${link}${when ? `<br><span class="src">upstream ${esc(String(when))}</span>` : ''}${backfilled}`;
+}
+
+/* ------------------------------------------------------- monitor health */
+const HEALTH_CLASS = { ok: 'sev-1', warn: 'sev-2', fail: 'sev-3', unknown: 'sev-0' };
+const HEALTH_WORD = { ok: 'PASS', warn: 'WARN', fail: 'FAIL', unknown: 'UNKNOWN' };
+
+function renderHealth(h) {
+  const box = document.getElementById('health-headline');
+  const tbody = document.querySelector('#tbl-health tbody');
+  const flags = document.getElementById('health-irregularities');
+  const foot = document.getElementById('health-footnote');
+  if (!box || !tbody) return;
+
+  if (!h) {
+    box.className = 'callout warn';
+    box.innerHTML = '<p><strong>Monitor health is unknown.</strong> No health artefact was '
+      + 'published with this page. Unknown is not clean — check the '
+      + '<a href="https://github.com/buffedlizard55-lab/SCORINGDISCREPNFL/actions">Actions history</a>.</p>';
+    tbody.innerHTML = '<tr><td class="empty" colspan="3">No health report published.</td></tr>';
+    return;
+  }
+
+  box.className = `callout ${h.status === 'ok' ? 'ok' : h.status === 'warn' ? 'warn' : 'bad'}`;
+  const wm = h.source_watermark || {};
+  box.innerHTML = `<p><span class="pill ${HEALTH_CLASS[h.status] || 'sev-0'}" style="margin-right:8px;">`
+    + `${esc((h.status || 'unknown').toUpperCase())}</span><strong>${esc(h.headline || '')}</strong></p>`
+    + `<p class="footnote">Assessed ${esc(h.generated_at || '—')} · last completed comparison `
+    + `<strong>${esc(h.last_successful_comparison_at || 'none')}</strong> `
+    + `(${fmt(h.hours_since_last_comparison)} h ago; stale after ${fmt(h.stale_after_hours)} h)`
+    + (wm.upstream_commit_sha
+      ? ` · newest snapshot pinned to upstream commit <a href="${esc(wm.upstream_commit_url || '#')}">${esc(String(wm.upstream_commit_sha).slice(0, 10))}</a> at ${esc(wm.upstream_commit_date || '—')}`
+      : ' · upstream commit watermark not recorded')
+    + `</p>`;
+
+  tbody.innerHTML = (h.checks || []).map((c) => `<tr>
+      <td><strong>${esc(c.check)}</strong></td>
+      <td><span class="pill ${HEALTH_CLASS[c.status] || 'sev-0'}">${esc(HEALTH_WORD[c.status] || c.status)}</span></td>
+      <td>${esc(c.detail)}</td>
+    </tr>`).join('') || '<tr><td class="empty" colspan="3">No checks reported.</td></tr>';
+
+  const irr = h.irregularities || [];
+  flags.innerHTML = irr.length
+    ? `<div class="callout warn"><p><strong>Irregularities flagged for review</strong></p><ul>`
+      + irr.map((i) => `<li>${esc(i)}</li>`).join('') + `</ul></div>`
+    : '';
+  foot.textContent = `Next action: ${h.next_action || '—'}`;
+}
+
+/* -------------------------------------------------------- source churn */
+function renderChurn(study) {
+  const cards = document.getElementById('churn-cards');
+  const callout = document.getElementById('churn-callout');
+  const fields = document.querySelector('#tbl-churn-fields tbody');
+  const revs = document.querySelector('#tbl-churn-revisions tbody');
+  if (!cards || !fields) return;
+
+  if (!study) {
+    callout.className = 'callout warn';
+    callout.innerHTML = '<p><strong>No churn study published.</strong> Run '
+      + '<code>python3 pipeline/run.py churn</code> to regenerate it.</p>';
+    fields.innerHTML = '<tr><td class="empty" colspan="3">No study available.</td></tr>';
+    revs.innerHTML = '<tr><td class="empty" colspan="5">No study available.</td></tr>';
+    return;
+  }
+
+  const t = study.totals || {}, sp = study.sampling || {};
+  cards.innerHTML = `
+    <div class="card"><div class="num accent">${num(sp.vintages_downloaded)}</div>
+      <div class="lbl">genuine upstream vintages</div>
+      <div class="sub">${num(sp.intervals_compared)} consecutive pairs compared</div></div>
+    <div class="card"><div class="num">${fmt(sp.window_hours)}</div>
+      <div class="lbl">hours of upstream history</div>
+      <div class="sub">${esc(String(sp.window_start || '').slice(0, 10))} → ${esc(String(sp.window_end || '').slice(0, 10))}</div></div>
+    <div class="card"><div class="num warn">${num(t.intervals_where_full_file_bytes_changed)}</div>
+      <div class="lbl">intervals where the source bytes changed</div>
+      <div class="sub">the mirror is actively rewritten</div></div>
+    <div class="card"><div class="num ${Number(t.frozen_field_changes_on_final_games) === 0 ? 'ok' : 'warn'}">${num(t.frozen_field_changes_on_final_games)}</div>
+      <div class="lbl">frozen scoreboard changes on finished games</div>
+      <div class="sub">score, margin, total, overtime</div></div>
+    <div class="card"><div class="num">${num(t.non_frozen_field_changes_on_final_games)}</div>
+      <div class="lbl">other changes on finished games</div>
+      <div class="sub">across ${num(t.distinct_final_games_touched)} games — the noise a naive detector would have sent</div></div>`;
+
+  callout.className = 'callout ok';
+  callout.innerHTML = `<p>${esc(study.interpretation || '')}</p>
+    <p class="footnote">${num(t.final_records_compared)} already-final record comparisons. `
+    + `Every vintage is re-downloadable from its recorded codeload URL and identified by SHA-256, `
+    + `so this table can be checked without trusting this page.</p>`;
+
+  const frozen = new Set(['away_score', 'home_score', 'result', 'total', 'overtime']);
+  const rows = Object.entries(t.non_frozen_fields_observed || {});
+  fields.innerHTML = (rows.length ? rows : [['(none observed)', 0]]).map(([k, n]) => `<tr>
+      <td class="mono">${esc(k)}</td>
+      <td class="num">${num(n)}</td>
+      <td>${frozen.has(k) ? '<span class="pill sev-3">yes — would alert</span>' : '<span class="pill sev-0">no — excluded by design</span>'}</td>
+    </tr>`).join('');
+
+  const revList = t.revisions_of_already_published_values || [];
+  revs.innerHTML = (revList.length ? revList.slice(0, 40) : []).map((r) => `<tr>
+      <td class="mono">${esc(r.observed_at)}</td>
+      <td class="mono">${esc(r.game_id)}</td>
+      <td class="mono">${esc(r.field)}</td>
+      <td>${esc(r.old)}</td>
+      <td>${esc(r.new)}</td>
+    </tr>`).join('')
+    || '<tr><td class="empty" colspan="5">No already-published value was revised in this window.</td></tr>';
+  if (revList.length > 40) {
+    revs.innerHTML += `<tr><td class="empty" colspan="5">…and ${revList.length - 40} more in `
+      + `<code>data/evidence/upstream_churn_study.json</code>.</td></tr>`;
+  }
+}
 /* Renders data/alerts/feed.json. Loaded separately and non-fatally: the feed is
    operational state, and its absence must never blank the historical database. */
 function renderFeed(feed) {
@@ -54,7 +181,7 @@ function renderFeed(feed) {
   if (!latest) {
     cards.innerHTML = '';
     note.innerHTML = '<p class="footnote">No detection run has been recorded yet.</p>';
-    tbody.innerHTML = '<tr><td class="empty" colspan="5">No runs recorded.</td></tr>';
+    tbody.innerHTML = '<tr><td class="empty" colspan="6">No runs recorded.</td></tr>';
     return;
   }
 
@@ -81,11 +208,22 @@ function renderFeed(feed) {
       <div class="sub">since ${esc(s.first_run || '—')}</div>
     </div>`;
 
-  const identical = latest.identical_inputs
-    ? ' The two snapshots compared were byte-identical (same SHA-256), so this run was a no-op rather than a fresh check.'
-    : '';
+  /* "Identical inputs" describes the COMPARED PROJECTION, not the source. The
+     manifests record the whole upstream file's SHA-256, so both facts are shown.
+     An earlier revision of this page called an identical projection a "no-op
+     rather than a fresh check", which the manifests disproved: the upstream file
+     had changed in every one of those comparisons. */
+  const srcMoved = latest.source_file_changed;
+  const srcNote = srcMoved === true
+    ? 'The upstream source file DID change between the two snapshots; the frozen-field projection did not.'
+    : srcMoved === false
+      ? 'The upstream source file did not change between the two snapshots either.'
+      : 'The upstream source-file hash is not recorded for this run, so source movement is unknown.';
+  const projNote = latest.identical_inputs
+    ? 'The compared projection (finished games, five frozen scoreboard fields) was byte-identical.'
+    : 'The compared projection changed.';
   note.innerHTML = `<p class="footnote">Last checked <strong>${esc(latest.checked_at)}</strong>.
-    Status: <strong>${esc(latest.status)}</strong>. ${esc(identical.trim())}</p>`;
+    Status: <strong>${esc(latest.status)}</strong>. ${esc(projNote)} ${esc(srcNote)}</p>`;
 
   tbody.innerHTML = (feed.runs || []).slice(0, 25).map((r) => {
     const cls = r.status === 'clean' ? 'sev-0' : 'sev-3';
@@ -95,9 +233,10 @@ function renderFeed(feed) {
       <td><span class="pill ${cls}">${esc(r.status === 'clean' ? 'clean' : 'ALERTS')}</span></td>
       <td class="num">${num(r.alerts_total)}</td>
       <td class="num">${num(r.records_compared)}</td>
+      <td>${srcCell(r)}</td>
       <td class="mono">${hash(r.old_sha256)} → ${hash(r.new_sha256)}</td>
     </tr>`;
-  }).join('') || '<tr><td class="empty" colspan="5">No runs recorded.</td></tr>';
+  }).join('') || '<tr><td class="empty" colspan="6">No runs recorded.</td></tr>';
 }
 
 /* ------------------------------------------------------------------ cards */
@@ -354,7 +493,15 @@ const LIMITS = [
   ['Low', 'Betting-line sign conventions are ambiguous in secondary sources.',
    'The exposure analysis uses only the magnitude of the spread, which is correct under either convention. The sign is never asserted.'],
   ['Low', 'A correction reverted between two snapshots is invisible.',
-   'If a value changes and changes back between snapshots, the diff sees nothing. The workflow uses a configured seasonal schedule; Actions scheduling is best-effort, not a freshness SLA.'],
+   'If a value changes and changes back between snapshots, the diff sees nothing. This is now measured, not assumed: the source-movement study found the mirrored file changed in 44 of 44 sampled intervals across 59 days, so the blind spot is exercised constantly. Upstream Git history is the only way to look inside an interval.'],
+  ['Medium', 'A notification can be delivered and never read.',
+   'A 2xx from a Slack or Discord webhook proves the endpoint accepted a payload. Neither platform returns a read receipt, and this project has no email or SMS channel and no user accounts. "The alert was sent" is the strongest honest claim; the Atom feeds let a reader verify independently what was published and when.'],
+  ['Medium', 'The watchdog cannot see GitHub-side or human-side failure.',
+   'health.yml reads the artefacts the detector leaves behind, so it cannot tell a workflow GitHub disabled or delayed from one that ran and found nothing, nor a runner outage, nor whether a delivered message was read. Every check reports UNKNOWN rather than OK when the evidence is absent, and staleness is a hard failure.'],
+  ['Medium', 'Archive verification uses one render channel on both sides.',
+   'web.archive.org is unreachable from this project\'s sandbox over plain HTTP, so a re-read compares a stored artefact against a fresh rendering obtained the same way. It catches transcription drift, dropped rows and a wrong capture (mutation-checked), but a systematic rendering error would appear on both sides.'],
+  ['Low', 'Provider id columns are renumbered long after a game ends.',
+   'The mirror renumbered its <code>ftn</code> and <code>pff</code> provider game-id columns on 2024 games in September 2026, about 21 months later. This project keys on <code>game_id</code> only, so a renumbering cannot re-point a record at a different game.'],
   ['Low', 'Exact correction publication latency and any general deadline are unknown.',
    'The selected joined sample spans 1–4 calendar days to the correction date printed on the archived page; this is not an exact timestamp or a universal deadline. The 14-day review flag is a project heuristic, not an NFL policy.'],
 ];
@@ -383,6 +530,16 @@ function renderLimits() {
     loadFirst(['data/alerts/feed.json', 'data/feed.json'])
       .then(renderFeed)
       .catch(() => renderFeed({ latest: null, runs: [], summary: {} }));
+
+    /* Operational state: loaded separately and non-fatally, and rendered with an
+       explicit "unknown" state rather than being silently omitted. */
+    loadFirst(['data/alerts/health.json'])
+      .then(renderHealth)
+      .catch(() => renderHealth(null));
+
+    loadFirst(['data/upstream_churn_study.json', 'data/evidence/upstream_churn_study.json'])
+      .then(renderChurn)
+      .catch(() => renderChurn(null));
 
     renderTopCards(db, study);
     renderIntegrity(study);

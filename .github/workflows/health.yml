@@ -1,0 +1,143 @@
+name: Monitor health watchdog
+
+# WHY THIS IS A SEPARATE WORKFLOW
+#   A detector cannot report its own death. If detect.yml is disabled, delayed,
+#   out of quota, or fails before it writes anything, the published feed simply
+#   stops updating — and the site keeps looking current. This workflow does not
+#   depend on detect.yml succeeding: it reads the artefacts detect.yml leaves
+#   behind (feed, snapshot manifests, delivery log, published copies) and fails
+#   loudly when they are stale, drifted or contradictory.
+#
+# WHAT "FAIL" MEANS HERE
+#   exit 3 from `run.py health --fail-on fail`, i.e. one of:
+#     * no completed comparison within the staleness threshold
+#     * the published Atom feed is malformed or out of step with the feed
+#     * a published copy has drifted from its canonical source
+#     * a snapshot store with nothing to diff against
+#     * a notification dead-lettered after exhausting retries
+#   A missing webhook (push notification not configured) is reported as UNKNOWN
+#   and degrades the status to WARN; it does not fail the run, because push is
+#   opt-in by design and a fork must never be forced to configure a secret.
+
+on:
+  schedule:
+    # 06:00 UTC daily — deliberately offset from detect.yml's 12:00 UTC poll so
+    # this watchdog judges a run that has already had its chance to happen.
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["Detect scoring discrepancies"]
+    types: [completed]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: health
+  cancel-in-progress: false
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Assess monitor health from the artefacts on disk
+        id: health
+        run: |
+          set +e
+          python3 pipeline/run.py health --fail-on fail \
+            --out data/alerts/health.json
+          CODE=$?
+          set -e
+          echo "status=$CODE" >> "$GITHUB_OUTPUT"
+          if [ "$CODE" -eq 3 ]; then
+            echo "::error::Monitor health FAILED. The site may be showing stale data as current."
+          fi
+          exit "$CODE"
+
+      - name: Publish the health report to the job summary
+        if: always()
+        run: |
+          if [ -f data/alerts/health.json ]; then
+            python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json, pathlib, sys
+          sys.path.insert(0, "pipeline")
+          import health
+          report = json.loads(pathlib.Path("data/alerts/health.json").read_text())
+          print(health.render_markdown(report))
+          PY
+          else
+            echo "## Monitor health: UNKNOWN" >> "$GITHUB_STEP_SUMMARY"
+            echo "No health artefact could be produced; this run cannot claim the monitor is working." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      # Regenerate the subscribable feeds from whatever the feed currently holds,
+      # so a stale Atom file cannot linger next to a fresh JSON one.
+      - name: Regenerate Atom feeds
+        if: always()
+        run: python3 pipeline/run.py atom
+
+      - name: Sync published copies
+        if: always()
+        run: ./pipeline/sync_site_data.sh
+
+      - name: Commit the health report and regenerated feeds
+        if: always()
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -f data/alerts/ docs/data/ data/corrections.atom
+          if git diff --cached --quiet; then
+            echo "nothing to commit"
+          else
+            git commit -m "chore: monitor health $(date -u +%Y-%m-%dT%H:%MZ) [skip ci]"
+            git push
+          fi
+
+      - name: Notify a configured webhook that the MONITOR is unhealthy
+        # Separate from alert delivery on purpose: a health failure means the
+        # alert path itself may be broken, so this is the channel that says
+        # "you are not being watched".
+        if: failure()
+        env:
+          WEBHOOK: ${{ secrets.ALERT_WEBHOOK_URL }}
+        run: |
+          if [ -z "$WEBHOOK" ]; then
+            echo "ALERT_WEBHOOK_URL is not configured; the failure is visible only in this run log."
+            echo "That is itself a monitoring gap: set the secret to be told when the monitor dies."
+            exit 0
+          fi
+          python3 - <<'PY'
+          import json, os, sys
+          sys.path.insert(0, "pipeline")
+          import health as health_mod
+
+          report = json.loads(open("data/alerts/health.json", encoding="utf-8").read())
+          text = (
+              f"*NFL scoring-discrepancy monitor is NOT healthy* — status {report['status'].upper()}.\n"
+              f"{report['headline']}\n"
+              f"Last completed comparison: {report.get('last_successful_comparison_at')} "
+              f"({report.get('hours_since_last_comparison')} h ago).\n"
+          )
+          for c in report.get("checks", []):
+              if c["status"] in ("fail", "warn", "unknown"):
+                  text += f"• [{c['status'].upper()}] {c['check']}: {c['detail']}\n"
+          text += f"Next action: {report.get('next_action')}\n"
+          run_id = os.environ.get("GITHUB_RUN_ID", "")
+          repo = os.environ.get("GITHUB_REPOSITORY", "")
+          if repo and run_id:
+              text += f"Run: https://github.com/{repo}/actions/runs/{run_id}\n"
+
+          # A health failure is NOT a scoring-discrepancy alert, so it is sent as
+          # plain text through the shared transport instead of being dressed up
+          # in an alert payload that would read "change candidate detected".
+          import detect
+          ok, msg = detect.post_text(text, os.environ["WEBHOOK"])
+          print("webhook:", ok, msg)
+          sys.exit(0 if ok else 1)
+          PY

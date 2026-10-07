@@ -74,6 +74,107 @@ negative result is the deliverable.
 
 ---
 
+## Finding 1b — The mirror does revise finished games; it just did not touch a scoreboard
+
+### Method
+
+`pipeline/vintage_study.py` enumerated upstream commits touching
+`nflverse/nfldata`'s `data/games.csv`, sampled every 50th, and downloaded each as a
+codeload tarball **pinned to the exact commit SHA** — immutable, so any reviewer can
+re-fetch byte-identical files from the URL stored in the artefact. Each consecutive
+pair was diffed with the shipped detector (`detect.diff_final_records`), and
+*additionally* every field-level change on games already final in the older vintage
+was recorded, including fields the detector ignores on purpose.
+
+45 vintages, 44 intervals, **2026-08-09 → 2026-10-07 (1,420.7 hours)**, 321,009
+already-final record comparisons.
+
+### Result
+
+| Measured | Value |
+|---|---|
+| Intervals where the mirrored file's bytes changed | **44 of 44** |
+| Frozen scoreboard changes on already-final games | **0** |
+| Other field changes on already-final games | **179** across **91** games |
+| — late backfill of a blank cell | 145 |
+| — revision of an already-published value | 34 |
+| Columns observed | `ftn` 55, `referee` 38, `temp` 28, `wind` 28, `surface` 28, `pff` 2 |
+| Observed edit lag for weather/officials backfills | 1 day (67), 2 days (48), 3 (6), 4 (5) |
+| Slim-projection changes not explained by a frozen change or a row-count change | **0** |
+
+Artefact: [`data/evidence/upstream_churn_study.json`](data/evidence/upstream_churn_study.json).
+
+### Interpretation
+
+Three things follow, and they pull in different directions.
+
+1. **Post-final edits are real and visible.** The mirror backfills weather and
+   officials metadata onto finished games 1–2 days after they are played — squarely
+   inside the window in which the archived official corrections were published. A
+   diff-based detector *can* see changes to finished games; it is not chasing a
+   phantom.
+2. **The scoreboard fields were stable.** Zero frozen-field changes across 59 days
+   and three full NFL weeks. Combined with Finding 1 (0 changes across 28,323
+   historical snapshot comparisons), this is now two independent-shaped measurements
+   pointing the same way — still bounded, still about a mirror, still not a law.
+3. **Scope is what makes the alert usable.** A detector that alerted on *any* field
+   of a finished game would have fired 179 times in 59 days — weather backfills,
+   officials names, and a wholesale renumbering of provider game-id columns on 2024
+   games observed ~21 months later — while catching none of the changes that matter
+   to a score market. That measured noise floor is the empirical justification for
+   the frozen-field rule, and it is the reason this project will not widen the field
+   set without a matching increase in corroboration.
+
+One genuine post-final *value* revision was observed in a non-scoreboard column:
+`2026_01_SF_LA`'s `surface` changed from `matrixturf` to `grass`, three days after
+the game. It is recorded in the artefact because it is the shape a real correction
+takes — a published value replaced by a different one — and because it shows the
+distinction the study draws between a backfill and a revision is not hypothetical.
+
+### What this is not
+
+Not a statement about NFL records, not exhaustive (a change made and reverted inside
+one sampled interval is invisible, and the stride is recorded so the blind spot is
+quantified), and not evidence that scoreboard fields *cannot* change.
+
+---
+
+## Finding 1c — What was independently re-verified, line by line
+
+The brief requires verification against official sources with links for manual
+review, and forbids hallucination. This session's checks are recorded in
+[`data/evidence/verification_log.json`](data/evidence/verification_log.json), each
+with the URL a human can open:
+
+* **All 10 stored archived pages are internally consistent**: the correction rows
+  extractable from each artefact equal the count its manifest declares and the count
+  that reached the shipping database (10/10 agree), and every artefact's recorded
+  capture URL matches its manifest (10/10).
+* **One page was independently re-read**: the 2018 week-14 capture
+  ([web.archive.org/web/20181219090041](https://web.archive.org/web/20181219090041/https://fantasy.nfl.com/research/statcorrections?leagueId=0&statWeek=14))
+  was fetched again and compared row by row with `pipeline/verify_artefact.py`:
+  **11 of 11 rows identical**, including player names, dates, stat wording, original
+  and corrected values and fantasy-point deltas. The publisher header — *"View
+  official stat corrections as released by the NFL League Office and the official
+  statistician of the NFL, Elias Sports Bureau"* — was confirmed verbatim on the same
+  capture, which is the primary-source basis for §Finding 4.
+* **The verification tool was mutation-checked**: altering one corrected value
+  (71 → 67 became 71 → 68) reported the exact differing row and exited 2; deleting
+  rows reported each missing row. A pass therefore means something.
+* **The database input is pinned**: the SHA-256 of the exact `games.csv` the shipping
+  database was built from appears among the re-downloadable vintages in the
+  source-movement study, so the join can be reproduced from a commit-pinned artefact
+  even though the builder did not retain the file.
+
+**Honestly not verified:** the other nine artefacts were not independently re-read
+this session (they were validated when first stored and remain self-consistent); no
+sportsbook or fantasy settlement has ever been verified in this project; and the
+re-read used the same document-render channel on both sides, because
+`web.archive.org` is unreachable from this sandbox over plain HTTP. That is a strong
+consistency check, not two independent observations of the archive.
+
+---
+
 ## Finding 2 — What the selected archived corrections document (74 rows)
 
 The 74 row-level corrections are regenerated from 10 stored archived-page

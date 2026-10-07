@@ -89,6 +89,34 @@ def nfldata_commits(path: str = NFLDATA_CSV, limit: int = 20, until: str | None 
     return http_json(url)
 
 
+def nfldata_head_commit(path: str = NFLDATA_CSV, ref: str = "master") -> dict | None:
+    """The newest commit touching `path`: our SOURCE WATERMARK.
+
+    Why this matters: a snapshot's bytes tell you what the mirror said, but not
+    how old that statement is. Recording the commit SHA and its date with every
+    snapshot lets `pipeline/health.py` report source freshness independently of
+    whether our own workflow ran, and lets any reviewer re-download exactly the
+    vintage we snapshotted from codeload.
+
+    Returns None rather than raising: an unreachable API must degrade the
+    watermark to "unknown", never fake a value.
+    """
+    try:
+        commits = nfldata_commits(path=path, limit=1)
+    except Exception:
+        return None
+    if not commits:
+        return None
+    c = commits[0]
+    return {
+        "sha": c.get("sha"),
+        "date": (c.get("commit", {}).get("committer", {}) or {}).get("date"),
+        "message": ((c.get("commit", {}).get("message") or "").splitlines() or [""])[0][:120],
+        "url": c.get("html_url"),
+        "ref": ref,
+    }
+
+
 def nfldata_snapshot_from_commit(sha: str, member: str = NFLDATA_CSV) -> bytes:
     """
     Download a full repo tarball at a specific commit and extract one file.

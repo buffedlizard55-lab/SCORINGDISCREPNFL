@@ -1,0 +1,295 @@
+{
+ "what_this_is": "Record of verification actually performed against external sources, with the exact URLs a human can open to repeat each check. It distinguishes checks that were run from checks that were not, and it never upgrades a self-consistency check into an independent confirmation.",
+ "generated_at": "2026-10-07T21:53:49Z",
+ "checks": {
+  "archived_official_pages": {
+   "artefacts_stored": 10,
+   "structural_self_check": "For every stored artefact, the number of correction rows extractable from it is compared with the count its source manifest declares and with the count that reached the shipping database. This is a self-consistency check: it catches dropped or duplicated rows, not a mis-transcription that was stored consistently.",
+   "all_counts_agree": true,
+   "all_header_urls_match_manifest": true,
+   "independent_re_reads_performed": 1,
+   "independent_re_read_detail": {
+    "source_id": "WAYBACK-2018W14-LEAGUE0",
+    "artefact": "data/evidence/pages/2018-W14-O.md",
+    "url_for_manual_review": "https://web.archive.org/web/20181219090041/https://fantasy.nfl.com/research/statcorrections?leagueId=0&statWeek=14",
+    "captured_snapshot_timestamp": "20181219090041",
+    "re_read_at": "2026-10-07T21:45:21Z",
+    "channel": "document-render (HTML-to-markdown) on both sides",
+    "rows_stored": 11,
+    "rows_in_fresh_rendering": 11,
+    "rows_matching": 11,
+    "result": "identical",
+    "stored_sha256": "8b3e6933738d31835512cf11e24469cd58d21290d6a5fe638a59a76623a2442b",
+    "fresh_sha256": "ef8c1ec97f3c1be44635f92e7324d588e00a07e7437282d8f711c1baff61162f",
+    "tool": "pipeline/verify_artefact.py",
+    "mutation_checked": "The same tool was run against deliberately mutated inputs: changing one corrected value (71 -> 67 became 71 -> 68) reported the exact differing row and exited 2; removing rows reported each missing row. A pass therefore means something.",
+    "residual_risk": "Both sides came through the same document-render channel, because web.archive.org is not reachable from this project's sandbox over plain HTTP (curl fails at TLS). This is a strong consistency check, not two independent observations of the archive.",
+    "committed_evidence": {
+     "directory": "data/evidence/verification/",
+     "why": "The re-read inputs are committed so this check is repeatable from the repository alone, without re-fetching the archive. Nothing below was hand-typed: the hashes and exit codes were computed from the committed files at generation time.",
+     "files": [
+      {
+       "role": "fresh_rendering",
+       "path": "data/evidence/verification/2018-W14-O-fresh-rendering.md",
+       "bytes": 3667,
+       "sha256": "ef8c1ec97f3c1be44635f92e7324d588e00a07e7437282d8f711c1baff61162f"
+      },
+      {
+       "role": "verifier_result",
+       "path": "data/evidence/verification/2018-W14-O-result.json",
+       "bytes": 665,
+       "sha256": "0cb8c7325baed66b93682b15f5bad355ceb3e3152c1a3fe2814119a481b971e0"
+      },
+      {
+       "role": "mutation_changed_value",
+       "path": "data/evidence/verification/mutation-check-changed-value.md",
+       "bytes": 3667,
+       "sha256": "aa34d0db06165b7256e57c4177f7073227201c6ca4f3d02fae6e20a72f19f2f0"
+      },
+      {
+       "role": "mutation_dropped_rows",
+       "path": "data/evidence/verification/mutation-check-dropped-rows.md",
+       "bytes": 615,
+       "sha256": "83f79dfae50cf3e7602adf06b0a91d3bb4e06e648748225a5ed28a6e5b4c6b15"
+      }
+     ],
+     "repeat_command": "python3 pipeline/verify_artefact.py --artefact data/evidence/pages/2018-W14-O.md --fetched data/evidence/verification/2018-W14-O-fresh-rendering.md",
+     "re_run_from_committed_inputs": {
+      "committed_fresh_rendering": {
+       "exit_code": 0,
+       "counts": "11 · Fresh rows: 11 · Matching: 11",
+       "result": "IDENTICAL"
+      },
+      "mutation_changed_value": {
+       "exit_code": 2,
+       "counts": "11 · Fresh rows: 11 · Matching: 10",
+       "result": "DIFFERENCES FOUND"
+      },
+      "mutation_dropped_rows": {
+       "exit_code": 2,
+       "counts": "11 · Fresh rows: 0 · Matching: 0",
+       "result": "DIFFERENCES FOUND"
+      }
+     },
+     "mutation_check_exit_codes": {
+      "identical_rendering": 0,
+      "one_value_changed": 2,
+      "all_rows_removed": 2
+     }
+    }
+   },
+   "not_independently_re_read_this_session": [
+    "WAYBACK-2010W01-DEF",
+    "WAYBACK-2012W01-O",
+    "WAYBACK-2013W01-O",
+    "WAYBACK-2015W01-O",
+    "WAYBACK-2015W16-O",
+    "WAYBACK-2017W01-O",
+    "WAYBACK-2017W16-LEAGUE0",
+    "WAYBACK-2018W01-O",
+    "WAYBACK-2022W17-EMPTY"
+   ],
+   "publisher_header_verified_verbatim": {
+    "text": "View official stat corrections as released by the NFL League Office and the official statistician of the NFL, Elias Sports Bureau. Fantasy points values are based on default NFL-Managed scoring.",
+    "observed_on": "https://web.archive.org/web/20181219090041/https://fantasy.nfl.com/research/statcorrections?leagueId=0&statWeek=14",
+    "observed_at": "2026-10-07T21:45:21Z",
+    "significance": "This is the primary-source basis for the claim that Elias Sports Bureau is the NFL's official statistician and that corrections are released jointly with the NFL League Office."
+   }
+  },
+  "live_mirror_source": {
+   "source": "nflverse/nfldata data/games.csv (third-party mirror, not an NFL publication)",
+   "newest_upstream_commit": "338e23a47692ce3f36b142084a325b6e692cdb78",
+   "newest_upstream_commit_date": "2026-10-07T21:45:15Z",
+   "commit_listing_url": "https://github.com/nflverse/nfldata/commits/master/data/games.csv",
+   "downloaded_bytes": 2183215,
+   "downloaded_sha256": "460f01c5e8273d85249032077d95ba921f6ee4613e13eb55ea88e324b744f1f3",
+   "snapshot_dir": "2026-10-07T211802Z",
+   "codeload_url": "https://codeload.github.com/nflverse/nfldata/tar.gz/b8a4c3931e3f85a7b6d9056198354ff5aadc8da4",
+   "matches_database_input_hash": true,
+   "note": "The shipping database records the SHA-256 of the exact games.csv it was built from; that same hash appears among the re-downloadable vintages in the source-movement study, so the database input is pinned to a reproducible artefact even though the builder did not retain the file."
+  },
+  "source_movement_study": {
+   "artefact": "data/evidence/upstream_churn_study.json",
+   "vintages": 45,
+   "vintages_failed": 0,
+   "window": "2026-08-09T16:05:13Z -> 2026-10-07T20:45:13Z",
+   "window_hours": 1420.67,
+   "every_vintage_re_downloadable": true,
+   "frozen_field_changes_on_final_games": 0,
+   "non_frozen_changes_on_final_games": 179,
+   "unexplained_projection_changes": []
+  },
+  "detection_runs_recorded": {
+   "runs": 3,
+   "all_runs_state_whether_the_source_file_moved": true,
+   "runs_where_the_upstream_file_changed": 3
+  }
+ },
+ "artefacts": [
+  {
+   "source_id": "WAYBACK-2010W01-DEF",
+   "artefact": "data/evidence/pages/2010-W01-DEF.md",
+   "source_url": "https://web.archive.org/web/20260516203131/https://fantasy.nfl.com/research/statcorrections?position=8&sort=pts&statCategory=stats&statSeason=2010&statType=weekStats&statWeek=1",
+   "snapshot_timestamp": "20260516203131",
+   "season": 2010,
+   "week": 1,
+   "rows_declared_by_source_manifest": 2,
+   "rows_extractable_from_artefact": 2,
+   "rows_in_shipping_database": 2,
+   "expected_empty": false,
+   "counts_agree": true,
+   "artefact_sha256": "9161013916c2046e692bbdbea3e8c7df9c3915f6454cb1b63e2babfe72d76b43",
+   "header_url_matches_manifest": true,
+   "independently_re_read_this_session": false
+  },
+  {
+   "source_id": "WAYBACK-2012W01-O",
+   "artefact": "data/evidence/pages/2012-W01-O.md",
+   "source_url": "https://web.archive.org/web/20191023182149/https://fantasy.nfl.com/research/statcorrections?position=O&sort=pts&statCategory=stats&statSeason=2012&statType=weekStats&statWeek=1",
+   "snapshot_timestamp": "20191023182149",
+   "season": 2012,
+   "week": 1,
+   "rows_declared_by_source_manifest": 7,
+   "rows_extractable_from_artefact": 7,
+   "rows_in_shipping_database": 7,
+   "expected_empty": false,
+   "counts_agree": true,
+   "artefact_sha256": "a63ac39f2a0d8752e537ea4be0be7f028ccd5b2f1e91befa4bac28414d82cdb6",
+   "header_url_matches_manifest": true,
+   "independently_re_read_this_session": false
+  },
+  {
+   "source_id": "WAYBACK-2013W01-O",
+   "artefact": "data/evidence/pages/2013-W01-O.md",
+   "source_url": "https://web.archive.org/web/20191019100813/https://fantasy.nfl.com/research/statcorrections?position=O&sort=pts&statCategory=stats&statSeason=2013&statType=weekStats&statWeek=1",
+   "snapshot_timestamp": "20191019100813",
+   "season": 2013,
+   "week": 1,
+   "rows_declared_by_source_manifest": 15,
+   "rows_extractable_from_artefact": 15,
+   "rows_in_shipping_database": 15,
+   "expected_empty": false,
+   "counts_agree": true,
+   "artefact_sha256": "f5170abcf4aae3741cde7435421b40e919883511d5799520f14b201abeec2816",
+   "header_url_matches_manifest": true,
+   "independently_re_read_this_session": false
+  },
+  {
+   "source_id": "WAYBACK-2015W01-O",
+   "artefact": "data/evidence/pages/2015-W01-O.md",
+   "source_url": "https://web.archive.org/web/20191019093854/https://fantasy.nfl.com/research/statcorrections?position=O&sort=pts&statCategory=stats&statSeason=2015&statType=weekStats&statWeek=1",
+   "snapshot_timestamp": "20191019093854",
+   "season": 2015,
+   "week": 1,
+   "rows_declared_by_source_manifest": 6,
+   "rows_extractable_from_artefact": 6,
+   "rows_in_shipping_database": 6,
+   "expected_empty": false,
+   "counts_agree": true,
+   "artefact_sha256": "2b0425ffccd1845f1ca308c261e39f23521868af4acac7ae3fdb73ad299827a2",
+   "header_url_matches_manifest": true,
+   "independently_re_read_this_session": false
+  },
+  {
+   "source_id": "WAYBACK-2015W16-O",
+   "artefact": "data/evidence/pages/2015-W16-O.md",
+   "source_url": "https://web.archive.org/web/20200930215056/https://fantasy.nfl.com/research/statcorrections?position=O&statCategory=stats&statSeason=2015&statType=weekStats&statWeek=16",
+   "snapshot_timestamp": "20200930215056",
+   "season": 2015,
+   "week": 16,
+   "rows_declared_by_source_manifest": 14,
+   "rows_extractable_from_artefact": 14,
+   "rows_in_shipping_database": 14,
+   "expected_empty": false,
+   "counts_agree": true,
+   "artefact_sha256": "09d7335354f1b7cbbc79a00cc59a975a1fce4e04cf67b5bda177167344ed3a62",
+   "header_url_matches_manifest": true,
+   "independently_re_read_this_session": false
+  },
+  {
+   "source_id": "WAYBACK-2017W01-O",
+   "artefact": "data/evidence/pages/2017-W01-O.md",
+   "source_url": "https://web.archive.org/web/20191015042529/https://fantasy.nfl.com/research/statcorrections?position=O&sort=pts&statCategory=stats&statSeason=2017&statType=weekStats&statWeek=1",
+   "snapshot_timestamp": "20191015042529",
+   "season": 2017,
+   "week": 1,
+   "rows_declared_by_source_manifest": 7,
+   "rows_extractable_from_artefact": 7,
+   "rows_in_shipping_database": 7,
+   "expected_empty": false,
+   "counts_agree": true,
+   "artefact_sha256": "9f6ee8c2e52901cb4487ced5e97cac855be39ca68ea49bf4d6edbab4b8db99b5",
+   "header_url_matches_manifest": true,
+   "independently_re_read_this_session": false
+  },
+  {
+   "source_id": "WAYBACK-2017W16-LEAGUE0",
+   "artefact": "data/evidence/pages/2017-W16-O.md",
+   "source_url": "https://web.archive.org/web/20180114192611/https://fantasy.nfl.com/research/statcorrections?leagueId=0&statWeek=16",
+   "snapshot_timestamp": "20180114192611",
+   "season": 2017,
+   "week": 16,
+   "rows_declared_by_source_manifest": 9,
+   "rows_extractable_from_artefact": 9,
+   "rows_in_shipping_database": 9,
+   "expected_empty": false,
+   "counts_agree": true,
+   "artefact_sha256": "da1909764d7328d56160fee52867360dc8114dfed6a32bfb536958c1592aa91c",
+   "header_url_matches_manifest": true,
+   "independently_re_read_this_session": false
+  },
+  {
+   "source_id": "WAYBACK-2018W01-O",
+   "artefact": "data/evidence/pages/2018-W01-O.md",
+   "source_url": "https://web.archive.org/web/20191017135639/https://fantasy.nfl.com/research/statcorrections?position=O&sort=pts&statCategory=stats&statSeason=2018&statType=weekStats&statWeek=1",
+   "snapshot_timestamp": "20191017135639",
+   "season": 2018,
+   "week": 1,
+   "rows_declared_by_source_manifest": 3,
+   "rows_extractable_from_artefact": 3,
+   "rows_in_shipping_database": 3,
+   "expected_empty": false,
+   "counts_agree": true,
+   "artefact_sha256": "ef12ab3f1e4bae9590cf13eb552fb189a979b7b59c572da645c94adcbd89e6e4",
+   "header_url_matches_manifest": true,
+   "independently_re_read_this_session": false
+  },
+  {
+   "source_id": "WAYBACK-2018W14-LEAGUE0",
+   "artefact": "data/evidence/pages/2018-W14-O.md",
+   "source_url": "https://web.archive.org/web/20181219090041/https://fantasy.nfl.com/research/statcorrections?leagueId=0&statWeek=14",
+   "snapshot_timestamp": "20181219090041",
+   "season": 2018,
+   "week": 14,
+   "rows_declared_by_source_manifest": 11,
+   "rows_extractable_from_artefact": 11,
+   "rows_in_shipping_database": 11,
+   "expected_empty": false,
+   "counts_agree": true,
+   "artefact_sha256": "8b3e6933738d31835512cf11e24469cd58d21290d6a5fe638a59a76623a2442b",
+   "header_url_matches_manifest": true,
+   "independently_re_read_this_session": true
+  },
+  {
+   "source_id": "WAYBACK-2022W17-EMPTY",
+   "artefact": "data/evidence/pages/2022-W17-EMPTY.md",
+   "source_url": "https://web.archive.org/web/20220523025020/https://fantasy.nfl.com/research/statcorrections?leagueId=0&statWeek=17",
+   "snapshot_timestamp": "20220523025020",
+   "season": 2022,
+   "week": 17,
+   "rows_declared_by_source_manifest": 0,
+   "rows_extractable_from_artefact": 0,
+   "rows_in_shipping_database": 0,
+   "expected_empty": true,
+   "counts_agree": true,
+   "artefact_sha256": "967bbe05b9bf56140f73e89dee1fbb7dc57c6d74104ef0fbab980155c994c8fc",
+   "header_url_matches_manifest": true,
+   "independently_re_read_this_session": false
+  }
+ ],
+ "not_verified_by_this_log": [
+  "Whether any archived correction changed a sportsbook or fantasy settlement: no settlement record exists in this project.",
+  "The 9 stored artefacts other than 2018-W14 were not independently re-read this session; they are self-consistent and were validated when first stored.",
+  "Whether the NFL's own internal records changed: every check here reads a third-party mirror or an archived copy of a retired NFL page."
+ ]
+}
