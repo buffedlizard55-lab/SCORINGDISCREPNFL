@@ -37,4 +37,4 @@ for f in index.html app.js styles.css; do
 done
 cp "$root/docs/.nojekyll" "$root/.nojekyll"
 
-echo "synced data artefacts + live feed -> docs/data/ and 4 site assets -> repo root"
+echo "synced 4 data artefacts + optional live feed -> docs/data/ and 4 site assets -> repo root"

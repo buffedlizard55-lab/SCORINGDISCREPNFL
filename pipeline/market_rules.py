@@ -3,75 +3,70 @@ market_rules.py — Market-impact rule table for NFL stat corrections.
 
 WHY THIS FILE EXISTS
 --------------------
-A stat correction only *matters* for a market if it crosses a line that somebody
-could have bet, or flips a discrete scoring event. A 1-yard rushing change from
-42 -> 43 is noise. A change from 299 -> 301 passing yards crosses the very common
-300-yard bonus threshold. This module encodes those thresholds as data so the
-detector can label each correction by market relevance instead of a human
-eyeballing every row.
+Whether a stat correction matters to a wager depends on the actual market,
+line, timing, and operator rules. This module provides a screening heuristic,
+not a verified market inventory: a move from 42 -> 43 may be worth checking
+against a line if one was offered, and 299 -> 301 crosses the project's 300-yard
+review marker without asserting that a bonus market existed. The rules help
+prioritize human review; they do not settle bets.
 
 SOURCING DISCIPLINE
 -------------------
-Every rule below is either:
-  (a) a DISCRETE SCORING EVENT (touchdown, field goal, extra point, two-point
-      conversion, safety, defensive score). These are binary: they either
-      happened or they did not. Changing one changes points on the scoreboard
-      and therefore team totals / game totals / player TD markets. No threshold
-      judgement is required.
-  (b) a ROUND-NUMBER STATISTICAL THRESHOLD that is widely offered as a betting
-      line or a DFS/fantasy bonus. These are the conventional round numbers.
+This rule table flags candidate relevance for player/team scoring stats,
+project-defined candidate line-market categories, and round-number review
+thresholds. The line-market categories are a heuristic, not verified proof of
+what books offered. A player-level stat correction can change attribution
+without changing points on the board; direct scoreboard fields are detected
+separately in detect.py. Round numbers are markers, not a claim that a
+particular book offered a market at that value.
 
-This file deliberately does NOT invent sportsbook lines. It encodes only
-(a) discrete events and (b) conventional round-number bonuses. Actual per-game
-player-prop lines are NOT available from any free, verifiable, redistributable
-feed, which is called out explicitly in LIMITATIONS.md rather than guessed at.
+This file deliberately does NOT invent sportsbook lines. Actual per-game
+player-prop lines are not available from a free, verified, redistributable feed
+in this project, which is called out explicitly in LIMITATIONS.md.
 """
 
 from __future__ import annotations
 
 # ---------------------------------------------------------------------------
-# 1. Discrete scoring events.
-#    Any correction to one of these can change the scoreboard, the game total,
-#    the team total, the spread, or a player's TD/points market.
-#    `severity` = 3 (highest).
+# 1. Player/team scoring-stat corrections.
+#    These can be decisive for a player scoring market, but a stat-line change
+#    alone does NOT prove that the scoreboard changed: the correction might
+#    re-attribute an unchanged play. Direct scoreboard fields are classified in
+#    detect.py, independently from player-stat categories.
+#    `severity` = 3 (highest candidate priority), with score impact unasserted.
 # ---------------------------------------------------------------------------
-SCORING_EVENT_STATS = {
-    # Offensive scoring
-    "touchdowns": "touchdown",
-    "passing touchdowns": "touchdown",
-    "rushing touchdowns": "touchdown",
-    "receiving touchdowns": "touchdown",
-    "return touchdowns": "touchdown",
-    "fumble recovery touchdowns": "touchdown",
-    "interception return touchdowns": "touchdown",
-    "kickoff return touchdowns": "touchdown",
-    "punt return touchdowns": "touchdown",
-    "two point conversions": "two_point",
-    "two-point conversions": "two_point",
-    "extra points made": "extra_point",
-    "extra points attempted": "extra_point",
-    # Kicking
-    "field goals made": "field_goal",
-    "field goals attempted": "field_goal",
-    # Defensive scoring
-    "safeties": "safety",
-    "defensive touchdowns": "touchdown",
+PLAYER_SCORING_STATS = {
+    "touchdowns": "player_touchdown",
+    "passing touchdowns": "player_passing_touchdown",
+    "rushing touchdowns": "player_rushing_touchdown",
+    "receiving touchdowns": "player_receiving_touchdown",
+    "return touchdowns": "player_return_touchdown",
+    "fumble recovery touchdowns": "player_fumble_recovery_touchdown",
+    "interception return touchdowns": "player_interception_return_touchdown",
+    "kickoff return touchdowns": "player_kickoff_return_touchdown",
+    "punt return touchdowns": "player_punt_return_touchdown",
+    "kickoff and punt return touchdowns": "player_return_touchdown",
+    "two point conversions": "player_two_point_conversion",
+    "two-point conversions": "player_two_point_conversion",
+    "extra points made": "player_extra_point_made",
+    "field goals made": "player_field_goal_made",
+    "safeties": "team_safety",
+    "defensive touchdowns": "team_defensive_touchdown",
 }
 
 # ---------------------------------------------------------------------------
-# 1b. LINE-PRICED STATS.
-#     These are stats that sportsbooks price as over/under lines at essentially
-#     every integer value, with the line almost always quoted at X.5.
-#     Consequence (and the reason this category exists): for these stats ANY
-#     integer change of >=1 can flip an over/under. A move of 182 -> 181 passing
-#     yards is NOT harmless simply because 182 is not a round number — it can
-#     flip a 181.5 line. Treating only round numbers as sensitive was a real bug
-#     found during review, so these are floored at severity 2.
+# 1b. CANDIDATE LINE-MARKET STATS.
+#     This project provisionally treats these stat categories as candidates for
+#     over/under review. It does NOT assert that every sportsbook offers each
+#     category, that a particular game had a line, or that all lines are X.5.
+#     Under a hypothetical half-point line between adjacent integer values, a
+#     one-unit change could cross it. Thus a move of 182 -> 181 passing yards is
+#     not dismissed solely because it misses a round-number marker. This is a
+#     screening heuristic, not a verified market inventory.
 #
-#     This deliberately does NOT claim that a prop line existed at any specific
-#     value. It claims only that the stat is line-priced, therefore a one-unit
-#     change is capable of crossing a line. Per-game lines are not freely
-#     redistributable, which is stated in LIMITATIONS.md rather than guessed.
+#     Per-game lines are not available here. Every generated market label is
+#     explicitly conditional (`if offered`); do not infer a specific book,
+#     line, price, wager, or settlement from this rule table.
 # ---------------------------------------------------------------------------
 LINE_PRICED_STATS = {
     "passing yards",
@@ -96,6 +91,7 @@ LINE_PRICED_STATS = {
     "field goals made",
     "field goals attempted",
     "extra points made",
+    "extra points attempted",
     "touchdowns",
 }
 
@@ -146,15 +142,6 @@ OTHER_RELEVANT_STATS = {
     "passing completions": "volume",
 }
 
-# ---------------------------------------------------------------------------
-# 4. Stats that are explicitly NOT market-relevant under our scope.
-#    These are recorded so the pipeline can drop them without a human deciding.
-# ---------------------------------------------------------------------------
-NON_MARKET_STATS = {
-    "kickoff and punt return touchdowns",  # duplicate guard; see SCORING_EVENT_STATS
-    "yardage",
-}
-
 SEVERITY = {3: "HIGH", 2: "MEDIUM", 1: "LOW", 0: "INFO"}
 
 
@@ -167,10 +154,10 @@ def crosses_threshold(stat: str, old_value: float, new_value: float) -> tuple[bo
     Return (crossed, threshold). `crossed` is True when old and new sit on
     opposite sides of some round-number threshold for this stat.
 
-    Exactness rule: if a value lands exactly ON a threshold we require the
-    other value to be beyond it, because sportsbook lines are typically
-    X.5 and only a strict crossing changes the outcome. A move from 100 -> 99
-    does cross the 100 line, so it is reported.
+    Project rule: flag when one value is strictly below the marker and the
+    other is at or above it (`lo < threshold <= hi`). This is a consistent
+    review boundary, not a claim about any book's line or settlement rule.
+    For example, 99 -> 100 and 100 -> 99 are flagged; 100 -> 101 is not.
     """
     ths = ROUND_NUMBER_THRESHOLDS.get(_norm(stat))
     if not ths:
@@ -198,14 +185,15 @@ def classify(stat: str, old_value: float, new_value: float) -> dict:
             "reason": "original and corrected value are identical",
         }
 
-    if s in SCORING_EVENT_STATS:
+    if s in PLAYER_SCORING_STATS:
         return {
             "severity": 3,
-            "category": SCORING_EVENT_STATS[s],
+            "category": PLAYER_SCORING_STATS[s],
             "threshold": None,
             "reason": (
-                f"discrete scoring event changed ({old_value:g} -> {new_value:g}); "
-                "can change scoreboard, game total, team total, spread or a TD market"
+                f"scoring-related statistic changed ({old_value:g} -> {new_value:g}); "
+                "may affect a player/team scoring market, but this row alone does not "
+                "establish a scoreboard change or prove that points were added or removed"
             ),
         }
 
@@ -216,8 +204,8 @@ def classify(stat: str, old_value: float, new_value: float) -> dict:
             "category": "threshold_crossing",
             "threshold": t,
             "reason": (
-                f"{stat} moved {old_value:g} -> {new_value:g}, crossing the "
-                f"round-number market threshold of {t:g}"
+                f"{stat} moved {old_value:g} -> {new_value:g}, crossing the project's "
+                f"round-number review threshold of {t:g}; no specific market is asserted"
             ),
         }
 
@@ -227,8 +215,9 @@ def classify(stat: str, old_value: float, new_value: float) -> dict:
             "category": "line_priced_change",
             "threshold": None,
             "reason": (
-                f"{stat} moved {old_value:g} -> {new_value:g}; this is a line-priced stat, so a "
-                "change of this size is capable of crossing an over/under quoted at a half point"
+                f"{stat} moved {old_value:g} -> {new_value:g}; this project flags the category "
+                "for line-market review. A hypothetical half-point line between these values "
+                "could be crossed if such a market was actually offered"
             ),
         }
 
@@ -249,35 +238,45 @@ def classify(stat: str, old_value: float, new_value: float) -> dict:
 
 
 def market_outcomes(stat: str, old_value: float, new_value: float) -> list[str]:
-    """Human-readable list of markets that could be affected."""
+    """List possible markets without inferring an unobserved scoreboard change."""
     c = classify(stat, old_value, new_value)
     s = _norm(stat)
     out: list[str] = []
-    if c["severity"] == 3:
-        out.append("game total (over/under)")
-        out.append("team total")
-        out.append("point spread")
-        out.append("moneyline (when the change flips the margin)")
+
+    if c["category"] in PLAYER_SCORING_STATS.values():
         if "passing" in s:
-            out.append("player passing touchdown market")
-        if "rushing" in s:
-            out.append("player rushing touchdown market / anytime TD")
-        if "receiving" in s:
-            out.append("player receiving touchdown market / anytime TD")
-        if "field goal" in s:
-            out.append("player field goals made market")
-        if "extra point" in s:
-            out.append("player extra points market")
-        if "safety" in s:
-            out.append("team total / game total precision markets")
-    elif c["severity"] == 2:
-        if c.get("category") == "threshold_crossing" and c.get("threshold") is not None:
-            out.append(f"{s} over/under (line near {c['threshold']:g})")
-            out.append(f"{s} statistical milestone / yardage bonus")
+            out.append("player passing-touchdown markets, if offered")
+        elif "rushing" in s:
+            out.append("player rushing-touchdown / anytime-touchdown markets, if offered")
+        elif "receiving" in s:
+            out.append("player receiving-touchdown / anytime-touchdown markets, if offered")
+        elif "return" in s or "recovery" in s or "defensive touchdown" in s:
+            out.append("player/defense touchdown markets, if offered")
+        elif "field goal" in s:
+            out.append("kicker field-goals-made markets, if offered")
+        elif "extra point" in s:
+            out.append("kicker extra-points-made markets, if offered")
+        elif "two" in s:
+            out.append("player two-point-conversion markets, if offered")
+        elif "safety" in s:
+            out.append("team safety/scoring markets, if offered")
         else:
-            out.append(f"{s} over/under (any half-point line between {min(old_value, new_value):g} and {max(old_value, new_value):g})")
-            out.append(f"{s} statistical milestone / yardage bonus if a round number sits inside that range")
-        out.append("same-game parlay / same-game combo legs containing this stat")
+            out.append("player touchdown / anytime-touchdown markets, if offered")
+        out.append("Scoreboard, team-total, game-total and spread impact is unproven unless the game-level score record also changes.")
+        return out
+
+    if c["severity"] == 2:
+        if c.get("category") == "threshold_crossing" and c.get("threshold") is not None:
+            out.append(f"{s} over/under around the {c['threshold']:g} threshold, if offered")
+            if "yard" in s:
+                out.append(f"{s} milestone/yardage-bonus markets, if offered")
+            else:
+                out.append(f"{s} threshold-based market or bonus, if offered")
+        else:
+            out.append(f"{s} over/under (a half-point line between {min(old_value, new_value):g} and {max(old_value, new_value):g}, if offered)")
+            if "yard" in s:
+                out.append(f"{s} milestone/yardage-bonus markets, if offered")
+        out.append("same-game parlay / combo legs containing this stat, if offered")
     elif c["severity"] == 1:
-        out.append(f"{s} over/under")
+        out.append(f"{s} over/under or fantasy/IDP scoring, if offered")
     return out

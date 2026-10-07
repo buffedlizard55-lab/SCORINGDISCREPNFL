@@ -35,6 +35,22 @@ from parse_corrections import parse_official_page  # noqa: E402
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
+def correction_scope_from_url(url: str, fallback_season: int | None = None) -> tuple[int | None, int | None]:
+    """Extract source season/week parameters, retaining a CLI season fallback."""
+    from urllib.parse import parse_qs, urlsplit
+
+    query = parse_qs(urlsplit(url).query)
+
+    def integer_param(name: str) -> int | None:
+        value = query.get(name, [None])[0]
+        try:
+            return int(value) if value is not None else None
+        except (TypeError, ValueError):
+            return None
+
+    return integer_param("statSeason") or fallback_season, integer_param("statWeek")
+
+
 def cmd_snapshot(args: argparse.Namespace) -> int:
     data = fetch.nfldata_snapshot_head(ref=args.ref)
     raw_sha = detect.sha256_bytes(data)
@@ -85,15 +101,62 @@ def cmd_diff(args: argparse.Namespace) -> int:
     return 10 if report["total_alerts"] else 0
 
 
+def summarize_evidence_baselines(results: list[dict]) -> dict:
+    """Summarize selected baseline diffs without treating failed fetches as zeroes."""
+    failed = [r for r in results if "error" in r]
+    fetched = len(results) - len(failed)
+    total_final = sum(r.get("final_at_baseline", 0) for r in results)
+    total_changed = sum(r.get("frozen_field_changes_vs_current", 0) for r in results)
+
+    if failed or not results:
+        if not results:
+            conclusion = "INCOMPLETE: no baseline results were available; no zero-change conclusion is possible."
+        else:
+            conclusion = (
+                f"INCOMPLETE: {len(failed)} of {len(results)} selected baseline fetches failed. "
+                f"Among the {fetched} fetched baselines, {total_changed} frozen-field differences "
+                "were observed among games already final at baseline. No conclusion about the "
+                "unfetched baselines or NFL score immutability follows."
+            )
+        status = "incomplete"
+    elif total_changed == 0:
+        conclusion = (
+            f"Across the {len(results)} selected historical baselines, no differences were observed "
+            "in the five frozen game fields for rows already final in each older mirror snapshot, "
+            "when compared with the current mirror. This limited third-party mirror comparison does "
+            "not establish that official NFL scores never change or estimate how often they change."
+        )
+        status = "complete"
+    else:
+        conclusion = (
+            "One or more frozen game fields differed between a selected older mirror snapshot and "
+            "the current mirror for a row already final at baseline. This is a mirror-change "
+            "candidate, not proof of an official NFL correction. See `baselines[].changes`."
+        )
+        status = "complete"
+
+    return {
+        "status": status,
+        "totals": {
+            "game_snapshots_examined": total_final,
+            "frozen_field_changes_vs_current": total_changed,
+            "selected_baselines": len(results),
+            "baselines_fetched": fetched,
+            "baselines_failed": len(failed),
+        },
+        "conclusion": conclusion,
+    }
+
+
 def cmd_evidence(args: argparse.Namespace) -> int:
     """
-    Score-integrity study.
+    Compare selected historical game-results mirror vintages.
 
     Pulls nfldata games.csv at a set of historical commits, keeps only games
-    that were ALREADY FINAL at that commit, and checks whether any frozen score
-    field differs from the current record. Any difference would be direct
-    evidence that a completed NFL game's official score was revised after the
-    fact and then propagated into a mirror.
+    that were already final at each commit, and checks whether any of five
+    frozen fields differs from the current mirror. A difference is a mirror
+    change candidate, not direct proof of an official NFL correction. Failed
+    baseline downloads make the study incomplete and are reported as such.
     """
     baselines = [
         ("2023-12-03", "88766138b8c3e78a669cca7116e79369749c3049"),
@@ -129,10 +192,9 @@ def cmd_evidence(args: argparse.Namespace) -> int:
             }
         )
 
-    total_final = sum(r.get("final_at_baseline", 0) for r in results)
-    total_changed = sum(r.get("frozen_field_changes_vs_current", 0) for r in results)
+    summary = summarize_evidence_baselines(results)
     out = {
-        "study": "final-score integrity of the NFL record as mirrored by nflverse/nfldata",
+        "study": "selected frozen-game-field comparisons in the nflverse/nfldata mirror",
         "method": (
             "For each historical commit of nflverse/nfldata data/games.csv, retain games whose "
             "`result` field was already populated (i.e. the game had concluded), then compare the "
@@ -141,23 +203,12 @@ def cmd_evidence(args: argparse.Namespace) -> int:
         ),
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "baselines": results,
-        "totals": {
-            "game_snapshots_examined": total_final,
-            "final_scores_revised_after_completion": total_changed,
-        },
-        "conclusion": (
-            "Across every baseline examined, zero completed games had any frozen score field "
-            "revised afterwards. Within the retention window of this mirror, an NFL game's final "
-            "score is effectively immutable once posted; what changes post-game is ATTRIBUTION "
-            "and STATISTICS, not the scoreboard."
-            if total_changed == 0
-            else "One or more completed games had a frozen score field revised after completion. "
-                 "See `baselines[].changes` for the specific games and values."
-        ),
+        **summary,
         "caveat": (
-            "This tests a third-party MIRROR of the NFL's record, not the NFL's own database. "
-            "It cannot detect a correction that the NFL made and then re-corrected back within a "
-            "single mirror update interval, nor any correction made before this mirror existed."
+            "This compares selected vintages of a third-party mirror, not the NFL's own database. "
+            "It cannot detect a correction that was made and reverted between sampled vintages, "
+            "nor any correction made before this mirror existed. The total counts overlapping "
+            "game-snapshot comparisons, not unique games."
         ),
     }
 
@@ -168,7 +219,7 @@ def cmd_evidence(args: argparse.Namespace) -> int:
         json.dump(out, f, indent=2)
     print(json.dumps(out["totals"], indent=2))
     print(f"wrote {path}")
-    return 0
+    return 1 if summary["status"] != "complete" else 0
 
 
 def cmd_corrections(args: argparse.Namespace) -> int:
@@ -181,10 +232,16 @@ def cmd_corrections(args: argparse.Namespace) -> int:
         except Exception as e:
             print(f"  {ts} FETCH FAILED {e!r}")
             continue
+        season, week = correction_scope_from_url(url, args.season)
+        review_url = fetch.official_corrections_snapshot_url(ts, url)
         rows = parse_official_page(
-            raw.decode("utf-8", "replace"), source_url=url, snapshot_timestamp=ts
+            raw.decode("utf-8", "replace"),
+            season=season,
+            week=week,
+            source_url=review_url,
+            snapshot_timestamp=ts,
         )
-        print(f"  {ts} -> {len(rows)} rows  ({url[:80]})")
+        print(f"  {ts} -> {len(rows)} rows  ({review_url[:100]})")
         rows_out.extend(r.to_dict() for r in rows)
 
     outdir = os.path.join(REPO_ROOT, "data")
@@ -198,14 +255,20 @@ def cmd_corrections(args: argparse.Namespace) -> int:
 
 def cmd_selfcheck(args: argparse.Namespace) -> int:
     """
-    Fetch one known-good archived page and report whether the parser recovered
-    the expected four-column structure. Run this FIRST on Actions before
-    trusting any parsed output.
+    Fetch one known archived page and report whether the parser recovered at
+    least ten fully parsed rows. This is a manual/backfill diagnostic, not a
+    validation of every field or a gate in the scoreboard-only workflow.
     """
     ts, url = "20200930215056", fetch.official_corrections_url(2015, 16, "O")
     raw = fetch.official_corrections_page(ts, url)
     text = raw.decode("utf-8", "replace")
-    rows = parse_official_page(text, 2015, 16, source_url=url, snapshot_timestamp=ts)
+    rows = parse_official_page(
+        text,
+        2015,
+        16,
+        source_url=fetch.official_corrections_snapshot_url(ts, url),
+        snapshot_timestamp=ts,
+    )
     parsed = [r for r in rows if r.parse_status == "parsed"]
     print(f"bytes={len(raw)} table_rows_parsed={len(rows)} fully_parsed={len(parsed)}")
     for r in parsed[:5]:

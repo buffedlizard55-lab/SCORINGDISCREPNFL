@@ -13,11 +13,15 @@ during review:
 
 from __future__ import annotations
 
+import csv
 import io
+import json
 import pathlib
 import os
 import sys
+import tempfile
 import unittest
+from unittest.mock import patch
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -25,7 +29,11 @@ DATA_DIR = os.path.join(ROOT, "data")
 sys.path.insert(0, os.path.join(ROOT, "pipeline"))
 
 import detect  # noqa: E402
+import run as pipeline_run  # noqa: E402
+import fetch as pipeline_fetch  # noqa: E402
+from build_database import parse_correction_date  # noqa: E402
 from market_rules import classify, crosses_threshold, market_outcomes  # noqa: E402
+from market_sensitivity import analyse as analyse_market_sensitivity  # noqa: E402
 from parse_corrections import parse_official_page, parse_markdown_rows  # noqa: E402
 
 
@@ -49,15 +57,29 @@ def make_row(**kw):
 
 
 class TestMarketRules(unittest.TestCase):
-    def test_discrete_scoring_events_are_highest_severity(self):
+    def test_player_scoring_stats_are_high_priority_but_not_scoreboard_proof(self):
         for stat in ["Touchdowns", "Passing Touchdowns", "Field Goals Made", "Extra Points Made", "Safeties", "Two Point Conversions"]:
-            self.assertEqual(classify(stat, 0, 1)["severity"], 3, stat)
+            result = classify(stat, 0, 1)
+            self.assertEqual(result["severity"], 3, stat)
+            self.assertIn("does not", result["reason"], stat)
+
+        markets = market_outcomes("Passing Touchdowns", 0, 1)
+        self.assertTrue(any("passing-touchdown" in item for item in markets))
+        self.assertTrue(any("unproven" in item for item in markets))
+        self.assertFalse(any("game total (over/under)" == item for item in markets))
+
+    def test_attempt_stats_do_not_imply_a_scoring_event(self):
+        for stat in ["Field Goals Attempted", "Extra Points Attempted"]:
+            self.assertEqual(classify(stat, 0, 1)["severity"], 2, stat)
+            self.assertEqual(classify(stat, 0, 1)["category"], "line_priced_change", stat)
 
     def test_one_yard_prop_change_is_not_out_of_scope(self):
         # Regression: 182 -> 181 passing yards must NOT be dismissed.
         c = classify("Passing Yards", 182, 181)
         self.assertEqual(c["severity"], 2)
         self.assertEqual(c["category"], "line_priced_change")
+        self.assertIn("hypothetical", c["reason"])
+        self.assertIn("if such a market was actually offered", c["reason"])
 
     def test_round_number_crossing_detected(self):
         c = classify("Passing Yards", 299, 301)
@@ -88,10 +110,24 @@ class TestMarketRules(unittest.TestCase):
         out = market_outcomes("Passing Yards", 182, 181)
         self.assertTrue(any("half-point line" in m for m in out))
 
-    def test_scoring_event_lists_scoreboard_markets(self):
+    def test_player_touchdown_stat_does_not_claim_game_score_markets(self):
         out = market_outcomes("Touchdowns", 0, 1)
-        self.assertIn("game total (over/under)", out)
-        self.assertIn("point spread", out)
+        self.assertTrue(any("touchdown" in item for item in out))
+        self.assertFalse(any(item == "game total (over/under)" for item in out))
+        self.assertFalse(any(item == "point spread" for item in out))
+
+    def test_game_score_alert_maps_to_direct_market_fields(self):
+        change = detect.Change(
+            key="g1",
+            field_name="home_score",
+            old_value="24",
+            new_value="27",
+            context={"home_team": "BBB", "away_team": "AAA"},
+        )
+        alert = detect.change_to_alert(change, "test", "2026-10-07T00:00:00Z")
+        self.assertIn("BBB team total, if offered", alert["markets_potentially_affected"])
+        self.assertIn("game total (over/under), if offered", alert["markets_potentially_affected"])
+        self.assertIn("point spread, if offered", alert["markets_potentially_affected"])
 
 
 class TestDiffRules(unittest.TestCase):
@@ -163,6 +199,55 @@ class TestAlerting(unittest.TestCase):
         self.assertEqual(detect.build_alert_report([low], "t", min_severity=1)["total_alerts"], 1)
         self.assertEqual(detect.build_alert_report([low], "t", min_severity=3)["total_alerts"], 0)
 
+    def test_webhook_uses_discord_payload_shape(self):
+        report = detect.build_alert_report(
+            [detect.Change("g1", "home_score", "24", "27")], "test", min_severity=1
+        )
+
+        class Response:
+            status = 204
+            def __enter__(self): return self
+            def __exit__(self, *args): return False
+
+        with patch("urllib.request.urlopen", return_value=Response()) as opener:
+            ok, message = detect.notify_webhook(report, "https://discord.com/api/webhooks/1/token")
+        self.assertTrue(ok)
+        self.assertEqual(message, "http 204")
+        payload = json.loads(opener.call_args.args[0].data.decode("utf-8"))
+        self.assertIn("content", payload)
+        self.assertNotIn("text", payload)
+
+    def test_webhook_uses_slack_payload_shape_and_review_link(self):
+        report = detect.build_alert_report(
+            [detect.Change("g1", "home_score", "24", "27", {"season": "2026", "week": "1", "away_team": "AAA", "home_team": "BBB"})],
+            "test",
+            min_severity=1,
+        )
+        report["review_url"] = "https://github.com/example/repo/actions/runs/123"
+
+        class Response:
+            status = 200
+            def __enter__(self): return self
+            def __exit__(self, *args): return False
+
+        with patch("urllib.request.urlopen", return_value=Response()) as opener:
+            ok, _ = detect.notify_webhook(report, "https://hooks.slack.com/services/test")
+        self.assertTrue(ok)
+        payload = json.loads(opener.call_args.args[0].data.decode("utf-8"))
+        self.assertIn("text", payload)
+        self.assertNotIn("content", payload)
+        self.assertIn("Unconfirmed NFL results-mirror change candidate", payload["text"])
+        self.assertIn("not confirmation", payload["text"])
+        self.assertIn("24 → 27", payload["text"])
+        self.assertIn("https://github.com/example/repo/actions/runs/123", payload["text"])
+
+    def test_empty_webhook_report_does_not_send(self):
+        with patch("urllib.request.urlopen") as opener:
+            ok, message = detect.notify_webhook(detect.build_alert_report([], "test"), "https://hooks.slack.com/services/test")
+        self.assertTrue(ok)
+        self.assertIn("no alerts", message)
+        opener.assert_not_called()
+
     def test_markdown_renders_empty_and_populated(self):
         empty = detect.build_alert_report([], "t")
         self.assertIn("No qualifying discrepancies", detect.render_markdown(empty))
@@ -193,6 +278,15 @@ class TestCorrectionsParser(unittest.TestCase):
     </table>
     </body></html>
     """
+
+    def test_correction_cli_scope_and_archived_review_url(self):
+        url = "https://fantasy.nfl.com/research/statcorrections?position=O&statSeason=2015&statWeek=16"
+        self.assertEqual(pipeline_run.correction_scope_from_url(url), (2015, 16))
+        self.assertEqual(pipeline_run.correction_scope_from_url("https://example.test/", 2018), (2018, None))
+        self.assertEqual(
+            pipeline_fetch.official_corrections_snapshot_url("20200930215056", url),
+            "https://web.archive.org/web/20200930215056/" + url,
+        )
 
     def test_parses_players_stats_and_values(self):
         rows = parse_official_page(self.HTML, season=2015, week=16)
@@ -362,7 +456,7 @@ class TestRealArchivedPageContent(unittest.TestCase):
         """
         The nickname->code table is the one place a typo or an invented code
         could enter the database. Every code it maps to must actually occur in
-        the authoritative schedule snapshot we ship.
+        the versioned third-party schedule snapshot we ship.
         """
         from build_database import TEAM_NAME_TO_CODE, TEAM_ALIASES
 
@@ -381,7 +475,7 @@ class TestRealArchivedPageContent(unittest.TestCase):
             self.assertIn(
                 target, real,
                 f"TEAM_NAME_TO_CODE['{nickname}'] = {code!r} (-> {target}) is not a "
-                f"team code that occurs in the authoritative schedule",
+                f"team code that occurs in the versioned third-party schedule",
             )
         self.assertEqual(len(TEAM_NAME_TO_CODE), 37)
 
@@ -427,8 +521,14 @@ class TestDocumentationIntegrity(unittest.TestCase):
                       f"README does not state the current row count ({n})")
         self.assertIn(f"{n}-row verified seed", readme)
         self.assertNotIn("36-row verified seed", readme, "README still claims the old row count")
-        self.assertEqual(counts["severity_3_scoring_or_scoreboard"], 0)
-        self.assertIn("Not one of the 74 rows is a scoring event", readme)
+        self.assertEqual(
+            counts["severity_3_high_priority_scoring_stat_or_scoreboard_candidate"], 0
+        )
+        self.assertEqual(counts["severity_2_market_relevant_numeric"], 48)
+        self.assertEqual(counts["severity_1_relevant_but_small"], 14)
+        self.assertEqual(counts["severity_0_out_of_scope"], 12)
+        self.assertIn("Not one of the 74 rows records a scoring-event change", readme)
+        self.assertIn("0 / 48 / 14 / 12", readme)
 
 
 class TestFeed(unittest.TestCase):
@@ -528,6 +628,17 @@ class TestShippedDatabase(unittest.TestCase):
         with open(os.path.join(self.DATA, name), encoding="utf-8") as f:
             return json.load(f)
 
+    def test_database_identifies_the_exact_game_data_input_hash(self):
+        db = self._load("discrepancies.json")
+        source = db["meta"]["game_data_input"]
+        import re
+        self.assertRegex(source["sha256"], r"^[0-9a-f]{64}$")
+        self.assertGreater(source["bytes"], 0)
+        self.assertIn("third-party mirror", source["source"])
+        self.assertTrue(source["source_url"].startswith("https://github.com/nflverse/nfldata/"))
+        self.assertFalse(source["retained_by_builder"])
+        self.assertIn("not inferred", source["note"])
+
     def test_every_record_has_a_reviewable_source_url(self):
         db = self._load("discrepancies.json")
         self.assertGreater(len(db["records"]), 0)
@@ -536,6 +647,38 @@ class TestShippedDatabase(unittest.TestCase):
             self.assertTrue(r["source_url_live_now_retired"].startswith("https://fantasy.nfl.com/"), r["record_id"])
             self.assertIn("NFL League Office", r["source_publisher"])
             self.assertIn("Elias", r["source_publisher"])
+
+    def test_reason_unknown_is_explicit_and_not_inferred(self):
+        db = self._load("discrepancies.json")
+        for r in db["records"]:
+            self.assertIsNone(r["correction_reason"], r["record_id"])
+            self.assertEqual(
+                r["correction_reason_status"],
+                "not_stated_in_archived_official_notice",
+                r["record_id"],
+            )
+
+    def test_date_gap_matches_source_row_dates(self):
+        from datetime import datetime
+
+        db = self._load("discrepancies.json")
+        gaps = []
+        for r in db["records"]:
+            correction_date = parse_correction_date(r["correction_date_text"], r["season"])
+            self.assertIsNotNone(correction_date, r["record_id"])
+            if not r.get("game_date"):
+                self.assertIsNone(r["days_from_game_to_correction"], r["record_id"])
+                self.assertTrue(
+                    any("TEAM_NOT_PRINTED" in flag for flag in r["review_flags"]),
+                    r["record_id"],
+                )
+                continue
+            game_date = datetime.strptime(r["game_date"], "%Y-%m-%d")
+            gap = (correction_date - game_date).days
+            self.assertEqual(gap, r["days_from_game_to_correction"], r["record_id"])
+            gaps.append(gap)
+        self.assertEqual(len(gaps), 70)
+        self.assertEqual((min(gaps), max(gaps)), (1, 4))
 
     def test_original_and_corrected_values_are_present_and_reproducible(self):
         db = self._load("discrepancies.json")
@@ -618,16 +761,78 @@ class TestShippedDatabase(unittest.TestCase):
                 self.assertIn("STL", (r["away_team"], r["home_team"]))
                 break
 
-    def test_score_integrity_study_is_present_and_reports_its_caveat(self):
+    def test_score_integrity_study_is_limited_to_completed_mirror_comparisons(self):
         st = self._load(os.path.join("evidence", "score_integrity_study.json"))
+        self.assertEqual(st["status"], "complete")
         self.assertGreater(st["totals"]["game_snapshots_examined"], 1000)
+        self.assertEqual(st["totals"]["selected_baselines"], st["totals"]["baselines_fetched"])
+        self.assertEqual(st["totals"]["baselines_failed"], 0)
+        self.assertEqual(st["totals"]["frozen_field_changes_vs_current"], 0)
         self.assertIn("caveat", st)
-        self.assertIn("MIRROR", st["caveat"])
+        self.assertIn("third-party mirror", st["caveat"].lower())
+        self.assertIn("does not establish", st["conclusion"])
+        self.assertNotIn("effectively immutable", st["conclusion"])
 
-    def test_market_sensitivity_is_framed_as_sensitivity_not_occurrence(self):
+    def test_failed_evidence_baseline_cannot_be_summarized_as_zero_revisions(self):
+        summary = pipeline_run.summarize_evidence_baselines([
+            {"baseline": "2023-12-03", "error": "network unavailable"},
+            {
+                "baseline": "2025-11-12",
+                "final_at_baseline": 100,
+                "frozen_field_changes_vs_current": 0,
+            },
+        ])
+        self.assertEqual(summary["status"], "incomplete")
+        self.assertEqual(summary["totals"]["baselines_failed"], 1)
+        self.assertIn("INCOMPLETE", summary["conclusion"])
+        self.assertIn("No conclusion about the unfetched baselines", summary["conclusion"])
+
+    def test_market_sensitivity_is_line_distance_not_occurrence_or_settlement(self):
         ms = self._load("market_sensitivity_2025_2026.json")
-        self.assertIn("Sensitivity only", ms["summary"]["framing"])
-        self.assertGreater(ms["summary"]["games_considered_with_scores_and_lines"], 0)
+        summary = ms["summary"]
+        self.assertIn("Distance-based sensitivity screen only", summary["framing"])
+        self.assertIn("does not mean a correction occurred", summary["framing"])
+        self.assertIn("wager settled", summary["framing"])
+        self.assertEqual(summary["games_considered_with_scores_and_lines"], 349)
+        self.assertEqual(summary["games_within_distance_threshold_of_a_line"], 82)
+        self.assertEqual(summary["zero_margin_line_distance_matches"], 10)
+        self.assertGreater(summary["games_considered_with_scores_and_lines"], 0)
+        source = summary["game_data_input"]
+        self.assertRegex(source["sha256"], r"^[0-9a-f]{64}$")
+        self.assertGreater(source["bytes"], 0)
+        self.assertIn("third-party mirror", source["source"])
+        self.assertFalse(source["retained_by_builder"])
+        for game in ms["games"]:
+            self.assertIn("margin_line_within_threshold", game)
+            self.assertIn("zero_margin_line_distance", game)
+            self.assertNotIn("pushed_on_spread", game)
+            self.assertNotIn("min_correction_points_to_flip_spread", game)
+
+    def test_market_sensitivity_does_not_infer_a_push_from_magnitude_only(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = os.path.join(directory, "games.csv")
+            rows = [{
+                "game_id": "sample-game",
+                "season": "2025",
+                "week": "1",
+                "gameday": "2025-09-01",
+                "away_team": "AAA",
+                "home_team": "BBB",
+                "away_score": "17",
+                "home_score": "20",
+                "spread_line": "-3",
+                "total_line": "40.5",
+            }]
+            with open(path, "w", newline="", encoding="utf-8") as f:
+                writer = csv.DictWriter(f, fieldnames=rows[0].keys())
+                writer.writeheader()
+                writer.writerows(rows)
+            games, summary = analyse_market_sensitivity(path, {2025}, threshold=1.0)
+
+        self.assertEqual(summary["zero_margin_line_distance_matches"], 1)
+        self.assertTrue(games[0]["zero_margin_line_distance"])
+        self.assertNotIn("pushed_on_spread", games[0])
+        self.assertIn("Spread sign/side", games[0]["note"])
 
 
     def test_every_case_card_on_the_site_resolves_to_a_real_record(self):
@@ -731,6 +936,21 @@ class TestSiteDataContract(unittest.TestCase):
         game_fields = set(ms["games"][0])
         for k in set(re.findall(r"\bg\.([a-z_][a-z0-9_]*)", js)):
             self.assertIn(k, game_fields, f"app.js reads g.{k} which is not on market-sensitivity rows")
+
+    def test_review_flags_are_visible_in_the_site_database(self):
+        import json
+        import pathlib
+
+        html = pathlib.Path(self.ROOT, "docs", "index.html").read_text(encoding="utf-8")
+        app = pathlib.Path(self.ROOT, "docs", "app.js").read_text(encoding="utf-8")
+        db = json.loads(pathlib.Path(self.ROOT, "data", "discrepancies.json").read_text(encoding="utf-8"))
+        self.assertIn('class="no-sort">Review flags</th>', html)
+        self.assertIn("r.review_flags", app)
+        self.assertTrue(any(row["review_flags"] for row in db["records"]))
+        self.assertTrue(any(
+            "TEAM_NOT_PRINTED" in flag
+            for row in db["records"] for flag in row["review_flags"]
+        ))
 
     def test_root_site_copies_match_the_canonical_docs_copies(self):
         """

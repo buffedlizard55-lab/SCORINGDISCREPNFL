@@ -107,32 +107,67 @@ function renderTopCards(db, study) {
   const sampleEl = document.getElementById('stat-sample-rows');
   if (sampleEl) sampleEl.textContent = num(c.total_records);
   document.getElementById('stat-potential').textContent = num(c.potential_to_change_market);
+  const studyComplete = study.status === 'complete';
+  const observedFieldChanges = Number(study.totals.frozen_field_changes_vs_current || 0);
   document.getElementById('stat-snapshots').textContent = num(study.totals.game_snapshots_examined);
-  document.getElementById('stat-snapshots-2').textContent = num(study.totals.game_snapshots_examined);
-  document.getElementById('stat-revisions').textContent = num(study.totals.final_scores_revised_after_completion);
-  document.getElementById('badge-records').textContent = `${c.total_records} verified records`;
+  document.getElementById('stat-snapshots-status').textContent = studyComplete
+    ? `across ${num(study.totals.selected_baselines)} selected baselines; not unique games`
+    : `from ${num(study.totals.baselines_fetched)} fetched baselines only; study incomplete`;
+  document.getElementById('stat-revisions').textContent = studyComplete
+    ? num(observedFieldChanges)
+    : (observedFieldChanges > 0 ? `≥${num(observedFieldChanges)}` : 'Unknown');
+  document.getElementById('stat-revisions').className = studyComplete ? 'num ok' : 'num warn';
+  const datedRows = db.records
+    .map((r) => Number(r.days_from_game_to_correction))
+    .filter((v) => Number.isFinite(v));
+  document.getElementById('stat-cadence').textContent = datedRows.length
+    ? `${Math.min(...datedRows)}–${Math.max(...datedRows)}`
+    : '—';
+  document.getElementById('badge-records').textContent = `${c.total_records} archived rows`;
 }
 
 /* --------------------------------------------------------- integrity table */
 function renderIntegrity(study) {
+  const complete = study.status === 'complete';
   const tb = document.querySelector('#tbl-integrity tbody');
   tb.innerHTML = study.baselines.map((b) => {
-    const bad = (b.frozen_field_changes_vs_current ?? 0) > 0;
+    const failed = Boolean(b.error);
+    const changed = Number(b.frozen_field_changes_vs_current || 0);
+    const result = failed ? 'fetch failed' : changed > 0 ? 'mirror change observed' : 'no difference observed';
+    const severity = failed ? 'sev-3' : changed > 0 ? 'sev-2' : 'sev-1';
     return `<tr>
       <td class="mono">${esc(b.baseline)}<br><span class="src">${esc(String(b.commit).slice(0, 10))}…</span></td>
       <td class="num">${num(b.final_at_baseline)}</td>
-      <td class="num">${num(b.frozen_field_changes_vs_current ?? 0)}</td>
-      <td><span class="pill ${bad ? 'sev-3' : 'sev-2'}">${bad ? 'revised' : 'unchanged'}</span></td>
+      <td class="num">${num(b.frozen_field_changes_vs_current)}</td>
+      <td><span class="pill ${severity}" title="${esc(b.error || '')}">${result}</span></td>
     </tr>`;
   }).join('');
 
   const t = study.totals;
+  const totalChanges = Number(t.frozen_field_changes_vs_current || 0);
+  const overall = !complete
+    ? 'incomplete — failed baselines are not counted as zero'
+    : totalChanges > 0
+      ? 'mirror change(s) observed; official status unconfirmed'
+      : 'no difference observed in selected mirror comparisons';
   document.querySelector('#tbl-integrity tfoot').innerHTML = `<tr>
-    <td><strong>Total</strong></td>
+    <td><strong>${complete ? 'Complete study' : 'Partial study'}</strong></td>
     <td class="num"><strong>${num(t.game_snapshots_examined)}</strong></td>
-    <td class="num"><strong>${num(t.final_scores_revised_after_completion)}</strong></td>
-    <td><span class="pill sev-2">no observed mirror revision</span></td>
+    <td class="num"><strong>${complete ? num(totalChanges) : (totalChanges > 0 ? `≥${num(totalChanges)}` : 'Unknown')}</strong></td>
+    <td><span class="pill ${complete && totalChanges === 0 ? 'sev-1' : 'sev-3'}">${overall}</span></td>
   </tr>`;
+
+  const callout = document.getElementById('integrity-callout');
+  if (!complete) {
+    callout.className = 'callout warn';
+    callout.textContent = 'The mirror comparison is incomplete. A failed baseline is not counted as zero; the available count cannot support a no-change conclusion.';
+  } else if (totalChanges > 0) {
+    callout.className = 'callout warn';
+    callout.textContent = `${num(totalChanges)} frozen-field difference(s) were observed in selected mirror comparisons. This is a third-party mirror change, not confirmation of an official NFL correction.`;
+  } else {
+    callout.className = 'callout ok';
+    callout.textContent = `No frozen-field differences were observed in the ${num(t.selected_baselines)} selected mirror comparisons (${num(t.game_snapshots_examined)} overlapping game-snapshot comparisons, not unique games). This does not establish that official scores never change.`;
+  }
 
   document.getElementById('integrity-caveat').textContent = study.caveat;
   document.getElementById('integrity-caveat-full').textContent = study.caveat;
@@ -169,7 +204,7 @@ function renderDB() {
 
   const tb = document.querySelector('#tbl-db tbody');
   if (!rows.length) {
-    tb.innerHTML = `<tr><td colspan="10" class="empty">No records match these filters.</td></tr>`;
+    tb.innerHTML = `<tr><td colspan="12" class="empty">No records match these filters.</td></tr>`;
     return;
   }
 
@@ -180,10 +215,14 @@ function renderDB() {
       <td><span class="pill ${SEV_CLASS[r.severity_label] || 'sev-0'}" title="${esc(r.impact_reason)}">${esc(r.severity_label)}</span></td>
       <td>${esc(r.season)} <span class="src">W${esc(r.week)}</span></td>
       <td><strong>${esc(r.player)}</strong> <span class="src">${esc(r.position || '')}</span></td>
-      <td>${esc(r.team)}</td>
+      <td title="${esc(r.team_source || '')}">${esc(fmt(r.team))}</td>
+      <td>${(r.review_flags || []).length
+        ? `<details><summary>⚠ ${num(r.review_flags.length)} flag(s)</summary><ul class="tight">${r.review_flags.map((flag) => `<li>${esc(flag)}</li>`).join('')}</ul></details>`
+        : '—'}</td>
       <td class="mono">${esc(fmt(r.game_id))}<br><span class="src">${esc(fmt(r.opponent))}</span></td>
       <td>${esc(fmt(r.game_date))}</td>
       <td>${esc(r.stat)}</td>
+      <td class="src" title="${esc(r.correction_reason || 'The archived official correction notice does not state a reason.')}">${esc(r.correction_reason || 'Not stated in source')}</td>
       <td class="chg"><span class="from">${esc(r.original_value)}</span> → <span class="to">${esc(r.corrected_value)}</span> <span class="delta">(${esc(delta)})</span></td>
       <td class="num">${esc(fmt(r.days_from_game_to_correction))}</td>
       <td class="src"><a href="${esc(r.source_url_archived)}" target="_blank" rel="noopener">archived official page ↗</a></td>
@@ -256,7 +295,8 @@ function renderCases(db) {
         corrected ${esc(fmt(r.days_from_game_to_correction))} days after the game
       </div>
       ${markets ? `<div class="src" style="margin-top:8px;"><strong>Markets potentially affected:</strong><ul class="tight" style="margin:4px 0 0 16px;">${markets}</ul></div>` : ''}
-      <div class="src" style="margin-top:8px;">${esc(r.impact_reason)}</div>
+      <div class="src" style="margin-top:8px;"><strong>Rationale stated in notice:</strong> ${esc(r.correction_reason || 'Not stated in the archived correction notice.')}</div>
+      <div class="src" style="margin-top:6px;"><strong>Market relevance:</strong> ${esc(r.impact_reason)}</div>
       <div style="margin-top:10px;"><a href="${esc(r.source_url_archived)}" target="_blank" rel="noopener" class="src">check the official source ↗</a></div>
     </div>`;
   }).join('');
@@ -265,23 +305,25 @@ function renderCases(db) {
 /* ---------------------------------------------------------------- exposure */
 function renderExposure(ms) {
   const s = ms.summary;
+  const exactMarginCount = document.getElementById('zero-margin-count');
+  if (exactMarginCount) exactMarginCount.textContent = num(s.zero_margin_line_distance_matches);
   document.getElementById('exposure-cards').innerHTML = `
     <div class="card"><div class="num">${num(s.games_considered_with_scores_and_lines)}</div>
       <div class="lbl">Games assessed</div>
       <div class="sub">2025–26 games with a final score and a closing line</div></div>
-    <div class="card"><div class="num warn">${num(s.correction_sensitive_games)}</div>
-      <div class="lbl">Correction-sensitive</div>
-      <div class="sub">${num(s.sensitive_share_pct)}% finished within 1 point of a market line</div></div>
-    <div class="card"><div class="num warn">${num(s.exact_spread_pushes)}</div>
-      <div class="lbl">Exact spread pushes</div>
-      <div class="sub">a correction of any size would have created a winner</div></div>
-    <div class="card"><div class="num">${num(s.exact_total_pushes)}</div>
-      <div class="lbl">Exact total pushes</div>
-      <div class="sub">finished exactly on the closing total</div></div>`;
+    <div class="card"><div class="num warn">${num(s.games_within_distance_threshold_of_a_line)}</div>
+      <div class="lbl">Within the distance threshold</div>
+      <div class="sub">${num(s.within_threshold_share_pct)}% had a final margin or total within ${num(s.distance_threshold_points)} point(s) of a line</div></div>
+    <div class="card"><div class="num warn">${num(s.zero_margin_line_distance_matches)}</div>
+      <div class="lbl">Zero margin-line distance</div>
+      <div class="sub">absolute final margin matched absolute spread size; not necessarily a push</div></div>
+    <div class="card"><div class="num">${num(s.zero_total_line_distance_matches)}</div>
+      <div class="lbl">Zero total-line distance</div>
+      <div class="sub">final total equaled the line value; settlement rules are not evaluated</div></div>`;
 
-  const pushes = ms.games.filter((g) => g.pushed_on_spread);
+  const zeroDistanceGames = ms.games.filter((g) => g.zero_margin_line_distance);
   const tb = document.querySelector('#tbl-push tbody');
-  tb.innerHTML = pushes.length ? pushes.map((g) => `<tr>
+  tb.innerHTML = zeroDistanceGames.length ? zeroDistanceGames.map((g) => `<tr>
       <td class="mono">${esc(g.game_id)}</td>
       <td>${esc(g.gameday)}</td>
       <td class="num">${esc(g.away_team)} ${esc(g.away_score)} – ${esc(g.home_score)} ${esc(g.home_team)}</td>
@@ -290,31 +332,31 @@ function renderExposure(ms) {
       <td class="num">${esc(g.margin_gap_points)}</td>
       <td class="num">${esc(g.total_gap_points)}</td>
     </tr>`).join('')
-    : `<tr><td colspan="7" class="empty">No exact spread pushes in this window.</td></tr>`;
+    : `<tr><td colspan="7" class="empty">No zero-distance margin-to-spread matches in this window.</td></tr>`;
 }
 
 /* ------------------------------------------------------------ limitations */
 const LIMITS = [
   ['Blocker', 'The official NFL correction feed was retired in 2026.',
-   'The page that published Elias Sports Bureau corrections now redirects to a news hub. Detection must infer changes by diffing third-party data, which can produce false positives and cannot distinguish an official correction from a provider bug. A licensed feed would unblock it.'],
+   'The page that published Elias Sports Bureau corrections now redirects to a news hub. A third-party diff cannot distinguish an official correction from a provider bug. A vendor feed could help only if the actual product documents NFL/Elias provenance, revision history, access and rights.'],
   ['High', 'The successor channel is a client-side JS app with no documented API.',
    'ESPN\'s corrections page renders in the browser. Scraping it would mean reverse-engineering a private API — brittle and likely against terms.'],
-  ['High', 'The highest-resolution signal is network-blocked in the build sandbox.',
-   'Raw play-by-play release assets are served from a host unreachable here. On GitHub Actions this restriction does not apply; the adapter already exists, so it is a configuration change, not a rewrite.'],
+  ['High', 'Player-stat polling is not wired into the scheduled detector.',
+   'The play-by-play adapter only exposes metadata/download helpers. Fetching, schema validation, normalization, revision diffing, durable persistence and player-stat alerting still need implementation and a production-data backtest.'],
   ['Medium', 'The corrections parser has not seen byte-exact archived HTML.',
-   'The Internet Archive is not reachable from the build sandbox, so the parser is unit-tested against structural fixtures. <code>run.py selfcheck</code> reconciles it against real input on the first CI run — and should be run before any parsed output is trusted.'],
+   'The parser was validated against stored rendered page content; byte-exact HTML extraction remains untested here. <code>run.py selfcheck</code> is a manual/backfill diagnostic and is not a gate in the score-only scheduled workflow.'],
   ['Medium', 'The mirror is not the NFL.',
-   'All differential detection runs against a third-party mirror of the official record. A change could be an official correction or a mirror bug, and the detector cannot tell them apart. A second independent source is the fix.'],
-  ['Medium', 'No free, redistributable source of per-game prop lines.',
-   'Real player-prop lines are a commercial product. We therefore model the pricing convention of line-priced stats and never assert that a specific line existed.'],
+   'The scheduled differential detector uses a third-party mirror of NFL results. A change could be an official correction or a mirror bug; this detector cannot tell them apart. No independent corroboration source is integrated or validated here, and cross-source agreement is not official confirmation.'],
+  ['Medium', 'No verified per-game prop-line or settlement archive.',
+   'No per-game player-prop line archive was verified. The project flags candidate stat categories for review under a heuristic; it does not prove a particular market or line was offered.'],
   ['Medium', 'The database is a verified seed, not the full corpus.',
-   'A verified seed parsed from stored archived pages, against an archived corpus spanning 2010–2025 × 10 position filters × 18+ weeks. Each page is a separate rate-limited request, so bulk expansion belongs in a scheduled job with backoff. Expansion is now mechanical: drop a new archived page into data/evidence/pages/ and re-run pipeline/ingest_rendered.py --write.'],
+   'A verified seed was parsed from 10 stored archived pages. An observed archive-search surface includes candidate captures across 2010–2025, multiple position filters and weeks, but has not been validated as a complete denominator. Adding a sourced page is mechanically ingestible; establishing coverage still requires review and rate-limited retrieval.'],
   ['Low', 'Betting-line sign conventions are ambiguous in secondary sources.',
    'The exposure analysis uses only the magnitude of the spread, which is correct under either convention. The sign is never asserted.'],
-  ['Low', 'A correction reverted between two polls is invisible.',
-   'If a value changes and changes back between snapshots, the diff sees nothing. Poll frequency is the only lever.'],
-  ['Low', 'There is no published deadline for how late a correction may arrive.',
-   'Rather than assume one, the build flags anything more than 14 days after the game, and anything dated before it.'],
+  ['Low', 'A correction reverted between two snapshots is invisible.',
+   'If a value changes and changes back between snapshots, the diff sees nothing. The workflow uses a configured seasonal schedule; Actions scheduling is best-effort, not a freshness SLA.'],
+  ['Low', 'Exact correction publication latency and any general deadline are unknown.',
+   'The selected joined sample spans 1–4 calendar days to the correction date printed on the archived page; this is not an exact timestamp or a universal deadline. The 14-day review flag is a project heuristic, not an NFL policy.'],
 ];
 
 function renderLimits() {

@@ -5,38 +5,45 @@ reason, and how we would know it succeeded.
 
 ---
 
-## P0 — Unblock the two things that actually gate live alerting
+## P0 — Close the main evidence and implementation gaps
 
 ### P0-1. ~~Validate the corrections parser against real archived HTML~~ — **DONE 2026-10-07 (rendered form); HTML path still open**
 
 **What was done.** The archive became reachable through a document-render channel, so
 the parser was run against **real archived page content** for the first time. It
-produced **zero usable rows from every page**, for two reasons the fixtures could not
-catch: the real page bolds the numbers (`from **0** to **1**`), and a player with a
+produced **zero usable rows from the nine non-empty pages** (the tenth page explicitly
+reported no corrections), for two reasons the fixtures could not catch: the real page
+bolds the numbers (`from **0** to **1**`), and a player with a
 highlight reel renders a second link in the same cell (`Case Keenum    View Videos`).
 Both are fixed, both are covered by `TestRealArchivedPageContent`, and both were
 **mutation-checked** (re-introducing either bug fails 6 and 2 tests).
 
 `pipeline/ingest_rendered.py` now regenerates `data/verified_corrections_raw.json` from
-stored artefacts in `data/evidence/pages/`, and `--check` fails if the shipped copy is
-not byte-reproducible from them. The raw layer is no longer hand-typed.
+stored artefacts in `data/evidence/pages/`, and `--check` fails if the parsed data
+payload differs (the generated timestamp is intentionally ignored). The raw layer
+is no longer hand-typed.
 
 **Still open.** The HTML extraction path has never seen byte-exact HTML. Run
 `python3 pipeline/run.py selfcheck` on Actions; reconcile if it reports < 10 rows.
 
-**Done when.** `selfcheck` prints `SELFCHECK PASS` in CI on every run.
+**Done when.** `selfcheck` has a repeatable runner and CI records a successful
+real-HTML check; unavailable archive access is reported as unknown, never as a
+parser pass or an empty corrections page.
 
 ### P0-2. Expand the database from 74 rows to the full archived corpus — **now mechanical**
 
-**Work.** Add a scheduled job that walks the archived corpus
-(2010–2025 × positions `O,1,2,3,4,7,8,11,12,13` × weeks 1–22), one request at a
-time with exponential backoff, and appends to
-`data/verified_corrections_raw.json`. The archive rate-limits (HTTP 429 was hit
-during the build), so this must be a patient background job, not a burst.
+**Work.** First enumerate exact, observed Internet Archive CDX captures and make
+a reviewable manifest. The search space includes 2010–2025, position filters
+`O,1,2,3,4,7,8,11,12,13`, and weeks 1–22, but do not assume every combination
+exists or that the observed CDX surface is a complete denominator. Fetch only
+listed captures, one request at a time with backoff, verify the served timestamp
+and rights/provenance, then ingest the stored page artefacts. The archive has
+rate-limited requests (HTTP 429 was hit during the build).
 
-**Why.** The brief asks for a *comprehensive* historical database. 74 rows is a
-verified seed, not the deliverable. The parse path is now **proven against real pages**
-and the ingest path is regenerable, so the remaining work is fetching, not research.
+**Why.** The brief asks for a *comprehensive* historical database. 74 rows are
+a verified seed, not the deliverable. The rendered-page ingest path is
+reproducible, but establishing completeness and preserving the source evidence
+still requires research and careful retrieval.
 
 **Progress 2026-10-07.** 36 → 74 rows, 4 → 6 seasons, 4 → 9 season-weeks. Use the CDX
 API (`web.archive.org/cdx/search/cdx?url=fantasy.nfl.com/research/statcorrections&matchType=prefix&output=json`)
@@ -47,20 +54,22 @@ no capture silently returns the *nearest* one (LIMITATIONS §11).
 retains a resolvable archived URL, and row counts per week are non-zero for
 weeks known to have corrections.
 
-### P0-3. Wire the pbp differential detector on Actions
+### P0-3. Build and backtest a player-stat/PBP adapter
 
-**Work.** Diff two vintages of `nflverse-pbp` raw play-by-play for one game
-(fetch at game end, re-fetch after the Wednesday 02:00 UTC refresh) and emit the
-changed plays. The engine is already source-agnostic; this is an adapter, not a
-rewrite.
+**Work.** On a permitted runner, first demonstrate access to genuine,
+versioned player-stat or play-by-play vintages. Validate schemas; preserve raw
+bytes, hashes and timestamps; normalize stable game/player IDs; diff additions,
+removals, nulls and changed fields; then reconcile candidates against archived
+official notices. Do not assume a weekly refresh means historical vintages are
+retained or accessible.
 
-**Why.** Raw play-by-play is the highest-resolution correction signal available,
-and nflverse explicitly refreshes it to fold in corrections (LIMITATIONS §3).
-This is what turns "a stat changed" into "**this specific play** was re-scored",
-which is the difference between an alert and an explanation.
+**Why.** The current workflow compares scoreboard fields only. Download helpers
+and upstream refresh documentation are leads, not a demonstrated player-stat
+detector. A known-correction backtest is required before scheduling alerts.
 
-**Done when.** A known historical correction is recovered by the diff, and the
-changed play is reported with both vintages' values.
+**Done when.** At least one known correction is recovered from genuine before/
+after vintages, with the exact old/new values, play/player/game identifiers,
+capture times, hashes and reviewable source links; failure cases have tests.
 
 ---
 
@@ -68,21 +77,24 @@ changed play is reported with both vintages' values.
 
 ### P1-1. Add a second independent mirror and require cross-source agreement
 
-**Work.** Add a second free schedule/results source. Only emit a high-severity
-alert when both sources disagree with the snapshot in the same direction, or
-label single-source alerts `LOW_CONFIDENCE` / `NEEDS_CROSS_CHECK`.
+**Work.** Evaluate a second genuinely independent source, including its
+upstream lineage, access terms, field coverage and revision history. Keep
+one-source candidates explicitly `LOW_CONFIDENCE` / `NEEDS_CROSS_CHECK`; do not
+label cross-source agreement as official NFL/Elias confirmation.
 
 **Why.** A mirror bug is currently indistinguishable from an official
-correction (LIMITATIONS §5). This is the single biggest false-positive risk in
-the design, and the cheapest way to cut it.
+correction (LIMITATIONS §5). A second source may reduce false positives, but
+correlated providers do not prove official attribution.
 
-**Done when.** Every alert carries a `corroboration` field naming the sources
-that agree, and single-source alerts are visibly marked.
+**Done when.** Every alert carries a `corroboration` field naming the sources,
+lineage and agreement status; no mirror-only alert is labeled an official
+correction.
 
 ### P1-2. Add per-player identity resolution
 
-**Work.** Join correction rows to the `nflverse/players` ID crosswalk
-(`gsis_id` / `pfr_id` / `espn_id`) instead of matching on name + team.
+**Work.** Evaluate a documented, stable player-ID crosswalk (provider IDs such
+as GSIS/PFR/ESPN only where licensed and supported) instead of relying on name
++ team. Record the crosswalk source and version.
 
 **Why.** Name matching will mis-join on duplicate names and on mid-season
 trades. Player prop markets are player-scoped, so a bad join is a wrong alert.
@@ -92,22 +104,20 @@ joins on name alone.
 
 ### P1-3. Backtest the detector against known corrections
 
-**Work.** For each of the 74 transcribed corrections, replay the detector using
-snapshots bracketing that week and confirm it would have fired, with correct
-severity, and with no false positives in the same window.
+**Work.** After the player-stat adapter exists, acquire genuine source
+vintages bracketing as many of the 74 transcribed correction rows as possible.
+Replay each comparison and manually reconcile candidates to the archived
+correction notice; record unavailable vintages rather than treating them as
+misses or successes.
 
-**Why.** A detector that has never been backtested against known ground truth is
-an assertion, not a capability. This is the highest-value correctness work
-available, because ground truth already exists in-repo.
+**Why.** The archived notices provide corrected values, but the repository does
+not currently contain the before/after player-stat vintages needed for a
+backtest. A detector not evaluated against genuine vintages is not a
+demonstrated capability.
 
-**Done when.** A report shows detection rate and false-positive rate across all
-74 historical cases.
-
-> **Scope caveat worth stating before this is attempted.** The 74 rows are *player
-> statistics* corrections. The detector as built diffs **scoreboard** fields, so it will
-> correctly fire on **none** of them. A meaningful backtest first requires the
-> play-by-play / weekly-stat differential from P0-3; backtesting the scoreboard diff
-> against stat corrections would measure nothing.
+**Done when.** A report states the number of cases with valid before/after
+vintages, detected cases, missed cases, false positives in the same windows,
+and cases that could not be tested. Each classification remains reviewable.
 
 ---
 
@@ -138,14 +148,16 @@ that builds the database twice with an extra artefact present.
 
 ### P2-1. ~~Publish a public alert archive~~ — **DONE 2026-10-07**
 
-`pipeline/feed.py` appends **every** detection run — including clean ones — to
-`data/alerts/feed.json`, which the site renders as a "Live detection feed" section with
-per-run SHA-256 hashes of both inputs. Recording clean runs is the point: without them,
-"nothing changed" is indistinguishable from "it never ran". `detect.yml` now passes
-`--feed` and re-syncs the published copy.
+`pipeline/feed.py` records each completed snapshot comparison passed to it,
+including clean comparisons, in `data/alerts/feed.json`; the site renders the
+feed with per-run SHA-256 hashes. The scheduled workflow publishes the updated
+feed after a successful comparison.
 
-**Still open.** History is capped at 200 runs and there is no retention/export strategy
-yet, and the feed records *runs*, not a human-readable "this week's corrections" digest.
+**Still open.** Baseline-only, failed and aborted workflow attempts do not
+necessarily create a feed row; users must check Actions for latest attempt
+status. History is capped at 200 runs with no retention/export strategy, and
+the feed records comparisons, not a human-readable "this week's corrections"
+digest. No webhook delivery was exercised in this review.
 
 ### P2-2. Fantasy-platform re-scoring impact
 
@@ -172,14 +184,16 @@ evidence.
 
 ## P3 — Engineering hygiene
 
-- **P3-1.** Replace the unit-test harness with `pytest` + coverage, and add the
-  suite to CI on every push (currently runnable but not gated in CI).
+- **P3-1.** Keep full `unittest` discovery as the no-dependency CI gate. Add
+  coverage reporting only if it improves diagnostics without weakening that path.
 - **P3-2.** Add schema validation (e.g. JSON Schema) for
   `verified_corrections_raw.json`, so a malformed contribution fails loudly
   rather than producing a plausible-looking wrong row.
-- **P3-3.** Add an integrity check that the shipped `discrepancies.json` is
-  reproducible byte-for-byte from `verified_corrections_raw.json` + the pinned
-  `games.csv`, so the derived layer can always be regenerated and audited.
+- **P3-3.** The database and market-sensitivity JSON now record the byte count
+  and SHA-256 of their exact `--games` input, but neither builder retains the
+  full source file or a retrieval timestamp/Git commit. Preserve an immutable
+  full snapshot or commit reference and test that the shipped outputs can be
+  rebuilt from it. Do not call a moving upstream file pinned.
 - **P3-4.** Terminate the `fantasy.nfl.com` retirement watch: a small scheduled
   probe that alerts us if the official corrections endpoint comes back, or if a
   documented successor appears.
@@ -189,12 +203,15 @@ evidence.
 ## Explicitly not recommended
 
 - **Do not scrape ESPN's JS app by reverse-engineering its private API.** It is
-  brittle and likely against terms. Prefer a licensed feed.
-- **Do not guess per-game prop lines.** Model the pricing convention instead; a
-  fabricated line makes the whole database untrustworthy.
-- **Do not assert that a correction changed a game's final score** without a
-  primary source. Our own evidence says this essentially never happens
-  (28,323 snapshots, 0 revisions), so any such claim should be treated as
-  extraordinary and demanded to be proven.
+  brittle and may violate terms. Prefer a documented, permitted source with
+  verified provenance; licensing alone does not prove official status.
+- **Do not guess per-game prop lines.** Keep the project-defined screen labelled
+  as a heuristic; a fabricated market, line or settlement makes the analysis
+  untrustworthy.
+- **Do not assert that a correction changed a game's final score** without
+  primary-source evidence. The selected mirror study observed zero frozen-field
+  changes across 28,323 overlapping comparisons; it does not establish that
+  official score amendments never happen. Any asserted amendment needs direct,
+  reviewable proof.
 - **Do not grow the database by relaxing verification.** Row count is not the
   goal; checkable rows are.

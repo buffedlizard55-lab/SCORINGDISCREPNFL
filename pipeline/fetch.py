@@ -1,22 +1,24 @@
 """
-fetch.py — Source adapters.
+fetch.py — Source adapters and snapshot helpers.
 
-Every source here was manually reachable and verified during the initial
-investigation. Each adapter records WHAT it fetched, WHEN, and a SHA-256 of the
-bytes, so that any claim downstream is reproducible from a hash + URL.
+Sources were investigated and their access limits are recorded below; not
+all endpoints were reachable from this sandbox. Fetch helpers return bytes or
+metadata. `write_snapshot()` records bytes, SHA-256 and supplied metadata when
+called, but fetch functions do not automatically persist a retrieval log.
 
-VERIFIED STATUS OF EACH SOURCE (checked 2026-10-07, see LIMITATIONS.md):
+ACCESS / EVIDENCE STATUS (checked 2026-10-07, see LIMITATIONS.md):
 
-  nfldata_games        LIVE.  nflverse/nfldata commits data/games.csv to git
-                       every ~30 min during the season. Full git history at
-                       codeload.github.com => we can snapshot any point in time.
-                       This is the workhorse source.
+  nfldata_games        VERSIONED THIRD-PARTY MIRROR. A small sample of recent
+                       commits to nflverse/nfldata data/games.csv inspected on
+                       2026-10-07 was spaced roughly 15–30 minutes apart. This
+                       is an observation, not a freshness guarantee or SLA.
+                       Git history provides selected historical vintages.
 
-  nflverse_release     BLOCKED IN SOME SANDBOXES. Release assets redirect to
-                       release-assets.githubusercontent.com. Works on GitHub
-                       Actions runners; did NOT work inside the restricted
-                       evaluation sandbox. Kept because Actions is the real
-                       deployment target.
+  nflverse_release     METADATA ACCESSIBLE; ASSET BYTES NOT VERIFIED HERE.
+                       Release assets redirect to
+                       release-assets.githubusercontent.com, which was not
+                       reachable from this sandbox. Access on another runner
+                       must be tested; it is not assumed.
 
   official_corrections RETIRED BUT ARCHIVED. fantasy.nfl.com/research/
                        statcorrections now 302-redirects to nfl.com/news/
@@ -93,7 +95,7 @@ def nfldata_snapshot_from_commit(sha: str, member: str = NFLDATA_CSV) -> bytes:
 
     We use codeload tarballs rather than the Contents API because games.csv is
     ~2.1 MB, above the Contents API's 1 MB inline limit. codeload serves the
-    whole tree as tar.gz and is reachable wherever github.com is.
+    whole tree as tar.gz; connectivity still depends on the caller's network.
     """
     url = f"https://codeload.github.com/{NFLDATA_REPO}/tar.gz/{sha}"
     blob = http_get(url, timeout=180)
@@ -123,7 +125,7 @@ def nfldata_snapshot_head(member: str = NFLDATA_CSV, ref: str = "master") -> byt
 # ---------------------------------------------------------------------------
 # Source 2 — Wayback Machine: archived official NFL stat-corrections pages
 # ---------------------------------------------------------------------------
-CDX_API = "http://web.archive.org/cdx/search/cdx"
+CDX_API = "https://web.archive.org/cdx/search/cdx"
 
 
 def official_corrections_snapshots(season: int | None = None, limit: int = 200) -> list[tuple[str, str]]:
@@ -150,14 +152,20 @@ def official_corrections_snapshots(season: int | None = None, limit: int = 200) 
     return out
 
 
+def official_corrections_snapshot_url(timestamp: str, original_url: str) -> str:
+    """Return the human-reviewable Wayback URL for a captured correction page."""
+    return f"https://web.archive.org/web/{timestamp}/{original_url}"
+
+
 def official_corrections_page(timestamp: str, original_url: str) -> bytes:
     """
     Fetch the raw archived HTML of an official corrections page.
 
     The `id_` modifier returns the ORIGINAL bytes without Wayback's injected
-    banner/toolbar, which keeps parsing deterministic.
+    banner/toolbar, which keeps parsing deterministic. Parsed rows should still
+    store `official_corrections_snapshot_url()` for human review.
     """
-    url = f"http://web.archive.org/web/{timestamp}id_/{original_url}"
+    url = f"https://web.archive.org/web/{timestamp}id_/{original_url}"
     return http_get(url, timeout=120)
 
 
@@ -170,8 +178,7 @@ def official_corrections_url(season: int, week: int, position: str = "O") -> str
 
 
 # ---------------------------------------------------------------------------
-# Source 3 — nflverse release assets (works on Actions, blocked in the
-#            restricted sandbox; kept so the deployment target is real)
+# Source 3 — nflverse release metadata and assets (bytes not yet validated)
 # ---------------------------------------------------------------------------
 def nflverse_release_assets(repo: str, tag: str) -> list[dict]:
     url = f"https://api.github.com/repos/{repo}/releases/tags/{tag}"
@@ -179,12 +186,13 @@ def nflverse_release_assets(repo: str, tag: str) -> list[dict]:
 
 
 def nflverse_pbp_asset_index(season: int) -> list[dict]:
-    """
-    Raw play-by-play, one asset per game. This is the dataset nflverse itself
-    refreshes weekly specifically "to incorporate stat corrections during the
-    week" (nflverse-pbp-internal/.github/workflows/refresh_raw_pbp.yaml, cron
-    '0 2 * 1,2,9-12 3' = Wednesdays 02:00 UTC). Diffing two vintages of these
-    assets is the highest-resolution correction detector available.
+    """Return release asset metadata for a season's raw play-by-play.
+
+    The upstream repository documents a weekly refresh to incorporate stat
+    corrections (see https://github.com/nflverse/nflverse-pbp/blob/master/.github/workflows/refresh_raw_pbp.yaml).
+    A release listing does not prove a correction occurred or identify an
+    official ruling. Asset bytes, schema, and a useful historical diff have not
+    been validated in this project; see LIMITATIONS.md §3.
     """
     return nflverse_release_assets("nflverse/nflverse-pbp", f"raw_pbp_{season}")
 

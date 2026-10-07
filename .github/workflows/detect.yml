@@ -2,12 +2,12 @@ name: Detect scoring discrepancies
 
 # Scheduled differential detection.
 #
-# WHY THIS CADENCE
-#   nflverse refreshes its raw play-by-play weekly "to incorporate stat
-#   corrections during the week" on Wednesdays 02:00 UTC, and the official
-#   corrections were historically published on the Wednesday after the games.
-#   We therefore poll daily in season and rely on the diff to surface anything
-#   that moved, rather than trying to hit an exact publish time.
+# SCOPE AND CADENCE
+#   This is a low-frequency final-game score-mirror check only. It snapshots
+#   nflverse/nfldata data/games.csv and diffs five frozen fields. It does NOT
+#   consume raw play-by-play or the retired NFL/Elias corrections feed, and it
+#   does NOT monitor player-stat changes. The seasonal daily schedule is a
+#   prototype cadence, not a source freshness or GitHub Actions SLA.
 #
 # NOTIFICATION IS OFF BY DEFAULT.
 #   Set the repository secret ALERT_WEBHOOK_URL to receive alerts (Slack or
@@ -17,8 +17,8 @@ name: Detect scoring discrepancies
 
 on:
   schedule:
-    # Daily at 12:00 UTC during the NFL season (Sep-Feb), plus a Wednesday run
-    # shortly after nflverse's 02:00 UTC correction refresh lands.
+    # Daily at 12:00 UTC during the NFL season (Sep-Feb), plus an extra
+    # Wednesday 04:00 UTC poll. These are prototype polling times, not feed SLAs.
     - cron: '0 12 * 9,10,11,12,1,2 *'
     - cron: '0 4 * 9,10,11,12,1,2 3'
   workflow_dispatch:
@@ -30,7 +30,6 @@ on:
 
 permissions:
   contents: write
-  issues: write
 
 concurrency:
   group: detect
@@ -46,24 +45,23 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Unit tests (must pass before we trust any alert)
-        run: python3 tests/test_pipeline.py
+      - name: Full unit test suite (must pass before we trust any alert)
+        run: python3 -m unittest discover -s tests -v
 
-      - name: Validate the archived-page parser against real HTML
-        run: |
-          # Reconciles parse_corrections.py against a known-good archived
-          # official page. This is the check that could not be run in the
-          # restricted build sandbox; it is authoritative here.
-          python3 pipeline/run.py selfcheck
-        continue-on-error: true
+      - name: Verify stored corrections still match the archived-page artefacts
+        run: python3 pipeline/ingest_rendered.py --check
 
-      - name: Fetch current snapshot of the official record
+      # The archived-corrections parser is a separate manual/backfill tool; it
+      # is not used by this scoreboard-only monitor. Do not let an unavailable
+      # Wayback snapshot masquerade as either a clean monitoring run or a reason
+      # to suppress the independent score snapshot.
+      - name: Fetch current snapshot of the versioned game-results mirror
+        id: snapshot
         run: python3 pipeline/run.py snapshot
 
       - name: Diff against the previous snapshot
         id: diff
         run: |
-          set +e
           PREV=$(ls -1dt snapshots/nfldata_games/*/ 2>/dev/null | sed -n 2p)
           if [ -z "$PREV" ]; then
             echo "No previous snapshot yet — this run establishes the baseline."
@@ -73,42 +71,66 @@ jobs:
           fi
           CUR=$(ls -1dt snapshots/nfldata_games/*/ | sed -n 1p)
           echo "prev=$PREV cur=$CUR"
-          # Diff the slim frozen-field snapshots (final games only). The full
-          # source file is referenced by SHA-256 in each manifest so any alert
-          # can be traced back to the exact bytes that produced it.
-          # --feed appends EVERY run to data/alerts/feed.json, including clean
-          # ones. That file is what the published site renders as the live feed,
-          # and it is what makes "nothing changed" distinguishable from "never ran".
+          # The detector returns 10 for alerts and 0 for a clean diff. Every
+          # other code is an error: fail closed rather than report "no alerts."
+          set +e
           python3 pipeline/run.py diff "${PREV}games.slim.csv" "${CUR}games.slim.csv" \
             --min-severity "${{ github.event.inputs.min_severity || 2 }}" \
             --out alerts/latest.md \
             --feed data/alerts/feed.json
           CODE=$?
-          echo "exit=$CODE"
+          set -e
+          if [ "$CODE" -ne 0 ] && [ "$CODE" -ne 10 ]; then
+            echo "::error::Diff failed with exit code $CODE; alert status is unknown."
+            exit "$CODE"
+          fi
           echo "alerts=$CODE" >> "$GITHUB_OUTPUT"
-          exit 0
 
-      - name: Publish to job summary
+      - name: Publish monitoring status to job summary
         if: always()
         run: |
-          if [ -f alerts/latest.md ]; then
+          if [ "${{ steps.snapshot.outcome }}" != "success" ]; then
+            echo "## Monitoring status: UNKNOWN" >> "$GITHUB_STEP_SUMMARY"
+            echo "Snapshot collection failed; this run cannot report whether discrepancies exist." >> "$GITHUB_STEP_SUMMARY"
+          elif [ "${{ steps.diff.outcome }}" != "success" ]; then
+            echo "## Monitoring status: UNKNOWN" >> "$GITHUB_STEP_SUMMARY"
+            echo "Snapshot was collected, but comparison failed. No clean result is being claimed." >> "$GITHUB_STEP_SUMMARY"
+          elif [ "${{ steps.diff.outputs.baseline }}" = "true" ]; then
+            echo "## Monitoring status: BASELINE" >> "$GITHUB_STEP_SUMMARY"
+            echo "A baseline was collected; no comparison was possible on this first run." >> "$GITHUB_STEP_SUMMARY"
+          elif [ -f alerts/latest.md ]; then
             cat alerts/latest.md >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "No alerts file produced (baseline run or no diffs)." >> "$GITHUB_STEP_SUMMARY"
+            echo "## Monitoring status: UNKNOWN" >> "$GITHUB_STEP_SUMMARY"
+            echo "No alert report exists even though comparison did not fail; investigate the run." >> "$GITHUB_STEP_SUMMARY"
           fi
 
-      - name: Notify webhook (only if configured and alerts exist)
-        if: steps.diff.outputs.alerts == '10' && env.WEBHOOK != ''
+      - name: Notify configured webhook
+        if: steps.diff.outputs.alerts == '10'
         env:
           WEBHOOK: ${{ secrets.ALERT_WEBHOOK_URL }}
         run: |
+          if [ -z "$WEBHOOK" ]; then
+            echo "ALERT_WEBHOOK_URL is not configured; report remains in the job summary and artefact."
+            exit 0
+          fi
           python3 - <<'PY'
           import json, os, sys
           sys.path.insert(0, "pipeline")
           import detect
-          report = json.load(open("alerts/latest.json"))
+          with open("alerts/latest.json", encoding="utf-8") as f:
+              report = json.load(f)
+          server = os.environ.get("GITHUB_SERVER_URL", "https://github.com").rstrip("/")
+          repo = os.environ.get("GITHUB_REPOSITORY", "")
+          run_id = os.environ.get("GITHUB_RUN_ID", "")
+          if repo and run_id:
+              report["review_url"] = f"{server}/{repo}/actions/runs/{run_id}"
+              with open("alerts/latest.json", "w", encoding="utf-8") as f:
+                  json.dump(report, f, indent=2)
           ok, msg = detect.notify_webhook(report, os.environ["WEBHOOK"])
           print("webhook:", ok, msg)
+          if not ok:
+              raise SystemExit(1)
           PY
 
       - name: Upload evidence artefact
@@ -122,23 +144,26 @@ jobs:
           retention-days: 90
           if-no-files-found: ignore
 
-      # The snapshot store is the system's memory: without it there is nothing
-      # to diff against on the next run.
-      # Re-copy the feed into the published docs/ layout so GitHub Pages serves
-      # the run we just recorded, not a stale one.
-      - name: Sync the feed into the published site
+      # A successful comparison updates the feed. Re-copy it into the published
+      # docs layout even on failures so the site stays internally synchronized;
+      # the last successful feed timestamp still reveals staleness.
+      - name: Sync published data copies
         if: always()
         run: ./pipeline/sync_site_data.sh
 
-      - name: Persist snapshots
-        if: always()
+      # The snapshot store is the system's memory: without it there is nothing
+      # to diff against on the next run.
+      - name: Persist snapshots and feed
+        # Do not advance the baseline after a failed comparison or failed
+        # webhook delivery: the next run must be able to retry the same alert.
+        if: success()
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -f snapshots/ alerts/ data/alerts/ docs/data/ 2>/dev/null || true
+          git add -f snapshots/ alerts/ data/alerts/ docs/data/
           if git diff --cached --quiet; then
             echo "nothing to commit"
           else
             git commit -m "chore: detection snapshot $(date -u +%Y-%m-%dT%H:%MZ) [skip ci]"
-            git push || echo "push skipped"
+            git push
           fi

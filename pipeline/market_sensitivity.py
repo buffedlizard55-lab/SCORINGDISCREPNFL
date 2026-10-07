@@ -1,71 +1,61 @@
 #!/usr/bin/env python3
 """
-market_sensitivity.py — Which games were VULNERABLE to a scoring correction?
+market_sensitivity.py — Measure distance between final scores and closing lines.
 
 WHY THIS MATTERS
 ----------------
-The brief asks us to separate corrections that ACTUALLY changed an official
-outcome from corrections that merely had the POTENTIAL to change a market.
-The second half of that cannot be answered by looking at corrections alone:
-you also have to know which games were close enough to a market line that any
-scoreboard change would have flipped a bet.
+The brief asks us to distinguish realized outcomes from hypothetical market
+sensitivity. This script computes a narrow distance metric for games with a
+final score and closing-line values; it does NOT model an actual correction or
+settlement.
 
-This script computes exactly that, from real closing lines, for every game in
-the nflverse/nfldata record. Output is a reproducible table of
-"correction-sensitive" games.
+METHOD
+------
+For each game:
 
-METHOD (and its arithmetic, so anyone can recompute it by hand)
----------------------------------------------------------------
-For each game we take the final scores and the closing lines:
+  home_margin = home_score - away_score
+  final_total = home_score + away_score
+  margin_line_distance = | |home_margin| - |spread_line| |
+  total_line_distance  = | final_total - total_line |
 
-  result     = home_score - away_score            (home margin)
-  total      = home_score + away_score
-  abs_spread = |spread_line|                      (magnitude of the handicap)
-
-  margin_gap = | abs(result) - abs_spread |
-      How many points the final margin sat away from the closing spread.
-      margin_gap == 0  => the game PUSHED on the spread. A scoring correction
-                          of even 1 point creates a winner where there was none.
-      margin_gap == 1  => a 1-point correction flips the spread result.
-      margin_gap == n  => a correction of >= n points flips it.
-
-  total_gap  = | total - total_line |
-      Same idea for the game total (over/under).
-
-A game is flagged "correction-sensitive" when margin_gap <= threshold or
-total_gap <= threshold for a configurable threshold (default 1 point, i.e.
-"any single scoring correction could have flipped this market").
+A game is included when either distance is at most the configured threshold
+(default: 1 point). This identifies proximity only. The distance is not the
+number of points a correction must change, does not specify a direction, and
+does not establish a wager outcome.
 
 IMPORTANT FRAMING
 -----------------
-This measures SENSITIVITY, not occurrence. It says "a correction here would have
-mattered". It does not claim a correction happened. Combined with the
-score-integrity study (data/evidence/score_integrity_study.json), which found
-zero post-completion score revisions across 28,323 game snapshots, the correct
-reading is:
+This measures line proximity, not correction occurrence, probability, or
+settlement. No score correction or wager is inferred. The sign convention of
+the `spread_line` field is not resolved here, so equal absolute margin/spread
+magnitudes are NOT labeled as confirmed pushes. The result is a sensitivity
+screen to prioritize review, not a count of affected games or bets.
 
-    This is the set of games where the failure mode COULD have bitten.
-    Empirically it did not bite, because NFL final scores are not revised
-    after the game. Player-level markets are where corrections do land.
-
-SIGN CONVENTION CAVEAT
-----------------------
-The sign convention of nflverse's `spread_line` field relative to home/away has
-been described inconsistently in secondary sources. This script therefore uses
-ONLY the magnitude |spread_line|, which is correct under either convention.
-That was a deliberate design choice to avoid asserting something we had not
-independently verified.
+The score-integrity study compares four selected vintages of a third-party
+mirror and found no difference in five frozen fields for rows already final in
+the older snapshots. That limited result does not establish that NFL scores
+never change or estimate how often corrections affect a market.
 """
 
 from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import json
 import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+
+def sha256_file(path: str) -> str:
+    """Hash the exact --games input without loading it all into memory."""
+    digest = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def to_float(v):
@@ -105,9 +95,9 @@ def analyse(path: str, seasons: set[int] | None, threshold: float = 1.0) -> tupl
         margin_gap = abs(abs(result) - abs(spread))
         total_gap = abs(total - tline)
 
-        spread_sensitive = margin_gap <= threshold
-        total_sensitive = total_gap <= threshold
-        if not (spread_sensitive or total_sensitive):
+        margin_line_within_threshold = margin_gap <= threshold
+        total_line_within_threshold = total_gap <= threshold
+        if not (margin_line_within_threshold or total_line_within_threshold):
             continue
 
         out.append(
@@ -126,31 +116,32 @@ def analyse(path: str, seasons: set[int] | None, threshold: float = 1.0) -> tupl
                 "closing_total": tline,
                 "margin_gap_points": round(margin_gap, 2),
                 "total_gap_points": round(total_gap, 2),
-                "pushed_on_spread": margin_gap == 0,
-                "pushed_on_total": total_gap == 0,
-                "spread_sensitive": spread_sensitive,
-                "total_sensitive": total_sensitive,
-                "min_correction_points_to_flip_spread": None if not spread_sensitive else round(margin_gap, 2),
-                "min_correction_points_to_flip_total": None if not total_sensitive else round(total_gap, 2),
+                "zero_margin_line_distance": margin_gap == 0,
+                "zero_total_line_distance": total_gap == 0,
+                "margin_line_within_threshold": margin_line_within_threshold,
+                "total_line_within_threshold": total_line_within_threshold,
                 "note": (
-                    "A scoring correction of any size would create a winner where the game pushed."
+                    "Absolute score-margin magnitude equals absolute spread-line magnitude. "
+                    "Spread sign/side and operator settlement are not inferred."
                     if margin_gap == 0
-                    else "Closest market outcome to the final score; listed because a correction "
-                    "within the stated gap would have flipped a spread/total market."
+                    else "Included because the final margin or total is within the configured "
+                    "distance threshold of a closing-line value; no correction or settlement is inferred."
                 ),
             }
         )
 
     summary = {
         "games_considered_with_scores_and_lines": considered,
-        "correction_sensitive_games": len(out),
-        "sensitive_share_pct": round(100.0 * len(out) / considered, 2) if considered else 0.0,
-        "threshold_points": threshold,
-        "exact_spread_pushes": sum(1 for g in out if g["pushed_on_spread"]),
-        "exact_total_pushes": sum(1 for g in out if g["pushed_on_total"]),
+        "games_within_distance_threshold_of_a_line": len(out),
+        "within_threshold_share_pct": round(100.0 * len(out) / considered, 2) if considered else 0.0,
+        "distance_threshold_points": threshold,
+        "zero_margin_line_distance_matches": sum(1 for g in out if g["zero_margin_line_distance"]),
+        "zero_total_line_distance_matches": sum(1 for g in out if g["zero_total_line_distance"]),
         "framing": (
-            "Sensitivity only. A row means a scoreboard correction WOULD have changed a market "
-            "outcome. It does not mean one occurred — see data/evidence/score_integrity_study.json."
+            "Distance-based sensitivity screen only. A row means the final score margin or total "
+            "is within the configured distance of a closing-line value. It does not mean a "
+            "correction occurred, that a particular side pushed or won, or that a wager settled. "
+            "See data/evidence/score_integrity_study.json and LIMITATIONS.md."
         ),
     }
     return out, summary
@@ -166,6 +157,15 @@ def main() -> int:
 
     seasons = {int(s) for s in args.seasons.split(",") if s.strip()}
     rows, summary = analyse(args.games, seasons, args.threshold)
+    summary["game_data_input"] = {
+        "source": "nflverse/nfldata data/games.csv (third-party mirror)",
+        "source_url": "https://github.com/nflverse/nfldata/blob/master/data/games.csv",
+        "input_basename": os.path.basename(args.games),
+        "sha256": sha256_file(args.games),
+        "bytes": os.path.getsize(args.games),
+        "retained_by_builder": False,
+        "note": "Hash identifies the exact --games input; retrieval time and Git commit are not inferred.",
+    }
 
     os.makedirs(args.outdir, exist_ok=True)
     stem = "market_sensitivity_" + "_".join(str(s) for s in sorted(seasons))
@@ -174,7 +174,7 @@ def main() -> int:
 
     cols = list(rows[0].keys()) if rows else []
     with open(csv_path, "w", newline="", encoding="utf-8") as f:
-        w = csv.DictWriter(f, fieldnames=cols)
+        w = csv.DictWriter(f, fieldnames=cols, lineterminator="\n")
         w.writeheader()
         w.writerows(rows)
     with open(json_path, "w", encoding="utf-8") as f:

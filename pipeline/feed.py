@@ -1,5 +1,5 @@
 """
-feed.py — The "current feed": an append-only log of every detection run.
+feed.py — The comparison feed: an append-only log of completed diff runs.
 
 WHY THIS EXISTS
 ---------------
@@ -8,11 +8,11 @@ The brief's everyday-use requirement is explicit:
     "It should solve the problem of having to manually check everything
      ourselves and having an up to date current feed."
 
-A detector that only speaks when it finds something is not a feed — you cannot
-tell "nothing changed" apart from "it never ran". So every run is recorded,
-INCLUDING clean runs. A reader opening the site can see when we last checked,
-what we compared, the SHA-256 of both inputs, and the result, whether or not
-anything moved.
+A detector that only speaks when it finds something is not a feed. This log
+records each completed snapshot comparison passed to `append_run`, INCLUDING
+clean comparisons, with the input hashes and result. It is not a workflow-health
+log: baseline-only, failed or aborted runs may not create an entry. Check the
+Actions history to see whether the latest scheduled attempt succeeded.
 
 HONESTY RULES
 -------------
@@ -37,15 +37,15 @@ MAX_RUNS = 200
 
 META = {
     "what_this_is": (
-        "Append-only log of automated differential-detection runs against a "
-        "versioned mirror of the NFL's official record. Every run is recorded, "
-        "including runs that found nothing, so 'nothing changed' is "
-        "distinguishable from 'we never checked'."
+        "Log of completed differential comparisons against a versioned "
+        "third-party mirror of the NFL record. Clean comparisons are recorded "
+        "too; baseline-only, failed and aborted workflow attempts may not appear. "
+        "This is not a workflow-health log."
     ),
     "what_a_recorded_alert_is": (
         "A machine-detected difference between two snapshots. It is a CANDIDATE "
-        "discrepancy, not a confirmed official NFL/Elias correction. Confirm "
-        "against the official gamebook before acting."
+        "discrepancy, not a confirmed official NFL/Elias correction. Cross-check "
+        "against an authoritative source before treating it as official."
     ),
     "what_a_clean_run_means": (
         "No frozen field on any already-final game differed between the two "
