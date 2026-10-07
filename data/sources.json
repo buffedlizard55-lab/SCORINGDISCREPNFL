@@ -1,0 +1,100 @@
+{
+  "nfl-ben": {
+    "publisher": "NFL.com",
+    "url": "https://www.nfl.com/news/ben-roethlisberger-stat-correction-spurs-fantasy-chaos-0ap1000000079289",
+    "excerpt": "Mendenhall originally was credited with a 13-yard touchdown run on the play",
+    "tier": "official",
+    "reviewed": "2026-10-07"
+  },
+  "espn-ben": {
+    "publisher": "ESPN",
+    "url": "https://www.espn.com/fantasy/football/ffl/story?id=8487835",
+    "excerpt": "he had 207 yards prior to the correction, and will have 220 afterwards",
+    "tier": "report",
+    "reviewed": "2026-10-07"
+  },
+  "nfl-mend": {
+    "publisher": "NFL.com",
+    "url": "https://www.nfl.com/news/nfl-corrects-mendenhall-s-yardage-from-steelers-jets-game-09000d5d81d254ba",
+    "excerpt": "has been reduced from 100 yards to 99",
+    "tier": "official",
+    "reviewed": "2026-10-07"
+  },
+  "nfl-watt": {
+    "publisher": "NFL.com",
+    "url": "https://www.nfl.com/news/j-j-watt-loses-nfl-s-sack-lead-on-statistical-correction-0ap1000000079268",
+    "excerpt": "The correction bumps Watt's sack total down to 7.5",
+    "tier": "official",
+    "reviewed": "2026-10-07"
+  },
+  "pat-gray": {
+    "publisher": "Patriots.com",
+    "url": "https://www.patriots.com/news/gray-s-day-gets-even-bigger-213496",
+    "excerpt": "After the correction Gray is now listed with 37 carries for 201 yards and four touchdowns",
+    "tier": "official",
+    "reviewed": "2026-10-07"
+  },
+  "espn-gray": {
+    "publisher": "ESPN",
+    "url": "https://www.espn.com/boston/nfl/story/_/id/11898556/stat-correction-gives-new-england-patriots-jonas-gray-201-rushing-yards-indianapolis-colts",
+    "excerpt": "37 carries for 201 yards instead of 38 carries for 199 yards",
+    "tier": "report",
+    "reviewed": "2026-10-07"
+  },
+  "nfl-pola": {
+    "publisher": "NFL.com league statement",
+    "url": "https://www.nfl.com/news/nfl-explains-ruling-at-end-of-chargers-steelers-game-09000d5d80c94a63",
+    "excerpt": "The final score will remain Steelers 11, Chargers 10",
+    "tier": "official",
+    "reviewed": "2026-10-07"
+  },
+  "ap-dawson": {
+    "publisher": "Associated Press / ESPN",
+    "url": "https://www.espn.com/espn/wire/_/section/nfl/id/3117705",
+    "excerpt": "After a lengthy discussion, the officials ruled the kick passed through the uprights and called the teams back onto the field",
+    "tier": "report",
+    "reviewed": "2026-10-07"
+  },
+  "cle-dawson": {
+    "publisher": "Cleveland Browns",
+    "url": "https://www.clevelandbrowns.com/video/phil-dawson-s-bank-shot-fg-i-this-day-in-nfl-history-16318592",
+    "excerpt": "November 18, 2007, the Cleveland Browns defeat the Baltimore Ravens 33-30",
+    "tier": "official",
+    "reviewed": "2026-10-07"
+  },
+  "espn-manning": {
+    "publisher": "ESPN quoting NFL spokesman",
+    "url": "https://www.espn.com/nfl/playoffs/2013/story/_/id/10224344/peyton-manning-passing-yardage-record-stand",
+    "excerpt": "Elias Sports Bureau made the final call after reviewing the play, which will remain a pass",
+    "tier": "report",
+    "reviewed": "2026-10-07"
+  },
+  "gsis": {
+    "publisher": "NFL Guide for Statisticians, 2025, p.4",
+    "url": "https://www.nflgsis.com/gsis/documentation/stadiumguides/guide_for_statisticians.pdf",
+    "excerpt": "subject to review by the NFL and the League\u2019s official statistician",
+    "tier": "official",
+    "reviewed": "2026-10-07"
+  },
+  "espn-policy": {
+    "publisher": "ESPN Fan Support",
+    "url": "https://support.espn.com/hc/en-us/articles/360000099732-Scoring-Stat-Corrections",
+    "excerpt": "Only official stat corrections made by the NFL after a game\u2019s conclusion will appear on the stat correction page",
+    "tier": "platform",
+    "reviewed": "2026-10-07"
+  },
+  "cbs-policy": {
+    "publisher": "CBS Fantasy support",
+    "url": "https://help.football.cbssports.com/s/article/How-do-Stat-Corrections-work",
+    "excerpt": "FINAL as of 6:00 a.m. Eastern Time",
+    "tier": "platform",
+    "reviewed": "2026-10-07"
+  },
+  "mfl-policy": {
+    "publisher": "MyFantasyLeague",
+    "url": "https://myfantasyleague.wordpress.com/2008/09/11/official-nfl-stat-corrections/",
+    "excerpt": "there is no set date or deadline for corrections to be made",
+    "tier": "platform",
+    "reviewed": "2026-10-07"
+  }
+}
