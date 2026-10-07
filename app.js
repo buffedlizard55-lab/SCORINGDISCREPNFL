@@ -189,6 +189,7 @@ function renderTopCards(db, study) {
   const studyComplete = study.status === 'complete';
   const observedFieldChanges = Number(study.totals.frozen_field_changes_vs_current || 0);
   setText('stat-snapshots', num(study.totals.game_snapshots_examined));
+  setText('stat-snapshots-2', num(study.totals.game_snapshots_examined));
   setText('stat-snapshots-status', studyComplete
     ? `across ${num(study.totals.selected_baselines)} selected baselines; not unique games`
     : `from ${num(study.totals.baselines_fetched)} fetched baselines only; study incomplete`);
