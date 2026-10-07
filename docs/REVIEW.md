@@ -38,3 +38,7 @@ independently verified PR #2's archived sources or historical mirror study.
 Final integrated local verification: all **40 tests** (32 pipeline + 8 seed) pass;
 both main and supplemental JavaScript syntax checks pass; supplemental build is
 deterministic; diff against current main has no new whitespace errors.
+
+PR #4 subsequently merged (`9a96509`) to restore root Pages and add validation.
+Kept its root site, validation workflow and sync script intact. Re-ran all **44
+integrated tests** successfully. Supplemental code still never overwrites root.
