@@ -1,3 +1,5 @@
+> **ARCHIVED CONCURRENT DRAFT — UNVERIFIED / SUPERSEDED.** Read [archive notice](README.md) and current [research limitations](../RESEARCH.md). Claims below are retained for review, not endorsed.
+
 # Alert Detection Notification System — Feasibility Analysis
 
 ## Executive Summary

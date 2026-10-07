@@ -1,0 +1,7 @@
+{
+  "status": "blocked",
+  "last_success": null,
+  "last_attempt": "2026-10-07",
+  "detail": "No live official feed connected. Legacy NFL corrections URL redirected to news. nflverse release metadata accessible; CSV download blocked by sandbox release-assets host restriction. No baseline collected.",
+  "alerts": []
+}

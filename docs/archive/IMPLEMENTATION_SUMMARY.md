@@ -1,14 +1,9 @@
-> **Reconciliation note (added when the two efforts were merged).**
-> This document was written by an earlier, parallel session on the same brief.
-> It is preserved for its research value. It is **not** the current source of
-> truth: see `README.md` for the governing brief and the verified findings, and
-> `data/prior_session/README.md` for the verification status of the candidate
-> cases this session catalogued.
+> **ARCHIVED CONCURRENT DRAFT — UNVERIFIED / SUPERSEDED.** Read [archive notice](README.md) and current [research limitations](../RESEARCH.md). Claims below are retained for review, not endorsed.
 
 # NFL Scoring Discrepancy Project - Implementation Summary
 
-**Date:** 2026-10-07  
-**Status:** ✅ Complete - Ready for Use  
+**Date:** 2026-10-07
+**Status:** ✅ Complete - Ready for Use
 **Live Site:** https://buffedlizard55-lab.github.io/SCORINGDISCREPNFL/
 
 ---
@@ -189,7 +184,7 @@ pip install requests beautifulsoup4
 
 **Impact:** Automated monitoring requires maintenance
 
-**Mitigation:** 
+**Mitigation:**
 - Script includes error handling and retries
 - Can switch to Sportradar API if budget allows ($500+/mo)
 - Manual backup: check NFL.com weekly
@@ -357,33 +352,33 @@ pip install requests beautifulsoup4
 ## Technical Debt & Known Issues
 
 ### 1. Duplicate Site Files
-**Issue:** Site files exist in both root and `/site/` directory  
-**Reason:** GitHub Pages configured for root, couldn't change via API  
-**Fix:** User can manually update Pages settings to use `/site/` directory  
+**Issue:** Site files exist in both root and `/site/` directory
+**Reason:** GitHub Pages configured for root, couldn't change via API
+**Fix:** User can manually update Pages settings to use `/site/` directory
 **Priority:** Low (doesn't affect functionality)
 
 ### 2. Fragile Web Scraping
-**Issue:** Script depends on NFL.com HTML structure  
-**Risk:** Site redesign could break scraper  
-**Fix:** Add multiple fallback sources, error handling  
+**Issue:** Script depends on NFL.com HTML structure
+**Risk:** Site redesign could break scraper
+**Fix:** Add multiple fallback sources, error handling
 **Priority:** Medium (will break eventually)
 
 ### 3. Limited Test Coverage
-**Issue:** No automated tests for scraper or data validation  
-**Risk:** Bugs could go unnoticed  
-**Fix:** Add unit tests and integration tests  
+**Issue:** No automated tests for scraper or data validation
+**Risk:** Bugs could go unnoticed
+**Fix:** Add unit tests and integration tests
 **Priority:** Medium (important for reliability)
 
 ### 4. No Authentication for Alerts
-**Issue:** Cron job runs without authentication  
-**Risk:** Anyone with server access can run script  
-**Fix:** Add API keys, environment variables  
+**Issue:** Cron job runs without authentication
+**Risk:** Anyone with server access can run script
+**Fix:** Add API keys, environment variables
 **Priority:** Low (local deployment)
 
 ### 5. JSON Schema Validation
-**Issue:** No formal schema for discrepancies.json  
-**Risk:** Invalid data could be added  
-**Fix:** Add JSON Schema validation  
+**Issue:** No formal schema for discrepancies.json
+**Risk:** Invalid data could be added
+**Fix:** Add JSON Schema validation
 **Priority:** Low (manual review catches errors)
 
 ---
@@ -457,8 +452,8 @@ This project successfully demonstrates that NFL scoring discrepancies are real, 
 **The Bottom Line:**
 This is a viable, valuable tool for fantasy football players and sports bettors. The core functionality works, the data is verified, and the path forward is clear. The main limitations are technical (no API) and temporal (corrections are delayed), but these can be mitigated with smart engineering and realistic expectations.
 
-**Maximize P(Win):** Focus on actionable insights, not perfect data  
-**Own the Outcome:** Build end-to-end solution, not just research  
+**Maximize P(Win):** Focus on actionable insights, not perfect data
+**Own the Outcome:** Build end-to-end solution, not just research
 **Verification First:** No hallucinations, only verified sources
 
 ---
@@ -471,5 +466,5 @@ This is a viable, valuable tool for fantasy football players and sports bettors.
 
 ---
 
-**Last Updated:** 2026-10-07  
+**Last Updated:** 2026-10-07
 **Next Review:** After first automated monitoring run

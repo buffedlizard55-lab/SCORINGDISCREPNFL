@@ -271,3 +271,27 @@ python3 pipeline/run.py selfcheck     # reconciles the parser against real HTML 
   Set `ALERT_WEBHOOK_URL` (Slack/Discord-compatible) as a repo secret to receive
   alerts; without it, alerts go to the job summary and an artefact. Webhook
   notification is **off by default** so a fork never spams anyone.
+
+
+## Supplemental evidence seed and review (PR #3)
+
+A concurrent contribution adds seven narrative cases in `data/events.json` with
+per-stat source mappings in `data/sources.json`. These supplement, and do not
+replace or automatically merge into, the broader main database. The seed includes
+Dawson's apparent-final reversal, Polamalu's unchanged final result, the Manning
+non-change, and Mendenhall/Gray/Watt post-game changes. It highlights a 31-day
+Watt reporting gap and the conflicting identity of Gray's penalized defender.
+
+- [Supplemental findings & next steps](docs/RESEARCH.md)
+- [Three-pass review](docs/REVIEW.md)
+- `scripts/monitor.py`: local SQLite weekly-stat snapshot prototype, separate from `pipeline/`.
+- `research-seed/`: standalone supplemental UI; does not control the main Pages deployment.
+- `docs/archive/`: preserved earlier draft, explicitly unverified/superseded.
+
+Run all tests with `python -m unittest discover -s tests -v`.
+Run `python scripts/build.py` to regenerate only the supplemental preview.
+A provider mirror's final flag is not proof of league finality; observed gaps
+are not exact publication latency, and sensitivity is not observed settlement.
+
+User's full everyday-use instruction, preserved without ellipsis:
+“Put this prompt into the repo readme and read it everytime we work on the project as a starting point to make sure we are building what we are aiming for and have a strong base to continue building and improving on making something useful for everyday use. It should solve the problem of having to manually check everything ourselves and having an up to date current feed.”
