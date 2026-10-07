@@ -1,0 +1,367 @@
+{
+  "as_of": "2026-10-07",
+  "coverage": "Evidence-backed seed; not exhaustive. No season has been fully audited.",
+  "events": [
+    {
+      "id": "2012-10-07-pit-phi",
+      "date": "2012-10-07",
+      "game": "Philadelphia Eagles at Pittsburgh Steelers",
+      "players": [
+        "Ben Roethlisberger",
+        "Rashard Mendenhall"
+      ],
+      "kind": "Post-game correction",
+      "correction_date": "2012-10-10",
+      "timing_precision": "date only; publication is not an exact correction timestamp",
+      "reason": "A throw originally scored as a backward lateral was determined to have gone forward.",
+      "changes": [
+        {
+          "subject": "Roethlisberger",
+          "stat": "Passing yards",
+          "before": 207,
+          "after": 220,
+          "delta": 13,
+          "scope": "game",
+          "evidence": [
+            "espn-ben"
+          ]
+        },
+        {
+          "subject": "Mendenhall",
+          "stat": "Rushing yards",
+          "before": 81,
+          "after": 68,
+          "delta": -13,
+          "scope": "game",
+          "evidence": [
+            "espn-ben"
+          ]
+        },
+        {
+          "subject": "Mendenhall",
+          "stat": "Receiving yards",
+          "before": 20,
+          "after": 33,
+          "delta": 13,
+          "scope": "game",
+          "evidence": [
+            "espn-ben"
+          ]
+        },
+        {
+          "subject": "Roethlisberger",
+          "stat": "Passing touchdowns",
+          "before": 0,
+          "after": 1,
+          "delta": 1,
+          "scope": "affected play",
+          "evidence": [
+            "nfl-ben"
+          ]
+        },
+        {
+          "subject": "Mendenhall",
+          "stat": "Rushing touchdowns",
+          "before": 1,
+          "after": 0,
+          "delta": -1,
+          "scope": "affected play",
+          "evidence": [
+            "nfl-ben"
+          ]
+        },
+        {
+          "subject": "Mendenhall",
+          "stat": "Receiving touchdowns",
+          "before": 0,
+          "after": 1,
+          "delta": 1,
+          "scope": "affected play",
+          "evidence": [
+            "nfl-ben"
+          ]
+        },
+        {
+          "subject": "Mendenhall",
+          "stat": "Receptions",
+          "before": 0,
+          "after": 1,
+          "delta": 1,
+          "scope": "affected play",
+          "evidence": [
+            "nfl-ben"
+          ]
+        }
+      ],
+      "impact": "Official statistical record changed; team points did not. NFL.com reports this play swung 20,000 fantasy matchups. Passing/rushing/receiving props could cross thresholds; actual sportsbook lines are not established.",
+      "sources": [
+        "nfl-ben",
+        "espn-ben"
+      ],
+      "flags": [
+        "ESPN article ends with an apparent yardage-scoring typo; do not generalize its historical fantasy rules."
+      ],
+      "settlement": "No sportsbook settlement independently verified",
+      "reviewed": "2026-10-07"
+    },
+    {
+      "id": "2010-12-19-pit-nyj",
+      "date": "2010-12-19",
+      "game": "New York Jets at Pittsburgh Steelers",
+      "players": [
+        "Rashard Mendenhall"
+      ],
+      "kind": "Post-game correction",
+      "correction_date": "2010-12-23",
+      "timing_precision": "date only; publication is not an exact correction timestamp",
+      "reason": "NFL did not clarify the reason. Article associates the extra yard with a nine-yard run incorrectly spotted as a first down.",
+      "changes": [
+        {
+          "subject": "Mendenhall",
+          "stat": "Rushing yards",
+          "before": 100,
+          "after": 99,
+          "delta": -1,
+          "scope": "game",
+          "evidence": [
+            "nfl-mend"
+          ]
+        }
+      ],
+      "impact": "Official statistic crossed 100 yards. Hypothetical over 99.5 changes from win to loss; no verified wager. Final score not revised.",
+      "sources": [
+        "nfl-mend"
+      ],
+      "flags": [
+        "Correction reason is reported context, not a confirmed NFL explanation."
+      ],
+      "settlement": "No sportsbook settlement independently verified",
+      "reviewed": "2026-10-07"
+    },
+    {
+      "id": "2012-09-09-hou-mia",
+      "date": "2012-09-09",
+      "game": "Miami Dolphins at Houston Texans",
+      "players": [
+        "J.J. Watt"
+      ],
+      "kind": "Post-game correction",
+      "correction_date": "2012-10-10",
+      "timing_precision": "date only; publication is not an exact correction timestamp",
+      "reason": "A designed running play had incorrectly been credited as a sack.",
+      "changes": [
+        {
+          "subject": "Watt",
+          "stat": "Sacks",
+          "before": 1,
+          "after": 0,
+          "delta": -1,
+          "scope": "affected play",
+          "evidence": [
+            "nfl-watt"
+          ]
+        },
+        {
+          "subject": "Watt",
+          "stat": "Sacks",
+          "before": 8.5,
+          "after": 7.5,
+          "delta": -1.0,
+          "scope": "season to correction date",
+          "evidence": [
+            "nfl-watt"
+          ]
+        }
+      ],
+      "impact": "Official sack count changed, 31 calendar days after the game. Before season value is derived as 7.5 + 1. Sack props and season totals potentially affected; no final-score change.",
+      "sources": [
+        "nfl-watt"
+      ],
+      "flags": [
+        "Do not confuse season-to-date numbers with game totals."
+      ],
+      "settlement": "No sportsbook settlement independently verified",
+      "reviewed": "2026-10-07"
+    },
+    {
+      "id": "2014-11-16-ne-ind",
+      "date": "2014-11-16",
+      "game": "New England Patriots at Indianapolis Colts",
+      "players": [
+        "Jonas Gray"
+      ],
+      "kind": "Post-game correction",
+      "correction_date": "2014-11-18",
+      "timing_precision": "date only; publication is not an exact correction timestamp",
+      "reason": "A two-yard loss was removed because the play was nullified by an accepted penalty.",
+      "changes": [
+        {
+          "subject": "Gray",
+          "stat": "Rushing yards",
+          "before": 199,
+          "after": 201,
+          "delta": 2,
+          "scope": "game",
+          "evidence": [
+            "pat-gray",
+            "espn-gray"
+          ]
+        },
+        {
+          "subject": "Gray",
+          "stat": "Rushing attempts",
+          "before": 38,
+          "after": 37,
+          "delta": -1,
+          "scope": "game",
+          "evidence": [
+            "espn-gray"
+          ]
+        }
+      ],
+      "impact": "Official statistic crossed 200 yards. Hypothetical over 200.5 changes from loss to win. Four touchdowns unchanged; team score unchanged.",
+      "sources": [
+        "pat-gray",
+        "espn-gray"
+      ],
+      "flags": [
+        "Sources disagree on penalized defender: Patriots says Jerel Freeman; ESPN says Erik Walden. Identity unresolved; omitted from reason."
+      ],
+      "settlement": "No sportsbook settlement independently verified",
+      "reviewed": "2026-10-07"
+    },
+    {
+      "id": "2007-11-18-cle-bal",
+      "date": "2007-11-18",
+      "game": "Cleveland Browns at Baltimore Ravens",
+      "players": [
+        "Phil Dawson"
+      ],
+      "kind": "Apparent-final reversal",
+      "correction_date": "2007-11-18",
+      "timing_precision": "date only; publication is not an exact correction timestamp",
+      "reason": "Officials conferred and determined the kick hit the support beyond the crossbar. Not a days-later statistical correction.",
+      "changes": [
+        {
+          "subject": "Dawson",
+          "stat": "Field goals made",
+          "before": 0,
+          "after": 1,
+          "delta": 1,
+          "scope": "affected play",
+          "evidence": [
+            "ap-dawson"
+          ]
+        },
+        {
+          "subject": "Cleveland",
+          "stat": "Points",
+          "before": 27,
+          "after": 30,
+          "delta": 3,
+          "scope": "end of regulation",
+          "evidence": [
+            "ap-dawson"
+          ]
+        }
+      ],
+      "impact": "Apparent Baltimore 30\u201327 win became 30\u201330; subsequent overtime play produced Cleveland 33\u201330. The correction itself added 3, not 6 points. Winner, spread, total, team total and kicking markets potentially affected.",
+      "sources": [
+        "ap-dawson",
+        "cle-dawson"
+      ],
+      "flags": [
+        "Teams had left the field, but game adjudication was still ongoing; not a finalized-record reversal."
+      ],
+      "settlement": "No sportsbook settlement independently verified",
+      "reviewed": "2026-10-07"
+    },
+    {
+      "id": "2008-11-16-pit-sd",
+      "date": "2008-11-16",
+      "game": "San Diego Chargers at Pittsburgh Steelers",
+      "players": [
+        "Troy Polamalu"
+      ],
+      "kind": "Acknowledged error; result stands",
+      "correction_date": "2008-11-17",
+      "timing_precision": "date only; publication is not an exact correction timestamp",
+      "reason": "Crew confused which pass was illegal and incorrectly erased a defensive touchdown. NFL acknowledged error but kept final score.",
+      "changes": [
+        {
+          "subject": "Polamalu",
+          "stat": "Defensive touchdowns",
+          "before": 1,
+          "after": 0,
+          "delta": -1,
+          "scope": "final-play on-field ruling to replay ruling",
+          "evidence": [
+            "nfl-pola"
+          ]
+        },
+        {
+          "subject": "Pittsburgh",
+          "stat": "Points",
+          "before": 11,
+          "after": 11,
+          "delta": 0,
+          "scope": "official final before/after NFL statement",
+          "evidence": [
+            "nfl-pola"
+          ]
+        }
+      ],
+      "impact": "Apparent touchdown was removed before final adjudication. Six potential points affect spread/total arithmetic, but Monday statement did not restore them. Official final remained 11\u201310.",
+      "sources": [
+        "nfl-pola"
+      ],
+      "flags": [],
+      "settlement": "No sportsbook settlement independently verified",
+      "reviewed": "2026-10-07"
+    },
+    {
+      "id": "2013-12-29-den-oak",
+      "date": "2013-12-29",
+      "game": "Denver Broncos at Oakland Raiders",
+      "players": [
+        "Peyton Manning",
+        "Eric Decker"
+      ],
+      "kind": "Reviewed; no change",
+      "correction_date": "2013-12-31",
+      "timing_precision": "date only; publication is not an exact correction timestamp",
+      "reason": "Elias retained on-site forward-pass classification after review of a seven-yard completion.",
+      "changes": [
+        {
+          "subject": "Manning",
+          "stat": "Passing yards",
+          "before": 266,
+          "after": 266,
+          "delta": 0,
+          "scope": "game",
+          "evidence": [
+            "espn-manning"
+          ]
+        },
+        {
+          "subject": "Manning",
+          "stat": "Passing yards",
+          "before": 5477,
+          "after": 5477,
+          "delta": 0,
+          "scope": "season",
+          "evidence": [
+            "espn-manning"
+          ]
+        }
+      ],
+      "impact": "No official statistical change. Hypothetical lateral would subtract 7 passing yards (259 game; 5,470 season). These are counterfactuals, not corrected values.",
+      "sources": [
+        "espn-manning"
+      ],
+      "flags": [],
+      "settlement": "No sportsbook settlement independently verified",
+      "reviewed": "2026-10-07"
+    }
+  ]
+}

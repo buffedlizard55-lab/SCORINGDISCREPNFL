@@ -119,15 +119,21 @@ def build(raw_path: str, games_path: str) -> tuple[dict, list[dict]]:
         if game is None:
             flags.append("GAME_JOIN_FAILED: team not found in this season+week of the schedule")
         else:
-            away, home = norm_team(game["away_team"]), norm_team(game["home_team"])
+            # Matching uses normalised codes (the corrections page writes JAC/TB-style
+            # codes that differ from the schedule's over time), but DISPLAY must use the
+            # codes as they were at the time. Showing today's code for a historical game
+            # is a factual error: the 2015 Rams were "STL", not "LA". Normalisation is
+            # therefore confined to the join.
+            away_raw, home_raw = game["away_team"], game["home_team"]
+            away_n, home_n = norm_team(away_raw), norm_team(home_raw)
             game_info = {
                 "game_id": game.get("game_id"),
                 "game_date": game.get("gameday"),
                 "weekday": game.get("weekday"),
-                "away_team": away,
-                "home_team": home,
-                "opponent": home if team == away else away,
-                "team_venue": "away" if team == away else "home",
+                "away_team": away_raw,
+                "home_team": home_raw,
+                "opponent": home_raw if team == away_n else away_raw,
+                "team_venue": "away" if team == away_n else "home",
                 "final_score": f"{game.get('away_team')} {game.get('away_score')} @ {game.get('home_team')} {game.get('home_score')}",
                 "closing_spread": game.get("spread_line"),
                 "closing_total": game.get("total_line"),
@@ -155,7 +161,10 @@ def build(raw_path: str, games_path: str) -> tuple[dict, list[dict]]:
             **game_info,
             "player": c["player"],
             "position": c["position"],
-            "team": team,
+            # `team` is exactly the code the official page printed — the most faithful
+            # representation of the source. `team_normalized` is what the join used.
+            "team": c["team"],
+            "team_normalized": team,
             "stat": c["stat"],
             "original_value": c["original_value"],
             "corrected_value": c["corrected_value"],
