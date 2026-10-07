@@ -22,8 +22,8 @@ class ProjectTests(unittest.TestCase):
         validate(json.loads((ROOT/'data/events.json').read_text()), json.loads((ROOT/'data/sources.json').read_text()))
 
     def test_deterministic_build(self):
-        build(); before = (ROOT/'index.html').read_bytes(); build()
-        self.assertEqual(before, (ROOT/'index.html').read_bytes())
+        build(); before = (ROOT/'research-seed/index.html').read_bytes(); build()
+        self.assertEqual(before, (ROOT/'research-seed/index.html').read_bytes())
         self.assertNotIn(b'<!-- CASES -->', before)
         self.assertEqual(before.count(b'<article '), 7)
 

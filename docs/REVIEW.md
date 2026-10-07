@@ -24,3 +24,17 @@ Did not admit Reddit-only cases or the guessed-column scraper. Kept existing
 Pages Actions workflow, added tests/build before deploy, and generate identical
 root/site copies so either existing deployment mode serves the current release.
 No concurrent branch or PR was modified. Re-ran all local checks after resolution.
+
+## Second concurrent-main reconciliation
+PR #2 then merged as `be9b359`, adding a much broader dataset, `pipeline/`, a
+scheduled detector and docs-based Pages deployment. Preserved that work and its
+active README/site/workflows. This PR is now **supplemental**: the seven-case UI
+lives in `research-seed/`, the local detector remains separately scoped, and the
+source mappings are not silently mixed into the broader database. Earlier status
+statements above apply to this contribution, not the newer main implementation.
+Root README links both contributions. No claim is made that this session
+independently verified PR #2's archived sources or historical mirror study.
+
+Final integrated local verification: all **40 tests** (32 pipeline + 8 seed) pass;
+both main and supplemental JavaScript syntax checks pass; supplemental build is
+deterministic; diff against current main has no new whitespace errors.
