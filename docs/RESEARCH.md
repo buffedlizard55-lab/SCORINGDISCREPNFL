@@ -1,5 +1,12 @@
 # Supplemental case-seed findings and feasibility — 2026-10-07
 
+> **PERIOD DOCUMENT — do not read as current.** This file records supplemental
+> case-seed research performed on 2026-10-07. It describes the database as a 36-row
+> seed; the database has since been expanded to **141 rows across 13 seasons from 22
+> archived evidence artefacts**. The twelve supplemental case studies remain valid as
+> individually sourced narratives, but counts quoted below are historical. For current
+> numbers see the root [`README.md`](../README.md).
+
 > **Scope note after concurrent integration:** This report describes the twelve-case supplemental seed and `scripts/monitor.py`, not the broader pipeline/site merged in PR #2. Main now also contains an archived-corrections database, historical mirror comparison, market-sensitivity study and scheduled `pipeline/` workflow. See the root README, FINDINGS.md and LIMITATIONS.md for that work. Those additions have not been independently source-audited by this supplemental implementation; the tests below exercise their code, not prove their evidence. The statements about no schedule/no notifications below apply to the local seed prototype only.
 
 ## What is established

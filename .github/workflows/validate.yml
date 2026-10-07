@@ -59,6 +59,8 @@ jobs:
               "docs/data/discrepancies.json": lambda d: len(d["records"]) > 0,
               "docs/data/score_integrity_study.json": lambda d: "totals" in d,
               "docs/data/market_sensitivity_2025_2026.json": lambda d: "summary" in d,
+          "docs/data/alerts/health.json": lambda d: d.get("status")
+              in ("ok", "baseline", "failed", "unknown"),
               # The live feed is operational state; if it exists it must be valid
               # and must carry its honesty labels, but a fresh fork may not have one.
               "data/alerts/feed.json": lambda d: (
@@ -66,9 +68,16 @@ jobs:
                   and all(k in d["meta"] for k in
                           ("what_this_is", "what_a_recorded_alert_is", "what_a_clean_run_means"))
               ),
+              # Monitor health records ATTEMPTS, not just completed comparisons,
+              # so a broken schedule cannot masquerade as a clean result. A bad
+              # status string must fail the build rather than render as healthy.
+              "data/alerts/health.json": lambda d: (
+                  d.get("status") in ("ok", "baseline", "failed", "unknown")
+                  and "meta" in d
+              ),
           }
 
-          OPTIONAL = {"data/alerts/feed.json"}
+          OPTIONAL = {"data/alerts/feed.json", "data/alerts/health.json"}
 
           failed = False
           for path, check in required.items():

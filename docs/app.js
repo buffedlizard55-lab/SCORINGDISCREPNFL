@@ -39,6 +39,18 @@ async function loadFirst(candidates) {
   throw lastErr;
 }
 
+/* Set an element's text by ID. A missing element is skipped, NEVER fatal.
+   BUG FOUND 2026-10-07: app.js referenced three IDs that never existed in
+   index.html (stat-snapshots-status, integrity-callout, zero-margin-count).
+   assigning to `.textContent` on the raw result of getElementById throws on null, the throw
+   escaped into init()'s catch, and the catch blanked EVERY table on the page
+   as a "could not load data" error. A missing label must never be able to take
+   down the whole render. */
+function setText(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = value;
+}
+
 /* ------------------------------------------------------------- live feed */
 /* Renders data/alerts/feed.json. Loaded separately and non-fatally: the feed is
    operational state, and its absence must never blank the historical database. */
@@ -100,30 +112,95 @@ function renderFeed(feed) {
   }).join('') || '<tr><td class="empty" colspan="5">No runs recorded.</td></tr>';
 }
 
+/* Numeric gap values for a set of records, excluding rows with no gap.
+   BUG FIXED 2026-10-07: the previous form cast each gap to a Number first and
+   filtered with Number.isFinite afterwards. Number(null) is 0, which IS finite,
+   so the 4 rows that could not be joined to a game (the official page printed no
+   team code for them) were silently counted as 0-day corrections. The headline
+   "days to correction" figure read 0-6 when no row in the database was corrected
+   on the day of its game. Nulls must be dropped BEFORE the numeric cast, not
+   after. tests/test_pipeline.py asserts this pattern never returns. */
+function gapValues(rows) {
+  return rows
+    .map((r) => r.days_from_game_to_correction)
+    .filter((v) => v !== null && v !== undefined && v !== '')
+    .map(Number)
+    .filter((v) => Number.isFinite(v));
+}
+
+/* ----------------------------------------------------------- monitor health */
+/* Renders data/alerts/health.json.
+   WHY: the feed records completed comparisons only. If the schedule breaks, no
+   new row appears and the page keeps showing the last successful run as though
+   it were current. A monitoring system whose failure mode is "looks fine" is
+   the worst kind, so the attempt outcome is rendered prominently and a stale
+   or failed monitor is stated outright rather than suppressed. */
+function renderHealth(health) {
+  const host = document.getElementById('health-banner');
+  if (!host) return;
+
+  const status = (health && health.status) || 'unknown';
+  const lastAttempt = health && health.last_attempt;
+  const lastSuccess = health && health.last_success;
+
+  const ageHours = (() => {
+    const stamp = lastAttempt || lastSuccess;
+    if (!stamp) return null;
+    const then = Date.parse(stamp.replace('Z', 'Z'));
+    if (!Number.isFinite(then)) return null;
+    return Math.round((Date.now() - then) / 3600000);
+  })();
+
+  const cls = status === 'ok' ? 'ok' : status === 'baseline' ? 'warn' : 'bad';
+  const label = {
+    ok: 'Monitor healthy',
+    baseline: 'Baseline only',
+    failed: 'Last attempt FAILED',
+    unknown: 'No attempt recorded',
+  }[status];
+
+  const head = status === 'failed'
+    ? '<strong>The last scheduled attempt did not complete.</strong> The results below may be stale — they are the last successful run, not the current state.'
+    : status === 'unknown'
+      ? '<strong>No scheduled attempt has been recorded yet.</strong> Nothing below has been verified as current.'
+      : status === 'baseline'
+        ? '<strong>A baseline snapshot was collected; no comparison has run yet.</strong>'
+        : '<strong>The last scheduled attempt completed.</strong> A completed attempt is not proof that the NFL made no corrections — only that this mirror\'s frozen fields did not differ.';
+
+  const age = ageHours === null
+    ? ''
+    : `<br><span class="src">Last attempt ${ageHours}h ago${ageHours >= 48 ? ' — <strong>this monitor may no longer be running</strong>' : ''}.</span>`;
+
+  host.className = `callout ${cls}`;
+  host.innerHTML = `<p><span class="pill ${status === 'ok' ? 'sev-1' : status === 'baseline' ? 'sev-2' : 'sev-3'}"
+      style="margin-right:8px;">${esc(label)}</span>${head}
+    ${health && health.detail ? `<br><span class="src">${esc(health.detail)}</span>` : ''}
+    ${lastSuccess ? `<br><span class="src">Last successful comparison: ${esc(lastSuccess)}.</span>` : ''}
+    ${age}</p>`;
+}
+
 /* ------------------------------------------------------------------ cards */
 function renderTopCards(db, study) {
   const c = db.meta.counts;
-  document.getElementById('stat-records').textContent = num(c.total_records);
+  setText('stat-records', num(c.total_records));
   const sampleEl = document.getElementById('stat-sample-rows');
   if (sampleEl) sampleEl.textContent = num(c.total_records);
-  document.getElementById('stat-potential').textContent = num(c.potential_to_change_market);
+  setText('stat-potential', num(c.potential_to_change_market));
   const studyComplete = study.status === 'complete';
   const observedFieldChanges = Number(study.totals.frozen_field_changes_vs_current || 0);
-  document.getElementById('stat-snapshots').textContent = num(study.totals.game_snapshots_examined);
-  document.getElementById('stat-snapshots-status').textContent = studyComplete
+  setText('stat-snapshots', num(study.totals.game_snapshots_examined));
+  setText('stat-snapshots-status', studyComplete
     ? `across ${num(study.totals.selected_baselines)} selected baselines; not unique games`
-    : `from ${num(study.totals.baselines_fetched)} fetched baselines only; study incomplete`;
-  document.getElementById('stat-revisions').textContent = studyComplete
+    : `from ${num(study.totals.baselines_fetched)} fetched baselines only; study incomplete`);
+  setText('stat-revisions', studyComplete
     ? num(observedFieldChanges)
-    : (observedFieldChanges > 0 ? `≥${num(observedFieldChanges)}` : 'Unknown');
+    : (observedFieldChanges > 0 ? `≥${num(observedFieldChanges)}` : 'Unknown'));
   document.getElementById('stat-revisions').className = studyComplete ? 'num ok' : 'num warn';
-  const datedRows = db.records
-    .map((r) => Number(r.days_from_game_to_correction))
-    .filter((v) => Number.isFinite(v));
-  document.getElementById('stat-cadence').textContent = datedRows.length
+  const datedRows = gapValues(db.records);
+  setText('stat-cadence', datedRows.length
     ? `${Math.min(...datedRows)}–${Math.max(...datedRows)}`
-    : '—';
-  document.getElementById('badge-records').textContent = `${c.total_records} archived rows`;
+    : '—');
+  setText('badge-records', `${c.total_records} archived rows`);
 }
 
 /* --------------------------------------------------------- integrity table */
@@ -158,7 +235,9 @@ function renderIntegrity(study) {
   </tr>`;
 
   const callout = document.getElementById('integrity-callout');
-  if (!complete) {
+  if (!callout) {
+    // Missing container must not take the render down with it.
+  } else if (!complete) {
     callout.className = 'callout warn';
     callout.textContent = 'The mirror comparison is incomplete. A failed baseline is not counted as zero; the available count cannot support a no-change conclusion.';
   } else if (totalChanges > 0) {
@@ -169,8 +248,8 @@ function renderIntegrity(study) {
     callout.textContent = `No frozen-field differences were observed in the ${num(t.selected_baselines)} selected mirror comparisons (${num(t.game_snapshots_examined)} overlapping game-snapshot comparisons, not unique games). This does not establish that official scores never change.`;
   }
 
-  document.getElementById('integrity-caveat').textContent = study.caveat;
-  document.getElementById('integrity-caveat-full').textContent = study.caveat;
+  setText('integrity-caveat', study.caveat);
+  setText('integrity-caveat-full', study.caveat);
 }
 
 /* ---------------------------------------------------------- database table */
@@ -199,8 +278,7 @@ function renderDB() {
     return String(x).localeCompare(String(y)) * sortDir;
   });
 
-  document.getElementById('count').textContent =
-    `${rows.length} of ${DB.length} records`;
+  setText('count', `${rows.length} of ${DB.length} records`);
 
   const tb = document.querySelector('#tbl-db tbody');
   if (!rows.length) {
@@ -239,6 +317,75 @@ function wireSorting() {
       renderDB();
     });
   });
+}
+
+/* ---------------------------------------------------------------- coverage */
+/* Renders one row per (season, week) present in the shipped data, straight from
+   the records. Nothing here is typed by hand, so the page cannot claim coverage
+   the database does not have. */
+function renderCoverage(db) {
+  const tb = document.querySelector('#tbl-coverage tbody');
+  if (!tb) return;
+
+  const groups = new Map();
+  for (const r of db.records) {
+    const k = `${r.season}|${r.week}`;
+    if (!groups.has(k)) groups.set(k, []);
+    groups.get(k).push(r);
+  }
+  const keys = [...groups.keys()].sort((a, b) => {
+    const [as, aw] = a.split('|').map(Number);
+    const [bs, bw] = b.split('|').map(Number);
+    return as - bs || aw - bw;
+  });
+
+  tb.innerHTML = keys.map((k) => {
+    const rows = groups.get(k);
+    const [season, week] = k.split('|').map(Number);
+    const dates = [...new Set(rows.map((r) => r.game_date).filter(Boolean))].sort();
+    const gaps = gapValues(rows);
+    const filters = [...new Set(rows.map((r) => r.position))].sort();
+    // The artefact filename is derivable from the row's own provenance, so the
+    // link can never point at a page that was not the source of these rows.
+    const url = rows[0].source_url_archived || '';
+    return `<tr>
+      <td><strong>${season}</strong> <span class="src">W${week}</span></td>
+      <td class="num">${rows.length}</td>
+      <td class="mono">${dates.length ? `${esc(dates[0])}${dates.length > 1 ? ` – ${esc(dates[dates.length - 1])}` : ''}` : '—'}</td>
+      <td class="num">${gaps.length ? `${Math.min(...gaps)}–${Math.max(...gaps)}` : '—'}</td>
+      <td class="src">${filters.map((f) => esc(f)).join(', ')}</td>
+      <td><a href="${esc(url)}" target="_blank" rel="noopener">archived page ↗</a></td>
+    </tr>`;
+  }).join('');
+
+  const totalRows = db.records.length;
+  const seasons = [...new Set(db.records.map((r) => r.season))].sort();
+  const missingSeasons = [];
+  for (let s = seasons[0]; s <= seasons[seasons.length - 1]; s += 1) {
+    if (!seasons.includes(s)) missingSeasons.push(s);
+  }
+  const weeks = [...new Set(db.records.map((r) => r.week))].sort((a, b) => a - b);
+
+  document.querySelector('#tbl-coverage tfoot').innerHTML = `<tr>
+    <td><strong>${keys.length} season-weeks</strong></td>
+    <td class="num"><strong>${num(totalRows)}</strong></td>
+    <td class="src" colspan="2">${seasons[0]}–${seasons[seasons.length - 1]}, ${seasons.length} seasons</td>
+    <td class="src" colspan="2">weeks present: ${weeks.join(', ')}</td>
+  </tr>`;
+
+  const gapEl = document.getElementById('coverage-gaps');
+  if (gapEl) {
+    const parts = [];
+    if (missingSeasons.length) {
+      parts.push(`<strong>${missingSeasons.join(', ')}</strong> ${missingSeasons.length === 1 ? 'is absent entirely' : 'are absent entirely'}`);
+    }
+    parts.push('weeks 2–15 and 17 are almost entirely absent');
+    gapEl.innerHTML = parts.join('; ') + '.';
+  }
+
+  // Keep the alert-system section's row count in step with the data too.
+  const rec2 = document.getElementById('stat-records-2');
+  if (rec2) rec2.textContent = num(totalRows);
 }
 
 /* -------------------------------------------------------------- case cards */
@@ -339,24 +486,30 @@ function renderExposure(ms) {
 const LIMITS = [
   ['Blocker', 'The official NFL correction feed was retired in 2026.',
    'The page that published Elias Sports Bureau corrections now redirects to a news hub. A third-party diff cannot distinguish an official correction from a provider bug. A vendor feed could help only if the actual product documents NFL/Elias provenance, revision history, access and rights.'],
+  ['Blocker', 'Player-stat vintages are not retained by any reachable channel.',
+   'Release asset bytes could not be downloaded from this environment via either of two tested routes, and upstream <strong>overwrites release assets in place</strong> — the <code>stats_player</code> release was published 2025-07-31 while its <code>stats_player_post_2023.csv</code> asset was created 2026-08-13. No Git-committed player-stat file exists in <code>nfldata</code>, <code>nflverse-data</code>, <code>nflverse-pbp</code> or <code>nflfastR-data</code>. A detector can be built and can accumulate vintages from day one, but it can <strong>never</strong> be backtested against the known historical corrections. This is not fixable by writing better code.'],
   ['High', 'The successor channel is a client-side JS app with no documented API.',
    'ESPN\'s corrections page renders in the browser. Scraping it would mean reverse-engineering a private API — brittle and likely against terms.'],
   ['High', 'Player-stat polling is not wired into the scheduled detector.',
-   'The play-by-play adapter only exposes metadata/download helpers. Fetching, schema validation, normalization, revision diffing, durable persistence and player-stat alerting still need implementation and a production-data backtest.'],
+   'The play-by-play adapter only exposes metadata/download helpers. Fetching, schema validation, normalization, revision diffing, durable persistence and player-stat alerting still need implementation. Given the vintage-retention blocker above, a historical backtest is not achievable with reachable sources, so the detector would ship unmeasured.'],
+  ['Medium', 'A failed or delayed monitor looks identical to a clean one.',
+   'The feed records <strong>completed comparisons</strong>, not attempts. If the scheduled workflow is disabled, delayed, lacks write permission, cannot fetch the source, or fails to publish, the page keeps showing the last successful run and looks current. A monitoring system whose failure mode is "looks fine" is the worst kind. Fixing this is the cheapest, highest-value item on the roadmap.'],
   ['Medium', 'The corrections parser has not seen byte-exact archived HTML.',
-   'The parser was validated against stored rendered page content; byte-exact HTML extraction remains untested here. <code>run.py selfcheck</code> is a manual/backfill diagnostic and is not a gate in the score-only scheduled workflow.'],
+   'The parser was validated against 22 stored rendered page artefacts and five distinct real cell shapes; byte-exact HTML extraction remains untested here. <code>run.py selfcheck</code> is a manual/backfill diagnostic and is not a gate in the score-only scheduled workflow.'],
   ['Medium', 'The mirror is not the NFL.',
    'The scheduled differential detector uses a third-party mirror of NFL results. A change could be an official correction or a mirror bug; this detector cannot tell them apart. No independent corroboration source is integrated or validated here, and cross-source agreement is not official confirmation.'],
   ['Medium', 'No verified per-game prop-line or settlement archive.',
    'No per-game player-prop line archive was verified. The project flags candidate stat categories for review under a heuristic; it does not prove a particular market or line was offered.'],
-  ['Medium', 'The database is a verified seed, not the full corpus.',
-   'A verified seed was parsed from 10 stored archived pages. An observed archive-search surface includes candidate captures across 2010–2025, multiple position filters and weeks, but has not been validated as a complete denominator. Adding a sourced page is mechanically ingestible; establishing coverage still requires review and rate-limited retrieval.'],
+  ['Medium', 'The database is a verified seed, with named gaps.',
+   'A verified seed parsed from 22 stored archived pages. <strong>2011 is absent entirely</strong>, and <strong>weeks 2–15 and 17 are almost entirely absent</strong> — the sample is weighted to weeks 1 and 16, so no weekly-frequency claim is supportable. An observed archive-search surface includes candidate captures across 2010–2025, but has not been validated as a complete denominator.'],
+  ['Low', 'Later captures print current franchise names, not historical ones.',
+   'A 2026 capture of the 2016 week-16 page shows Oakland players under <code>LV</code> and "Las Vegas Raiders". The transcription records what the page printed; historical codes are restored only in the clearly-labelled derived layer for the game join. Recorded as an irregularity, never silently normalised.'],
   ['Low', 'Betting-line sign conventions are ambiguous in secondary sources.',
    'The exposure analysis uses only the magnitude of the spread, which is correct under either convention. The sign is never asserted.'],
   ['Low', 'A correction reverted between two snapshots is invisible.',
    'If a value changes and changes back between snapshots, the diff sees nothing. The workflow uses a configured seasonal schedule; Actions scheduling is best-effort, not a freshness SLA.'],
   ['Low', 'Exact correction publication latency and any general deadline are unknown.',
-   'The selected joined sample spans 1–4 calendar days to the correction date printed on the archived page; this is not an exact timestamp or a universal deadline. The 14-day review flag is a project heuristic, not an NFL policy.'],
+   'The selected joined sample spans 1–6 calendar days to the correction date printed on the archived page; this is not an exact timestamp or a universal deadline. The gap is measured <strong>per game</strong>, not per week — the two 6-day rows are corrections dated Dec 27 measured against a Thursday-night game played Dec 21. The 14-day review flag is a project heuristic, not an NFL policy.'],
 ];
 
 function renderLimits() {
@@ -384,8 +537,15 @@ function renderLimits() {
       .then(renderFeed)
       .catch(() => renderFeed({ latest: null, runs: [], summary: {} }));
 
+    // Monitor health is loaded on the same non-fatal path: if it is missing or
+    // broken the page must say so, never imply the monitor is fine.
+    loadFirst(['data/alerts/health.json', 'data/health.json'])
+      .then(renderHealth)
+      .catch(() => renderHealth({ status: 'unknown' }));
+
     renderTopCards(db, study);
     renderIntegrity(study);
+    renderCoverage(db);
     renderCases(db);
     renderExposure(ms);
     renderLimits();
@@ -399,9 +559,9 @@ function renderLimits() {
       document.getElementById(id).addEventListener('input', renderDB));
     renderDB();
 
-    document.getElementById('generated').textContent =
+    setText('generated',
       `Database generated ${db.meta.generated_at} · integrity study ${study.generated_at} · ` +
-      `official statistician: ${db.meta.official_statistician}`;
+      `official statistician: ${db.meta.official_statistician}`);
   } catch (e) {
     document.querySelectorAll('tbody').forEach((tb) => {
       tb.innerHTML = `<tr><td class="empty">Could not load data: ${esc(e.message)}</td></tr>`;
