@@ -280,6 +280,37 @@ class TestShippedDatabase(unittest.TestCase):
                 f"{r['record_id']} failed to join to a game",
             )
 
+    def test_team_codes_are_shown_as_the_era_they_played_in(self):
+        """
+        Regression: the join normalises franchise codes (STL -> LA, JAC -> JAX,
+        SD -> LAC, OAK -> LV) and that normalised code was leaking into DISPLAY,
+        so a 2015 Rams row rendered as "LA". Normalisation must be confined to
+        matching; display must use the code as it was at the time, which is also
+        exactly what the official source page printed.
+        """
+        db = self._load("discrepancies.json")
+        by_player = {}
+        for r in db["records"]:
+            by_player.setdefault(r["player"], []).append(r)
+
+        gurley = by_player.get("Todd Gurley")
+        self.assertIsNotNone(gurley, "expected the 2015 Todd Gurley row")
+        self.assertEqual(gurley[0]["team"], "STL", "2015 Rams must display as STL, not LA")
+
+        # Any row whose normalised code differs must show the original, and the
+        # two must be recorded separately so the join stays reproducible.
+        for r in db["records"]:
+            self.assertIn("team_normalized", r, r["record_id"])
+            self.assertNotIn(
+                r["team"], ("", None), f"{r['record_id']} lost its as-printed team code"
+            )
+
+        # And the 2015 Rams game itself must show STL on both sides of the join.
+        for r in db["records"]:
+            if r.get("game_id") == "2015_16_STL_SEA":
+                self.assertIn("STL", (r["away_team"], r["home_team"]))
+                break
+
     def test_score_integrity_study_is_present_and_reports_its_caveat(self):
         st = self._load(os.path.join("evidence", "score_integrity_study.json"))
         self.assertGreater(st["totals"]["game_snapshots_examined"], 1000)
