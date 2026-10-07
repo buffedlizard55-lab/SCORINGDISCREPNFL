@@ -239,11 +239,26 @@ def snapshot_dir(root: str, source: str, stamp: str | None = None) -> str:
     return os.path.join(root, "snapshots", source, stamp)
 
 
-def write_snapshot(root: str, source: str, name: str, data: bytes, meta: dict | None = None) -> str:
-    """Persist raw bytes + a manifest carrying the SHA-256 of exactly those bytes."""
+def write_snapshot(
+    root: str,
+    source: str,
+    name: str,
+    data: bytes,
+    meta: dict | None = None,
+    stamp: str | None = None,
+) -> str:
+    """
+    Persist raw bytes + a manifest carrying the SHA-256 of exactly those bytes.
+
+    `stamp` lets a caller label the snapshot with the vintage it actually
+    represents (for example the upstream commit date) instead of wall-clock
+    now. That matters for backfills: a snapshot labelled with today's clock
+    time while holding bytes from 2026-09-22 would silently misdate the
+    comparison window recorded in the feed.
+    """
     import hashlib
 
-    d = snapshot_dir(root, source)
+    d = snapshot_dir(root, source, stamp=stamp)
     os.makedirs(d, exist_ok=True)
     path = os.path.join(d, name)
     with open(path, "wb") as f:

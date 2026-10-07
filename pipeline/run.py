@@ -226,6 +226,34 @@ def cmd_churn(args: argparse.Namespace) -> int:
         "unexplained": study["totals"]["slim_changes_not_explained_by_frozen_or_row_count"],
     }, indent=2))
     print(f"wrote {args.out}")
+def cmd_attempt(args: argparse.Namespace) -> int:
+    """
+    Record the outcome of one scheduled detection ATTEMPT.
+
+    This exists because the comparison feed records completed comparisons only.
+    If the schedule breaks, no new entry appears and the site keeps showing the
+    last successful run as though it were current. Recording attempts separately
+    makes a dead monitor visible instead of silently reassuring.
+
+    It is called `attempt` and writes `data/alerts/attempts.json` because
+    `health` / `health.json` means the wider self-assessment produced by
+    pipeline/health.py — which reads this ledger as one of its checks, so a
+    failed attempt is escalated by the watchdog instead of living only in a
+    banner. Both features are kept; only the ambiguous name was removed.
+    """
+    h = feed.record_attempt(args.attempts, args.status, args.detail)
+    age = feed.attempt_age_hours(h)
+    print(json.dumps({
+        "status": h["status"],
+        "last_attempt": h.get("last_attempt"),
+        "last_success": h.get("last_success"),
+        "last_failure": h.get("last_failure"),
+        "consecutive_failures": h.get("consecutive_failures", 0),
+        "age_hours": age,
+    }, indent=2))
+    return 0
+
+
     return 0
 
 
@@ -460,6 +488,15 @@ def main() -> int:
     ch.add_argument("--cache", default=None)
     ch.add_argument("--out", default=os.path.join(REPO_ROOT, "data", "evidence", "upstream_churn_study.json"))
     ch.set_defaults(fn=cmd_churn)
+
+    am = sub.add_parser("attempt", help="record the outcome of one scheduled attempt")
+    am.add_argument("--status", required=True,
+                    choices=list(feed.VALID_STATUSES),
+                    help="ok | baseline | failed | unknown")
+    am.add_argument("--detail", default="", help="free-text context for the run log")
+    am.add_argument("--attempts",
+                    default=os.path.join(REPO_ROOT, "data", "alerts", "attempts.json"))
+    am.set_defaults(fn=cmd_attempt)
 
     args = p.parse_args()
     return args.fn(args)

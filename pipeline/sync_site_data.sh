@@ -38,10 +38,12 @@ if [ -f "$root/data/corrections.atom" ]; then
   cp "$root/data/corrections.atom" "$root/docs/data/"
 fi
 
-# 1b. the live detection feed -> docs/data/alerts/ (optional: a fresh fork has
-#     no runs yet, and the site renders "no runs recorded" rather than breaking)
+# 1b. the live detection feed, the monitor self-assessment, the attempt ledger
+#     and the delivery receipts -> docs/data/alerts/ (all optional: a fresh fork
+#     has none yet, and the site renders "no runs recorded" / "no attempt
+#     recorded" / an UNKNOWN assessment rather than breaking)
 mkdir -p "$root/docs/data/alerts"
-for f in feed.json feed.atom health.json deliveries.json; do
+for f in feed.json feed.atom health.json attempts.json deliveries.json; do
   if [ -f "$root/data/alerts/$f" ]; then
     cp "$root/data/alerts/$f" "$root/docs/data/alerts/"
   fi

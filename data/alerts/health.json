@@ -1,26 +1,26 @@
 {
  "meta": {
-  "what_this_is": "Self-assessment of the monitoring artefacts in this repository: the comparison feed, the snapshot store, the delivery log and the published site copies. It answers 'is the monitor running?', not 'did the NFL change anything?'.",
+  "what_this_is": "Self-assessment of the monitoring artefacts in this repository: the comparison feed, the attempt ledger, the snapshot store, the delivery log and the published site copies. It answers 'is the monitor running?', not 'did the NFL change anything?'.",
   "status_values": {
    "ok": "every check passed",
    "warn": "the monitor is working but at least one check is degraded",
    "fail": "the monitor cannot currently be trusted; see checks[]",
    "unknown": "the evidence needed to decide is absent; never reported as ok"
   },
-  "what_it_cannot_see": "A workflow that is disabled, queued or cancelled by GitHub, a runner outage, or a notification that was accepted by an endpoint and never read. Check the Actions history for attempt-level truth.",
+  "what_it_cannot_see": "A workflow that GitHub disabled, queued or cancelled writes nothing at all, so it shows up only as an ageing attempt ledger and an ageing feed, never as an explicit failure; likewise a runner outage, or a notification that an endpoint accepted and nobody read. The attempt ledger (data/alerts/attempts.json) narrows this gap by recording failed runs too, but it cannot record a run that never started.",
   "see": [
    "ALERT_SYSTEM_FEASIBILITY.md",
    "LIMITATIONS.md",
    ".github/workflows/health.yml"
   ]
  },
- "generated_at": "2026-10-07T21:54:23Z",
+ "generated_at": "2026-10-07T22:07:10Z",
  "status": "warn",
  "headline": "Monitor degraded: it is running, but at least one check needs attention.",
  "last_successful_comparison_at": "2026-10-07T21:22:14+00:00",
- "hours_since_last_comparison": 0.54,
+ "hours_since_last_comparison": 0.75,
  "stale_after_hours": 40.0,
- "identical_input_streak": 3,
+ "identical_input_streak": 1,
  "source_watermark": {
   "upstream_commit_sha": "b8a4c3931e3f85a7b6d9056198354ff5aadc8da4",
   "upstream_commit_date": "2026-10-07T21:15:15Z",
@@ -32,30 +32,38 @@
   {
    "check": "comparison_feed",
    "status": "ok",
-   "detail": "3 completed comparison(s) recorded",
-   "runs_recorded": 3
+   "detail": "4 completed comparison(s) recorded",
+   "runs_recorded": 4
   },
   {
    "check": "freshness",
    "status": "ok",
-   "detail": "newest completed comparison is 0.54h old (threshold 40.0h)",
+   "detail": "newest completed comparison is 0.75h old (threshold 40.0h)",
    "last_comparison_at": "2026-10-07T21:22:14+00:00",
-   "age_hours": 0.54,
+   "age_hours": 0.75,
    "threshold_hours": 40.0
+  },
+  {
+   "check": "attempt_ledger",
+   "status": "ok",
+   "detail": "the last scheduled attempt completed 0.43h ago; 15-day vintage comparison 2026-09-22 -> 2026-10-07 completed; 7,308 already-final games compared, 0 frozen-field differences",
+   "attempt_status": "ok",
+   "consecutive_failures": 0,
+   "hours_since_last_attempt": 0.43
   },
   {
    "check": "source_movement",
    "status": "ok",
-   "detail": "the upstream source file changed in 3 of the last 3 comparisons; the frozen-field projection changed in none of them (identical-input streak 3), which is the expected state for a scoreboard-only monitor",
-   "identical_input_streak": 3,
+   "detail": "the upstream source file changed in 3 of the last 3 comparisons; the frozen-field projection changed in none of them (identical-input streak 1), which is the expected state for a scoreboard-only monitor",
+   "identical_input_streak": 1,
    "comparisons_inspected": 3,
    "source_file_changed_in": 3
   },
   {
    "check": "snapshot_store",
    "status": "ok",
-   "detail": "5 snapshot(s); newest is pinned to upstream commit b8a4c3931e (0.65h old)",
-   "snapshots": 5,
+   "detail": "7 snapshot(s); newest is pinned to upstream commit b8a4c3931e (0.87h old)",
+   "snapshots": 7,
    "watermark": {
     "upstream_commit_sha": "b8a4c3931e3f85a7b6d9056198354ff5aadc8da4",
     "upstream_commit_date": "2026-10-07T21:15:15Z",
@@ -63,7 +71,7 @@
     "source_file_sha256": "460f01c5e8273d85249032077d95ba921f6ee4613e13eb55ea88e324b744f1f3",
     "snapshot_dir": "2026-10-07T211802Z"
    },
-   "watermark_age_hours": 0.65
+   "watermark_age_hours": 0.87
   },
   {
    "check": "push_notification",
@@ -84,8 +92,8 @@
   {
    "check": "atom_feed",
    "status": "ok",
-   "detail": "3 subscribable entr(ies), unique ids, <updated> 2026-10-07T21:22:14Z",
-   "entries": 3
+   "detail": "4 subscribable entr(ies), unique ids, <updated> 2026-10-07T21:22:14Z",
+   "entries": 4
   },
   {
    "check": "published_copies",

@@ -67,6 +67,8 @@ jobs:
               "docs/data/discrepancies.json": lambda d: len(d["records"]) > 0,
               "docs/data/score_integrity_study.json": lambda d: "totals" in d,
               "docs/data/market_sensitivity_2025_2026.json": lambda d: "summary" in d,
+          "docs/data/alerts/health.json": lambda d: d.get("status")
+              in ("ok", "baseline", "failed", "unknown"),
               # The live feed is operational state; if it exists it must be valid
               # and must carry its honesty labels, but a fresh fork may not have one.
               "data/alerts/feed.json": lambda d: (
@@ -84,6 +86,20 @@ jobs:
                   and "next_action" in d and "meta" in d
               ),
               "docs/data/alerts/health.json": lambda d: d.get("status") in ("ok", "warn", "fail", "unknown"),
+              # Attempt ledger (from the detection workflow): records ATTEMPTS,
+              # not just completed comparisons, so a broken schedule cannot
+              # masquerade as a clean result. A bad status string must fail the
+              # build rather than render as healthy. The monitor assessment above
+              # reads this ledger, so a failed attempt is escalated rather than
+              # living only in a site banner.
+              "data/alerts/attempts.json": lambda d: (
+                  d.get("status") in ("ok", "baseline", "failed", "unknown")
+                  and "meta" in d and "last_attempt" in d
+                  and "consecutive_failures" in d
+              ),
+              "docs/data/alerts/attempts.json": lambda d: (
+                  d.get("status") in ("ok", "baseline", "failed", "unknown")
+              ),
               # Source-movement study: the internal-consistency guard is the point.
               # If the slim frozen projection changed while no frozen value changed
               # and no row was added or removed, our understanding of the
@@ -102,6 +118,8 @@ jobs:
               "data/alerts/feed.json",
               "data/alerts/health.json",
               "docs/data/alerts/health.json",
+              "data/alerts/attempts.json",
+              "docs/data/alerts/attempts.json",
               "data/evidence/upstream_churn_study.json",
               "docs/data/upstream_churn_study.json",
           }

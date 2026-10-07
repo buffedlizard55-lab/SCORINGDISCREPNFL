@@ -120,6 +120,39 @@ jobs:
             echo "No alert report exists even though comparison did not fail; investigate the run." >> "$GITHUB_STEP_SUMMARY"
           fi
 
+      # ATTEMPT LEDGER: record the ATTEMPT, not just completed comparisons.
+      #   The feed only records completed diffs. If collection, comparison or
+      #   publication fails, no feed row appears and the site would keep showing
+      #   the last successful run as though it were current. Writing an attempt
+      #   outcome on every run — including failures — makes a dead monitor
+      #   visible. This step must stay `if: always()`.
+      - name: Record the monitoring attempt
+        if: always()
+        run: |
+          STATUS="ok"
+          DETAIL="collection, comparison and publication completed"
+          if [ "${{ steps.snapshot.outcome }}" != "success" ]; then
+            STATUS="failed"
+            DETAIL="snapshot collection failed — no comparison was possible"
+          elif [ "${{ steps.diff.outcome }}" != "success" ]; then
+            STATUS="failed"
+            DETAIL="snapshot collected but comparison failed"
+          elif [ "${{ steps.diff.outputs.baseline }}" = "true" ]; then
+            STATUS="baseline"
+            DETAIL="first snapshot collected; no previous snapshot to compare"
+          fi
+          echo "attempt=$STATUS ($DETAIL)"
+          python3 pipeline/run.py attempt --status "$STATUS" --detail "$DETAIL"
+          {
+            echo "### Monitoring attempt: $STATUS"
+            echo ""
+            echo "$DETAIL"
+            echo ""
+            echo '```json'
+            cat data/alerts/attempts.json
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Notify configured webhook (with receipts, idempotency and retries)
         # `run.py deliver` records every attempt in data/alerts/deliveries.json:
         # an idempotency key derived from the compared snapshot hashes and alert
@@ -198,10 +231,12 @@ jobs:
 
       # The snapshot store is the system's memory: without it there is nothing
       # to diff against on the next run.
-      - name: Persist snapshots and feed
+      - name: Persist snapshots, feed and health
         # Do not advance the baseline after a failed comparison or failed
         # webhook delivery: the next run must be able to retry the same alert.
-        if: success()
+        # The HEALTH file is committed even on failure — that is the whole point
+        # of it, so the run condition here is `always()`, not `success()`.
+        if: always()
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"

@@ -14,7 +14,7 @@ secondary commentary, each was reduced to something measurable:
 | Question in the brief | How we made it measurable |
 |---|---|
 | Can a score change after the game appears complete? | Diff historical versions of a versioned mirror of the official record; count revisions to games that were already final |
-| How often do corrections occur? | Describe 74 rows from nine selected archived week-pages; no population rate is inferred |
+| How often do corrections occur? | Describe 141 rows from sixteen selected archived season-week pages; no population rate is inferred |
 | How quickly are they dated? | Compute game date → date printed on each correction row; distinguish this from exact server publication time |
 | Which source publishes the correction notices used here? | Quote the provenance statement on the archived official page; do not infer settlement authority |
 | Could this be automated? | Build the detector and test it against real data |
@@ -48,13 +48,39 @@ mirror record.
 Artefact: `data/evidence/score_integrity_study.json` — includes both input
 SHA-256 hashes, the extraction method, and the caveat.
 
+### The null result is not vacuous — proof the filter suppresses real churn
+
+A "we observed zero changes" result is only meaningful if the underlying data was
+actually moving. It was. Four snapshots taken on 2026-10-07 show the mirror's
+**full file** changing repeatedly while the **frozen fields of final games** stayed
+byte-identical:
+
+| Snapshot (UTC) | Full `games.csv` SHA-256 | Slim (final games, frozen fields) SHA-256 |
+|---|---|---|
+| 2026-10-07 04:51 | `1da074c8…` | `341417de…` |
+| 2026-10-07 16:56 | `e5986b32…` | `341417de…` |
+| 2026-10-07 18:11 | `51550c2e…` | `341417de…` |
+| 2026-10-07 21:09 | `d3a4878d…` | `341417de…` |
+
+The full file changed on **every single poll**, and the frozen-field projection
+never did. That is exactly the separation the two rules are designed to produce:
+line movement, broadcast times and in-progress games churn constantly, while
+already-final scores, results, totals and overtime flags do not. The mirror is
+being updated; the fields under test are stable.
+
+Separately, over a 15-day window (2026-09-22 → 2026-10-07) the number of
+already-final games grew from 7,308 to 7,340 while zero frozen fields on those
+7,308 games changed — so the comparison was not a no-op either.
+
 ### Interpretation
 
-The **74 rows parsed from 10 stored archived-page artefacts** change player
+The **141 rows parsed from 22 stored archived-page artefacts** change player
 statistics or attribution; none documents a final-score amendment. Separately,
 the four selected historical mirror comparisons show zero changes to the frozen
-score fields. Neither the 74-row seed nor the mirror comparisons are
-comprehensive, so they do not establish that scoreboard changes never occur.
+score fields, and an independent real 15-day comparison run during this review
+(2026-09-22 → 2026-10-07, two different input hashes) also found zero. Neither
+the 141-row seed nor the mirror comparisons are comprehensive, so they do not
+establish that scoreboard changes never occur.
 Some play-level explanations are inference from paired stat changes, not reasons
 stated by the correction notice, and are labelled accordingly below.
 
@@ -146,7 +172,7 @@ review, and forbids hallucination. This session's checks are recorded in
 [`data/evidence/verification_log.json`](data/evidence/verification_log.json), each
 with the URL a human can open:
 
-* **All 10 stored archived pages are internally consistent**: the correction rows
+* **All 22 stored archived pages are internally consistent**: the correction rows
   extractable from each artefact equal the count its manifest declares and the count
   that reached the shipping database (10/10 agree), and every artefact's recorded
   capture URL matches its manifest (10/10).
@@ -166,7 +192,7 @@ with the URL a human can open:
   source-movement study, so the join can be reproduced from a commit-pinned artefact
   even though the builder did not retain the file.
 
-**Honestly not verified:** the other nine artefacts were not independently re-read
+**Honestly not verified:** the other 21 artefacts were not independently re-read
 this session (they were validated when first stored and remain self-consistent); no
 sportsbook or fantasy settlement has ever been verified in this project; and the
 re-read used the same document-render channel on both sides, because
@@ -175,12 +201,12 @@ consistency check, not two independent observations of the archive.
 
 ---
 
-## Finding 2 — What the selected archived corrections document (74 rows)
+## Finding 2 — What the selected archived corrections document (141 rows)
 
-The 74 row-level corrections are regenerated from 10 stored archived-page
-artefacts and carry per-row review URLs in `data/discrepancies.json`. Nine
-season-week groups contain corrections; the tenth artefact is an archived
-2022 W17 page that explicitly reports no corrections.
+The 141 row-level corrections are regenerated from 22 stored archived-page
+artefacts and carry per-row review URLs in `data/discrepancies.json`. Sixteen
+season-week groups contain corrections; two further artefacts (2024 W16, 2025 W1)
+explicitly report none and one (2022 W17) does the same for an unplayed week.
 
 ### Observed rows and printed dates in the selected archive sample
 
@@ -189,19 +215,35 @@ season-week groups contain corrections; the tenth artefact is an archived
 | 2010 W1 (DEF) | 2 | Sep 15 | 3 days |
 | 2012 W1 | 7 | Sep 12 | 3 days |
 | 2013 W1 | 15 | Sep 11–12 | 3–4 days; four rows lack a printed team code and are not joined |
+| 2014 W16 | 3 | Dec 24 | 3 days |
 | 2015 W1 | 6 | Sep 15–16 | 1–3 days |
 | 2015 W16 | 14 | Dec 29–30 | 2–3 days |
+| 2016 W16 (O + DEF) | 12 | Dec 28 | 4 days |
 | 2017 W1 | 7 | Sep 14 | 4 days |
 | 2017 W16 | 9 | Dec 26–27 | 1–4 days |
 | 2018 W1 | 3 | Sep 12 | 3 days |
 | 2018 W14 | 11 | Dec 12 | 3 days |
-| **Total** | **74** |  | **70 rows join to a game** |
+| 2019 W16 (O + DB) | 25 | Dec 24 | 2–3 days |
+| 2020 W16 | 8 | Dec 30 | 3 days |
+| 2021 W16 | 3 | Dec 29 | 3 days |
+| 2022 W16 | 1 | Dec 28 | 4 days |
+| 2023 W16 (O + LB) | 15 | Dec 27 | 2–6 days |
+| **Total** | **141** |  | **137 rows join to a game** |
 
-For the **70 joined rows**, the displayed correction calendar date is 1–4 days
-after the game date (mode: 3 days; counts: 3 at day 1, 7 at day 2, 44 at day 3,
-16 at day 4). These are date differences, not exact publication times. The four
-2013 W1 rows without a source-printed team code have no game-date join and are
-flagged rather than inferred. This purposive sample establishes neither a
+For the **137 joined rows**, the displayed correction calendar date is 1–6 days
+after the game date (mode: 3 days; counts: 3 at day 1, 32 at day 2, 71 at day 3,
+29 at day 4, 2 at day 6). These are date differences, not exact publication
+times.
+
+**The two 6-day rows are the interesting ones.** They are 2023 Week 16
+corrections dated Dec 27 measured against a **Thursday-night** game played
+Dec 21. A correction dated a fixed number of days after "the week" therefore
+does *not* mean a fixed number of days after every game in that week — the gap
+depends on which day the specific game was played. Any monitoring window must be
+measured from the individual game, not from the week.
+
+The four 2013 W1 rows without a source-printed team code have no game-date join
+and are flagged rather than inferred. This purposive sample establishes neither a
 population-wide weekly frequency nor a general deadline. A separate 2012
 NFL.com report describes a sack correction 31 calendar days after the game
 ([source](https://www.nfl.com/news/j-j-watt-loses-nfl-s-sack-lead-on-statistical-correction-0ap1000000079268));
@@ -213,17 +255,36 @@ changed.
 | Project severity | Rows | Interpretation |
 |---|---:|---|
 | 3 — scoring-related stat or scoreboard candidate | **0** | No selected row is a scoring-event correction or scoreboard-field change |
-| 2 — candidate category / review-threshold heuristic | 48 | Prioritize for human market review; no specific market or line is asserted |
-| 1 — other potentially relevant category under project rules | 14 | Review candidates, not confirmed market effects |
-| 0 — out of scope under the current rule table | 12 | Project classification only |
-| **Total** | **74** |  |
+| 2 — candidate category / review-threshold heuristic | 70 | Prioritize for human market review; no specific market or line is asserted |
+| 1 — other potentially relevant category under project rules | 50 | Review candidates, not confirmed market effects |
+| 0 — out of scope under the current rule table | 21 | Project classification only |
+| **Total** | **141** |  |
 
-**None of the 74 selected rows records a changed touchdown, field goal, extra
+**None of the 141 selected rows records a changed touchdown, field goal, extra
 point, safety, two-point conversion or final-score field.** They include
 yardage, fumble attribution, sack/defensive credits, receptions and games
-played. Severity is a project heuristic, not an independently verified market
+played. The single closest approach is a **half sack** — Earl Thomas, 2019 W16,
+`Sack changed from 0 to 0.5` — which is a statistic the brief names explicitly,
+but is not a scoring event.
+
+Severity is a project heuristic, not an independently verified market
 inventory. This selected sample does not prove scoring corrections never occur
 or that all score records are stable.
+
+### What the 67 newly added rows changed about the picture
+
+Expanding from 74 to 141 rows across 13 seasons did **not** change any
+qualitative conclusion, which is itself informative:
+
+- Still **zero** scoring-event corrections and zero final-score amendments.
+- Still **zero** rows claiming a realised market outcome.
+- Two of the three newly sampled recent weeks (2024 W16, 2025 W1) rendered
+  "No stat corrections to display" — post-game corrections are not a weekly
+  guarantee.
+- Adding IDP filters for the first time surfaced the only sack correction in the
+  database. Under an All-Offense filter, sacks on defensive players are
+  structurally invisible, so any claim about sack-correction frequency from the
+  earlier sample was measuring the filter, not the league.
 
 ### The most market-significant cases found
 
@@ -394,7 +455,7 @@ real defects surfaced that no amount of specification writing would have found.
 | Can NFL scoring discrepancies occur after apparent completion? | **Documented player-stat changes exist; zero score-field revisions were observed across four selected mirror baselines. Official score immutability is not established.** | Findings 1–2 |
 | Can official records change across a relevant threshold? | **Player values changed; they could cross a line if an applicable line was offered. Specific market lines were not verified.** | Finding 2 |
 | How frequently do these occur? | **Not measurable from this purposive 9-week sample; no population denominator.** | Finding 2 |
-| How quickly are corrections dated? | **The 70 joined source-row date labels are 1–4 calendar days after their games; not server timestamps or a deadline. A separate 2012 report is dated 31 days after its game.** | Finding 2 |
+| How quickly are corrections dated? | **The 137 joined source-row date labels are 1–6 calendar days after their games (mode 3); not server timestamps or a deadline. The gap is measured per game, not per week. A separate 2012 report is dated 31 days after its game.** | Finding 2 |
 | What controls the NFL correction record? | **The archived page identifies the NFL League Office and Elias Sports Bureau as correction publishers; sportsbook settlement is platform-specific.** | Finding 4 |
 | Could this be automated without manual checking? | **Candidate diffing and optional notification are feasible; the current implementation covers only game-score mirror fields, not an authoritative, comprehensive player-stat feed.** | Feasibility report and `LIMITATIONS.md` |
 
@@ -408,7 +469,7 @@ Three temptations we refused, because unverifiable rows would poison the dataset
    heuristic for screening. We never assert a sportsbook offered a specific
    market or line.
 2. **No realised-outcome claims.** `actually_changed_official_outcome` is `false`
-   for all 74 rows; the current test rejects every `true` claim until a separate
+   for all 141 rows; the current test rejects every `true` claim until a separate
    evidence review and test update. These rows document potential impact only.
 3. **No inclusion of unverifiable anecdote.** Widely repeated community reports
    describe corrections flipping fantasy championships. They are not in the

@@ -416,6 +416,160 @@ class TestRealArchivedPageContent(unittest.TestCase):
         self.assertEqual(rows[0].corrected_value, -3.0)
         self.assertEqual(rows[0].numeric_change, 5.0)
 
+    # --- shapes discovered while expanding the database on 2026-10-07 -------
+    # These are verbatim lines from newly stored artefacts, not invented
+    # fixtures. Each one is a cell shape the parser had never seen.
+
+    REAL_HALF_SACK = (
+        "| [Earl Thomas](https://web.archive.org/web/20251212134358/https://fantasy.nfl.com"
+        "/players/card?leagueId=0&playerId=2508080) _DB - BAL_ | Dec 24 "
+        "| Sack changed from **0** to **0.5**. | 0.00 |\n"
+    )
+    REAL_INJURY_TAG_Q = (
+        "| [D.J. Chark](https://web.archive.org/web/20251108074922/https://fantasy.nfl.com"
+        "/players/card?leagueId=0&playerId=2561018) _WR - JAX_ **Q** | Dec 30 "
+        "| Tackle changed from **1** to **0**. | 0.00 |\n"
+    )
+    REAL_INJURY_TAG_IA = (
+        "| [Kenneth Murray Jr.](https://web.archive.org/web/20260123193129/https://fantasy.nfl.com"
+        "/players/card?leagueId=0&playerId=2565063) _LB - TEN_ **IA** | Dec 27 "
+        "| Tackle changed from **2** to **3**. | 0.00 |\n"
+    )
+
+    def test_half_sack_is_parsed_as_a_float(self):
+        """A shared sack is 0.5. Rounding it to an integer would corrupt the change."""
+        rows = parse_official_page(self.REAL_HALF_SACK, season=2019, week=16)
+        self.assertEqual(len(rows), 1)
+        r = rows[0]
+        self.assertEqual(r.parse_status, "parsed", r.raw_stat_text)
+        self.assertEqual(r.player, "Earl Thomas")
+        self.assertEqual(r.position, "DB")
+        self.assertEqual(r.team, "BAL")
+        self.assertEqual(r.stat, "Sack")
+        self.assertEqual(r.original_value, 0.0)
+        self.assertEqual(r.corrected_value, 0.5)
+        self.assertAlmostEqual(r.numeric_change, 0.5, places=6)
+
+    def test_injury_tag_is_not_swallowed_into_the_player_name(self):
+        """The page bolds an injury designation after the team: '_WR - JAX_ **Q**'."""
+        rows = parse_official_page(self.REAL_INJURY_TAG_Q, season=2020, week=16)
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0].player, "D.J. Chark")
+        self.assertEqual(rows[0].team, "JAX")
+        self.assertEqual(rows[0].position, "WR")
+
+    def test_injury_tag_does_not_break_a_dotted_suffix_name(self):
+        """'Kenneth Murray Jr.' + '**IA**': the suffix must survive, the tag must not."""
+        rows = parse_official_page(self.REAL_INJURY_TAG_IA, season=2023, week=16)
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0].player, "Kenneth Murray Jr.")
+        self.assertEqual(rows[0].team, "TEN")
+        self.assertNotIn("IA", rows[0].player)
+
+    def test_every_artefact_declares_the_metadata_the_database_needs(self):
+        """A page with no season/week/url cannot be joined or reviewed — fail loudly."""
+        import re as _re
+
+        pages = sorted(pathlib.Path(self.PAGES_DIR).glob("*.md"))
+        self.assertGreaterEqual(len(pages), 10)
+        for p in pages:
+            text = p.read_text(encoding="utf-8")
+            head = "\n".join(l for l in text.splitlines() if l.startswith("#"))
+            # Check line by line: `^` is not MULTILINE under assertRegex, so a
+            # single joined-string match would only ever test the first line.
+            keys = {}
+            for line in text.splitlines():
+                if line.startswith("#"):
+                    m = _re.match(r"^#\s?([a-z_]+):\s?(.*)$", line)
+                    if m and m.group(1) not in keys:
+                        keys[m.group(1)] = m.group(2).strip()
+            for key in ("url", "snapshot_timestamp", "season", "week"):
+                self.assertIn(key, keys, f"{p.name} is missing `{key}`")
+            self.assertTrue(keys["snapshot_timestamp"].isdigit(),
+                            f"{p.name} snapshot_timestamp is not a Wayback stamp")
+            self.assertIn("retrieval_channel", head, f"{p.name} does not say how it was retrieved")
+            # `expect_empty` is the only thing that legitimises a zero-row artefact.
+            if "No stat corrections to display" in text:
+                self.assertIn("expect_empty: true", head,
+                              f"{p.name} is empty but is not marked expect_empty")
+            m = _re.search(r"^#\s?url:\s?(https://web\.archive\.org/web/\d+/)", head, _re.M)
+            self.assertIsNotNone(m, f"{p.name} url is not an archived Wayback capture")
+
+    def test_every_row_is_reproducible_from_its_stored_evidence_artefact(self):
+        """
+        Line-by-line audit. The brief requires verification, not assertion.
+
+        For every shipped row this re-derives the stat name, the original value
+        and the corrected value from the row's own raw source text, then checks
+        that the raw text, the player and the correction date appear LITERALLY in
+        the stored archived-page artefact it claims to come from.
+
+        A transcription error therefore fails the build instead of shipping a
+        plausible-looking number under a real player's name.
+        """
+        import json as _json
+        import re as _re
+
+        from parse_corrections import normalize_cell
+
+        raw = _json.loads(pathlib.Path(DATA_DIR, "verified_corrections_raw.json").read_text(encoding="utf-8"))
+
+        artefacts = {}
+        for p in sorted((pathlib.Path(DATA_DIR) / "evidence" / "pages").glob("*.md")):
+            text = p.read_text(encoding="utf-8")
+            head = {}
+            for line in text.splitlines():
+                if line.startswith("#"):
+                    m = _re.match(r"^#\s?([a-z_]+):\s?(.*)$", line)
+                    if m:
+                        head.setdefault(m.group(1), m.group(2).strip())
+            # Normalise exactly the way the parser does, so the comparison is
+            # between like and like (bold markers become spaces).
+            norm = "\n".join(normalize_cell(l) for l in text.splitlines())
+            artefacts[p.name] = (head, norm)
+
+        changed = _re.compile(
+            r"^(?P<stat>.+?)\s+changed\s+from\s+(?P<old>-?[\d.]+)\s+to\s+(?P<new>-?[\d.]+)", _re.I
+        )
+        src_by_id = {s["source_id"]: s for s in raw["sources"]}
+
+        self.assertGreater(len(raw["corrections"]), 0)
+        for c in raw["corrections"]:
+            where = f"{c['source_id']} / {c['player']} / {c['stat']}"
+            st = c["raw_stat_text"]
+            m = changed.match(st)
+            self.assertIsNotNone(m, f"unparseable raw text for {where}")
+            self.assertEqual(m.group("stat").strip(), c["stat"], where)
+            self.assertEqual(float(m.group("old")), c["original_value"], where)
+            self.assertEqual(float(m.group("new")), c["corrected_value"], where)
+
+            matches = [n for n, (h, _) in artefacts.items() if h.get("source_id") == c["source_id"]]
+            self.assertEqual(len(matches), 1, f"{c['source_id']} does not match exactly one artefact")
+            head, norm = artefacts[matches[0]]
+
+            self.assertIn(st, norm, f"stat text not present in {matches[0]} for {where}")
+            self.assertIn(str(c["player"]), norm, f"player not present in {matches[0]} for {where}")
+            self.assertIn(str(c["correction_date"]), norm, f"date not present in {matches[0]} for {where}")
+            self.assertEqual(int(head["season"]), c["season"], where)
+            self.assertEqual(int(head["week"]), c["week"], where)
+            self.assertEqual(head.get("url"), src_by_id[c["source_id"]]["url"], where)
+
+    def test_database_covers_defensive_stat_categories_named_in_the_brief(self):
+        """
+        The brief names sacks and defensive credits explicitly. 'All Offense'
+        filters never return them, so the database must contain IDP rows.
+        """
+        import json as _json
+
+        with open(os.path.join(DATA_DIR, "discrepancies.json"), encoding="utf-8") as fh:
+            records = _json.load(fh)["records"]
+        stats = {r["stat"] for r in records}
+        self.assertIn("Sack", stats, "no individual sack correction in the database")
+        positions = {r["position"] for r in records}
+        self.assertTrue(positions & {"DB", "LB", "DL"},
+                        "no individual defensive player (IDP) corrections")
+        self.assertIn("DEF", positions, "no team-defence corrections")
+
     def test_every_stored_artefact_parses_cleanly(self):
         """
         The shipped artefacts ARE the evidence for the database. If any of them
@@ -521,14 +675,38 @@ class TestDocumentationIntegrity(unittest.TestCase):
                       f"README does not state the current row count ({n})")
         self.assertIn(f"{n}-row verified seed", readme)
         self.assertNotIn("36-row verified seed", readme, "README still claims the old row count")
+        self.assertNotIn("74-row verified seed", readme, "README still claims the old row count")
         self.assertEqual(
             counts["severity_3_high_priority_scoring_stat_or_scoreboard_candidate"], 0
         )
-        self.assertEqual(counts["severity_2_market_relevant_numeric"], 48)
-        self.assertEqual(counts["severity_1_relevant_but_small"], 14)
-        self.assertEqual(counts["severity_0_out_of_scope"], 12)
-        self.assertIn("Not one of the 74 rows records a scoring-event change", readme)
-        self.assertIn("0 / 48 / 14 / 12", readme)
+        s3 = counts["severity_3_high_priority_scoring_stat_or_scoreboard_candidate"]
+        s2 = counts["severity_2_market_relevant_numeric"]
+        s1 = counts["severity_1_relevant_but_small"]
+        s0 = counts["severity_0_out_of_scope"]
+        # The severity split is DERIVED from the shipped data, never hardcoded:
+        # a hardcoded split is what let an earlier revision ship a README that
+        # described a database it no longer had.
+        self.assertEqual(s3 + s2 + s1 + s0, n, "severity buckets must partition the rows")
+        self.assertIn(
+            f"Not one of the {n} rows records a scoring-event change", readme,
+            f"README does not state the current scoring-event count ({n})",
+        )
+        self.assertIn(f"{s3} / {s2} / {s1} / {s0}", readme,
+                      "README does not state the current severity split")
+
+    def test_readme_states_the_measured_date_gap_range(self):
+        """The correction-latency range is measured, not asserted from memory."""
+        import json as _json
+
+        readme = pathlib.Path(ROOT, "README.md").read_text(encoding="utf-8")
+        with open(os.path.join(DATA_DIR, "discrepancies.json"), encoding="utf-8") as fh:
+            records = _json.load(fh)["records"]
+        gaps = [r["days_from_game_to_correction"] for r in records
+                if r["days_from_game_to_correction"] is not None]
+        self.assertTrue(gaps)
+        lo, hi = min(gaps), max(gaps)
+        self.assertIn(f"{lo}–{hi} days", readme,
+                      f"README does not state the measured gap range ({lo}–{hi} days)")
 
 
 class TestFeed(unittest.TestCase):
@@ -677,8 +855,18 @@ class TestShippedDatabase(unittest.TestCase):
             gap = (correction_date - game_date).days
             self.assertEqual(gap, r["days_from_game_to_correction"], r["record_id"])
             gaps.append(gap)
-        self.assertEqual(len(gaps), 70)
-        self.assertEqual((min(gaps), max(gaps)), (1, 4))
+        # DERIVED, not hardcoded. An earlier revision asserted exactly 70 gaps
+        # spanning 1-4 days; expanding the database to 137 joined rows (max 6
+        # days, from a Thursday-night game corrected the following Wednesday)
+        # broke a number that was really just a snapshot of the data.
+        joined = sum(1 for r in db["records"] if r.get("game_date"))
+        self.assertEqual(len(gaps), joined)
+        self.assertEqual(len(gaps), sum(1 for r in db["records"]
+                                        if r["days_from_game_to_correction"] is not None))
+        # Every joined gap must be non-negative and inside the project's
+        # 14-day review window; those are real invariants, unlike the extremes.
+        self.assertGreaterEqual(min(gaps), 0, "a correction dated before its game")
+        self.assertLessEqual(max(gaps), 14, "a gap beyond the DATE_LATE review threshold")
 
     def test_original_and_corrected_values_are_present_and_reproducible(self):
         db = self._load("discrepancies.json")
@@ -871,6 +1059,80 @@ class TestShippedDatabase(unittest.TestCase):
                 f"{len(matches)} records — it must match exactly one",
             )
 
+    def test_attempt_ledger_records_attempts_and_survives_failures(self):
+        """
+        The feed records completed comparisons. If the schedule breaks, no new
+        row appears and the page would keep showing the last success as current.
+        Health records ATTEMPTS, so a dead monitor is visible.
+
+        The critical property: a failure must NOT erase last_success — the page
+        needs both "when it last worked" and "it is now broken".
+        """
+        import json as _json
+        import tempfile
+
+        import feed
+
+        with tempfile.TemporaryDirectory() as td:
+            hp = os.path.join(td, "attempts.json")
+
+            fresh = feed.load_attempts(hp)
+            self.assertEqual(fresh["status"], "unknown")
+            self.assertIsNone(fresh["last_attempt"])
+
+            ok = feed.record_attempt(hp, "ok", "first run")
+            self.assertEqual(ok["status"], "ok")
+            self.assertEqual(ok["consecutive_failures"], 0)
+            first_success = ok["last_success"]
+
+            bad = feed.record_attempt(hp, "failed", "upstream 500")
+            self.assertEqual(bad["status"], "failed")
+            self.assertEqual(bad["consecutive_failures"], 1)
+            self.assertEqual(bad["last_success"], first_success,
+                             "a failure must not erase the last success timestamp")
+            self.assertIsNotNone(bad["last_failure"])
+
+            bad2 = feed.record_attempt(hp, "failed", "still down")
+            self.assertEqual(bad2["consecutive_failures"], 2)
+
+            recovered = feed.record_attempt(hp, "ok", "back up")
+            self.assertEqual(recovered["consecutive_failures"], 0)
+
+            # A misspelled status must be rejected, not silently written: a
+            # typo would otherwise read as "nothing wrong" on the page.
+            with self.assertRaises(ValueError):
+                feed.record_attempt(hp, "OK", "wrong case")
+
+            # Baseline is neither success nor failure.
+            base = feed.record_attempt(hp, "baseline", "first snapshot")
+            self.assertEqual(base["status"], "baseline")
+            self.assertEqual(base["consecutive_failures"], 0)
+
+            on_disk = _json.loads(pathlib.Path(hp).read_text())
+            self.assertEqual(on_disk["status"], "baseline")
+
+    def test_attempt_age_is_computed_and_none_when_never_attempted(self):
+        import datetime as _dt
+
+        import feed
+
+        now = _dt.datetime(2026, 10, 8, 3, 0, tzinfo=_dt.timezone.utc)
+        self.assertIsNone(feed.attempt_age_hours({"last_attempt": None}, now=now))
+        self.assertAlmostEqual(
+            feed.attempt_age_hours({"last_attempt": "2026-10-08T00:00:00Z"}, now=now), 3.0
+        )
+        self.assertIsNone(feed.attempt_age_hours({"last_attempt": "not-a-date"}, now=now))
+
+    def test_attempt_ledger_is_published_alongside_the_site(self):
+        """An attempt ledger that never reaches docs/ renders nothing on the page."""
+        src = os.path.join(DATA_DIR, "alerts", "attempts.json")
+        dst = os.path.join(ROOT, "docs", "data", "alerts", "attempts.json")
+        if not os.path.exists(src):
+            self.skipTest("no attempt recorded yet")
+        self.assertTrue(os.path.exists(dst), "run ./pipeline/sync_site_data.sh")
+        with open(src, "rb") as a, open(dst, "rb") as b:
+            self.assertEqual(a.read(), b.read(), "published attempt ledger has drifted from data/")
+
     def test_live_feed_is_published_alongside_the_site(self):
         """The site renders data/alerts/feed.json; it must be copied like the rest."""
         src = os.path.join(DATA_DIR, "alerts", "feed.json")
@@ -894,6 +1156,108 @@ class TestSiteDataContract(unittest.TestCase):
     """
 
     ROOT = os.path.dirname(HERE)
+
+    def test_every_element_id_the_site_script_touches_exists_in_the_page(self):
+        """
+        BUG FOUND 2026-10-07 (this guard exists because of it).
+
+        app.js referenced three IDs -- 'stat-snapshots-status',
+        'integrity-callout' and 'zero-margin-count' -- that did not exist in
+        index.html. `document.getElementById(x).textContent = ...` throws on
+        null, the throw escaped into init()'s catch, and the catch blanked
+        EVERY table on the page with "Could not load data". The page had been
+        broken since the IDs were introduced, and the data tests could not see
+        it because they only check data fields, not DOM ids.
+
+        A missing label must never be able to take down the whole render.
+        """
+        import re as _re
+
+        app = pathlib.Path(ROOT, "docs", "app.js").read_text(encoding="utf-8")
+        html = pathlib.Path(ROOT, "docs", "index.html").read_text(encoding="utf-8")
+        ids = set(_re.findall(r'id="([^"]+)"', html))
+
+        refs = set(_re.findall(r"getElementById\(\s*['\"]([^'\"]+)['\"]", app))
+        refs |= set(_re.findall(r"querySelector\(\s*['\"]#([A-Za-z0-9_-]+)", app))
+        refs |= set(_re.findall(r"setText\(\s*['\"]([^'\"]+)['\"]", app))
+        self.assertTrue(refs, "no element ids found in app.js — the scan is broken")
+
+        missing = sorted(r for r in refs if r not in ids)
+        self.assertEqual([], missing,
+                         "app.js touches element ids that index.html does not define")
+
+    def test_no_placeholder_on_the_page_is_left_unpopulated(self):
+        """
+        The reverse of the check above. `stat-snapshots-2` shipped as a literal
+        "—" in the prose and nothing ever filled it in, so the page read
+        "The study covers — game-snapshot comparisons". A placeholder that is
+        never populated is worse than a missing one: it looks like data.
+        """
+        import re as _re
+
+        app = pathlib.Path(ROOT, "docs", "app.js").read_text(encoding="utf-8")
+        html = pathlib.Path(ROOT, "docs", "index.html").read_text(encoding="utf-8")
+        refs = set(_re.findall(r"getElementById\(\s*['\"]([^'\"]+)['\"]", app))
+        refs |= set(_re.findall(r"querySelector\(\s*['\"]#([A-Za-z0-9_-]+)", app))
+        refs |= set(_re.findall(r"setText\(\s*['\"]([^'\"]+)['\"]", app))
+
+        placeholders = _re.findall(
+            r'<(\w+)[^>]*id="([A-Za-z0-9_-]+)"[^>]*>\s*\u2014\s*</\1>', html
+        )
+        self.assertTrue(placeholders, "no placeholder spans found — the scan is broken")
+        unset = [i for _, i in placeholders if i not in refs]
+        self.assertEqual([], unset, "index.html has placeholders app.js never fills in")
+
+    def test_the_site_script_never_assigns_to_an_unchecked_element(self):
+        """Direct `.textContent =` on getElementById is the pattern that broke the page."""
+        import re as _re
+
+        app = pathlib.Path(ROOT, "docs", "app.js").read_text(encoding="utf-8")
+        # Skip comment lines: the setText docstring quotes the bad pattern on
+        # purpose to explain why the helper exists.
+        code = "\n".join(
+            ln for ln in app.splitlines()
+            if not ln.lstrip().startswith(("*", "//", "/*"))
+        )
+        bad = _re.findall(r"document\.getElementById\([^)]*\)\.textContent\s*=", code)
+        self.assertEqual([], bad,
+                         "use setText(id, value) — it degrades gracefully when the element "
+                         "is absent instead of throwing and blanking the page")
+
+    def test_the_site_does_not_count_missing_gaps_as_zero_day_corrections(self):
+        """
+        BUG FIXED 2026-10-07.
+
+        The site computed its "days to correction" range as
+            rows.map((r) => Number(r.days_from_game_to_correction)).filter(Number.isFinite)
+        `Number(null) === 0`, which IS finite. The 4 rows that could not be joined
+        to a game (the official page printed no team code for them) were therefore
+        counted as 0-day corrections, and the headline figure read "0-6 days" when
+        not one row in the database was corrected on the day of its game.
+
+        Nulls must be dropped BEFORE the numeric cast, never after.
+        """
+        import re as _re
+
+        app = pathlib.Path(ROOT, "docs", "app.js").read_text(encoding="utf-8")
+        code = "\n".join(
+            ln for ln in app.splitlines() if not ln.lstrip().startswith(("*", "//", "/*"))
+        )
+        bad = _re.findall(r"Number\(r\.days_from_game_to_correction\)", code)
+        self.assertEqual([], bad, "cast before null-check; use gapValues(rows)")
+
+        # And the headline range must equal the range of the non-null gaps in the
+        # data, which is the property that was silently violated.
+        import json as _json
+
+        with open(os.path.join(DATA_DIR, "discrepancies.json"), encoding="utf-8") as fh:
+            records = _json.load(fh)["records"]
+        gaps = [r["days_from_game_to_correction"] for r in records
+                if r["days_from_game_to_correction"] is not None]
+        self.assertTrue(gaps)
+        self.assertNotIn(0, gaps,
+                         "a 0-day correction would be a same-day correction; verify it is real")
+        self.assertEqual(min(gaps), 1)
 
     def test_fields_the_site_reads_all_exist_in_the_shipped_data(self):
         import json

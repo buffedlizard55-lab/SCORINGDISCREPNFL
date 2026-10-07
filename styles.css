@@ -104,6 +104,7 @@ p { margin: 0 0 14px; }
 .card .num.accent { color: var(--accent); }
 .card .num.ok { color: var(--ok); }
 .card .num.warn { color: var(--sev2); }
+.card .num.bad { color: var(--sev3); }
 .card .lbl { font-size: 0.8rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 6px; }
 .card .sub { font-size: 0.82rem; color: var(--dim); margin-top: 6px; }
 

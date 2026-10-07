@@ -30,7 +30,7 @@ is no longer hand-typed.
 real-HTML check; unavailable archive access is reported as unknown, never as a
 parser pass or an empty corrections page.
 
-### P0-2. Expand the database from 74 rows to the full archived corpus — **now mechanical**
+### P0-2. Expand the database from 141 rows to the full archived corpus — **now mechanical**
 
 **Work.** First enumerate exact, observed Internet Archive CDX captures and make
 a reviewable manifest. The search space includes 2010–2025, position filters
@@ -40,36 +40,86 @@ listed captures, one request at a time with backoff, verify the served timestamp
 and rights/provenance, then ingest the stored page artefacts. The archive has
 rate-limited requests (HTTP 429 was hit during the build).
 
-**Why.** The brief asks for a *comprehensive* historical database. 74 rows are
+**Why.** The brief asks for a *comprehensive* historical database. 141 rows are
 a verified seed, not the deliverable. The rendered-page ingest path is
 reproducible, but establishing completeness and preserving the source evidence
 still requires research and careful retrieval.
 
-**Progress 2026-10-07.** 36 → 74 rows, 4 → 6 seasons, 4 → 9 season-weeks. Use the CDX
+**Progress 2026-10-07 (two passes in one day).** 36 → 74 → **141 rows**,
+4 → 6 → **13 seasons**, 4 → 9 → **16 season-weeks**, 10 → **22 artefacts**.
+Use the CDX
 API (`web.archive.org/cdx/search/cdx?url=fantasy.nfl.com/research/statcorrections&matchType=prefix&output=json`)
 to enumerate exact capture timestamps before fetching: requesting a timestamp that has
 no capture silently returns the *nearest* one (LIMITATIONS §11).
+
+**Named remaining gaps, in priority order:**
+
+1. **2011** — no capture retrieved yet. The only fully missing season.
+2. **Weeks 2–15 and 17** — the sample is weighted to weeks 1 and 16, so no
+   frequency claim is supportable until mid-season weeks are sampled.
+3. **Remaining IDP filters** — sacks, interceptions and defensive scores sit on
+   individual defensive players. Only one DB page (2019 W16) and one LB page
+   (2023 W16) exist so far; DL (position 11) has none, and no interception or
+   defensive-touchdown correction has appeared in any page read to date.
 
 **Done when.** Coverage spans every season with archived snapshots, every row
 retains a resolvable archived URL, and row counts per week are non-zero for
 weeks known to have corrections.
 
-### P0-3. Build and backtest a player-stat/PBP adapter
+### P0-3. Build a player-stat adapter — and accept that a backtest is not achievable
 
-**Work.** On a permitted runner, first demonstrate access to genuine,
-versioned player-stat or play-by-play vintages. Validate schemas; preserve raw
-bytes, hashes and timestamps; normalize stable game/player IDs; diff additions,
-removals, nulls and changed fields; then reconcile candidates against archived
-official notices. Do not assume a weekly refresh means historical vintages are
-retained or accessible.
+**REVISED 2026-10-07.** This item previously asked for "build *and backtest*".
+Testing during this review established that the backtest half is **not achievable
+with any channel available to this project** (LIMITATIONS §3):
 
-**Why.** The current workflow compares scoreboard fields only. Download helpers
-and upstream refresh documentation are leads, not a demonstrated player-stat
-detector. A known-correction backtest is required before scheduling alerts.
+- Release asset bytes could not be downloaded here via either of two routes.
+- Release assets are **overwritten in place** — the `stats_player` release was
+  published 2025-07-31 and its `stats_player_post_2023.csv` asset was created
+  2026-08-13 — so prior vintages do not survive.
+- No Git-committed player-stat file exists in `nflverse/nfldata`,
+  `nflverse/nflverse-data`, `nflverse/nflverse-pbp` or `guga31bb/nflfastR-data`.
 
-**Done when.** At least one known correction is recovered from genuine before/
-after vintages, with the exact old/new values, play/player/game identifiers,
-capture times, hashes and reviewable source links; failure cases have tests.
+**Work that remains worthwhile, in order:**
+
+1. **Start capturing vintages now.** The first snapshot is day one; every day of
+   delay is permanent history loss. Store bytes, SHA-256, retrieval time and the
+   upstream `updated_at`.
+2. **Write the download defensively.** Bounded retries, explicit failure, and a
+   manifest that distinguishes "no change" from "could not look". Never record a
+   clean result when the source was unreachable.
+3. **Build the diff and test it against synthetic before/after fixtures.** The logic
+   is testable even though the network path is not.
+
+**Do not** describe a player-stat detector as validated. Report tested / detected /
+missed / false-positive / **unavailable** counts separately, and never treat
+"unavailable" as a pass.
+
+### P0-4. ~~Make monitor health visible~~ — **DONE 2026-10-07**
+
+**The failure mode to fix.** The feed records *completed comparisons*, not
+attempts. If the scheduled workflow is disabled, delayed, lacks write permission,
+cannot fetch the source, or fails to publish, the site keeps showing the last
+successful run and looks current. **A monitoring system whose failure mode is
+"looks fine" is worse than no monitor.**
+
+**What shipped.** `pipeline/feed.py` gained `record_attempt()` /
+ `load_health()` / `health_age_hours()`, exposed as
+ `python3 pipeline/run.py health --status ok|baseline|failed|unknown --detail "..."`.
+ `detect.yml` writes it from an `if: always()` step that classifies collection
+ failure, comparison failure, baseline and success separately, and commits it
+ even on failure. The site renders a banner at the top of the feed section.
+ A failure deliberately does **not** erase `last_success`: the page must show
+ both "when it last worked" and "it is now broken".
+
+**Verification.** Unit tests cover ok → failed → failed → ok transitions, rejection
+of an invalid status (a typo must never read as "nothing wrong"), age computation
+and the never-attempted case. The rendered banner was checked in both the `ok` and
+`failed` states.
+
+**Still open.** (a) No watermark for the *upstream* source's own freshness, only
+for our attempt. (b) Nothing alerts on silence out of band — a human still has to
+open the page. (c) The live scheduled path has not been observed completing end to
+end on GitHub Actions, so the wiring is unverified even though the logic is tested.
 
 ---
 
@@ -105,7 +155,10 @@ joins on name alone.
 ### P1-3. Backtest the detector against known corrections
 
 **Work.** After the player-stat adapter exists, acquire genuine source
-vintages bracketing as many of the 74 transcribed correction rows as possible.
+vintages bracketing as many of the 141 transcribed correction rows as possible.
+**NOTE:** see P0-3 — historical player-stat vintages do not exist on any
+reachable channel, so this item is currently blocked rather than merely
+unfinished. Do not report "unavailable" as either a pass or a miss.
 Replay each comparison and manually reconcile candidates to the archived
 correction notice; record unavailable vintages rather than treating them as
 misses or successes.
@@ -250,8 +303,11 @@ procedure written down so it can be repeated.
   read as "nothing changed". It also cannot run from this project's sandbox
   (`nfl.com` is not on the egress allowlist); it must be validated on an Actions
   runner before it is trusted.
-- **P3-5.** Add an out-of-band heartbeat to close the watchdog's blind spot
-  (LIMITATIONS §15). The cheapest honest version is a dead-man's-switch service that
+- **P3-5.** Add an out-of-band heartbeat to close the *remaining* watchdog blind spot
+  (LIMITATIONS §15). The recorded-failure half is already shipped: `detect.yml` writes
+  `data/alerts/attempts.json` on every run including failures, `pipeline/health.py`
+  escalates a `failed` ledger to FAIL, and `health.yml` fails loudly. What is still
+  undetectable is a schedule GitHub never started, because that writes nothing. The cheapest honest version is a dead-man's-switch service that
   the health workflow pings on success and that alerts *itself* when the ping stops —
   which is the only way to detect a schedule GitHub never ran. Requires a third-party
   account, so it must be opt-in and documented, never silently added.

@@ -13,8 +13,12 @@ source_file_changed (the whole upstream file): the manifests prove they differ.
 After changing docs/ run ./pipeline/sync_site_data.sh, then python3 -m unittest discover -s tests.
 Order matters at the end of any session: run.py atom -> run.py health -> sync_site_data.sh,
 because health.json and the Atom feeds are generated artefacts and a stale copy fails the suite.
-Never hand-write data/alerts/health.json, data/alerts/feed.atom, data/corrections.atom or
-data/evidence/upstream_churn_study.json; regenerate them (health, atom, churn).
+Never hand-write data/alerts/health.json, data/alerts/attempts.json, data/alerts/feed.atom,
+data/corrections.atom or data/evidence/upstream_churn_study.json; regenerate them
+(health, `run.py attempt`, atom, churn).
+data/alerts/attempts.json is the ATTEMPT ledger (did a scheduled run happen, ok/baseline/
+failed); data/alerts/health.json is the monitor SELF-ASSESSMENT (eight checks) and reads
+the ledger. They are different artefacts with different writers - do not merge them by hand.
 A test asserts the published health report matches a fresh assessment of the repo, so an
 un-synced run fails the build rather than shipping a stale "healthy" badge.
 New evidence from the archive goes through pipeline/verify_artefact.py before it is trusted:

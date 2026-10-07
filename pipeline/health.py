@@ -58,9 +58,9 @@ DEFAULT_IDENTICAL_INPUT_STREAK_WARN = 3
 META = {
     "what_this_is": (
         "Self-assessment of the monitoring artefacts in this repository: the "
-        "comparison feed, the snapshot store, the delivery log and the published "
-        "site copies. It answers 'is the monitor running?', not 'did the NFL "
-        "change anything?'."
+        "comparison feed, the attempt ledger, the snapshot store, the delivery "
+        "log and the published site copies. It answers 'is the monitor "
+        "running?', not 'did the NFL change anything?'."
     ),
     "status_values": {
         "ok": "every check passed",
@@ -69,9 +69,12 @@ META = {
         "unknown": "the evidence needed to decide is absent; never reported as ok",
     },
     "what_it_cannot_see": (
-        "A workflow that is disabled, queued or cancelled by GitHub, a runner "
-        "outage, or a notification that was accepted by an endpoint and never "
-        "read. Check the Actions history for attempt-level truth."
+        "A workflow that GitHub disabled, queued or cancelled writes nothing at "
+        "all, so it shows up only as an ageing attempt ledger and an ageing "
+        "feed, never as an explicit failure; likewise a runner outage, or a "
+        "notification that an endpoint accepted and nobody read. The attempt "
+        "ledger (data/alerts/attempts.json) narrows this gap by recording "
+        "failed runs too, but it cannot record a run that never started."
     ),
     "see": ["ALERT_SYSTEM_FEASIBILITY.md", "LIMITATIONS.md", ".github/workflows/health.yml"],
 }
@@ -193,6 +196,57 @@ def assess(root: str = REPO_ROOT, now: _dt.datetime | None = None,
             "freshness", "ok",
             f"newest completed comparison is {age}h old (threshold {stale_after_hours}h)",
             last_comparison_at=last_at, age_hours=age, threshold_hours=stale_after_hours))
+
+    # ---- 2b. did a scheduled ATTEMPT happen at all? ----------------------
+    # The feed records COMPLETED comparisons only, so its absence is ambiguous:
+    # quiet week, or dead schedule? The detection workflow writes an attempt
+    # outcome on every run -- including failures -- and this check reads it, so
+    # a failed attempt is escalated by the watchdog instead of living only in a
+    # site banner. A run that never started still cannot be recorded; that case
+    # surfaces as an ageing ledger (warn) rather than a lie (ok).
+    attempts_path = os.path.join(root, "data", "alerts", "attempts.json")
+    if not os.path.exists(attempts_path):
+        checks.append(check("attempt_ledger", "unknown",
+                            "no attempt ledger exists; the detection workflow has not recorded an "
+                            "attempt from this checkout, so a failed run would be invisible"))
+        irregularities.append("attempt ledger missing: failed runs cannot be distinguished from quiet ones")
+    else:
+        try:
+            ledger = json.loads(pathlib.Path(attempts_path).read_text(encoding="utf-8"))
+        except Exception as e:
+            checks.append(check("attempt_ledger", "fail", f"attempt ledger is not valid JSON: {e}"))
+            irregularities.append(f"attempt ledger unreadable: {e}")
+        else:
+            lstatus = ledger.get("status")
+            lage = _age_hours(ledger.get("last_attempt"), now)
+            failures = int(ledger.get("consecutive_failures") or 0)
+            detail = (ledger.get("detail") or "").strip()
+            extra = {"attempt_status": lstatus, "consecutive_failures": failures,
+                     "hours_since_last_attempt": lage}
+            if lstatus == "failed":
+                checks.append(check("attempt_ledger", "fail",
+                                    f"the last scheduled attempt FAILED ({failures} consecutive): "
+                                    f"{detail or 'no detail recorded'}", **extra))
+                irregularities.append(f"detection attempt failed: {detail or 'no detail recorded'}")
+            elif lstatus not in ("ok", "baseline", "unknown"):
+                checks.append(check("attempt_ledger", "fail",
+                                    f"attempt ledger carries an unusable status {lstatus!r}", **extra))
+                irregularities.append(f"attempt ledger status {lstatus!r} is not one of ok/baseline/failed/unknown")
+            elif lstatus == "baseline":
+                checks.append(check("attempt_ledger", "warn",
+                                    "the last attempt only collected a baseline snapshot; no comparison "
+                                    "has run yet, so nothing has actually been monitored", **extra))
+            elif lage is not None and lage > stale_after_hours:
+                checks.append(check("attempt_ledger", "warn",
+                                    f"the ledger reports ok but the last attempt was {lage:.1f}h ago "
+                                    f"(threshold {stale_after_hours:.1f}h): the schedule may have stopped",
+                                    **extra))
+                irregularities.append("attempt ledger is older than the staleness threshold")
+            else:
+                checks.append(check("attempt_ledger", "ok",
+                                    f"the last scheduled attempt completed"
+                                    f"{'' if lage is None else f' {lage:.2f}h ago'}"
+                                    f"{'; ' + detail if detail else ''}", **extra))
 
     # ---- 3. did the SOURCE actually move between comparisons? ------------
     # Two different facts, and conflating them is the mistake this replaces:
@@ -354,6 +408,7 @@ def assess(root: str = REPO_ROOT, now: _dt.datetime | None = None,
     for src, dst in (
         ("data/alerts/feed.json", "docs/data/alerts/feed.json"),
         ("data/alerts/feed.atom", "docs/data/alerts/feed.atom"),
+        ("data/alerts/attempts.json", "docs/data/alerts/attempts.json"),
         ("data/discrepancies.json", "docs/data/discrepancies.json"),
         ("data/corrections.atom", "docs/data/corrections.atom"),
         ("data/evidence/upstream_churn_study.json", "docs/data/upstream_churn_study.json"),
@@ -421,6 +476,14 @@ def _next_action(status: str, checks: list[dict]) -> str:
         return ("Open the Actions history for detect.yml. If runs are missing, the schedule is "
                 "disabled or GitHub delayed it; if runs failed, read the job log. Do not treat the "
                 "site's last timestamp as current.")
+    if by_name.get("attempt_ledger", {}).get("status") == "fail":
+        return ("The detection workflow recorded a failed attempt. Read the detect.yml job log for "
+                "the run named in checks[].detail; the site is showing the last successful "
+                "comparison, not the current state. Do not treat a clean feed as a clean week.")
+    if by_name.get("attempt_ledger", {}).get("status") == "warn":
+        return ("The attempt ledger is stale or baseline-only. Confirm detect.yml is still enabled "
+                "and scheduled, then re-run it; a monitor that never attempts anything cannot "
+                "report discrepancies.")
     if by_name.get("atom_feed", {}).get("status") == "fail":
         return ("The published Atom feed is inconsistent or malformed. Regenerate it with "
                 "`python3 pipeline/run.py atom` and re-run ./pipeline/sync_site_data.sh.")

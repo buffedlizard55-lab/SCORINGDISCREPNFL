@@ -1,5 +1,13 @@
 # Three-pass review — 2026-10-07
 
+> **PERIOD DOCUMENT — do not read as current.** This file records a three-pass review
+> performed on 2026-10-07 against the repository as it stood at that time. It describes
+> a 36-row and then 74-row database; the database has since been expanded to **141 rows
+> across 13 seasons and 16 season-weeks from 22 evidence artefacts**. Row counts,
+> severity splits, test counts and latency ranges quoted below are historical. For
+> current numbers see the root [`README.md`](../README.md), [`FINDINGS.md`](../FINDINGS.md)
+> and [`LIMITATIONS.md`](../LIMITATIONS.md).
+
 ## Pass 1 — repository, evidence, implementation
 Repository was a single 19-byte README, no application or tests. Pages already configured for main/root. Built source register, seven-case seed with original/corrected values and per-stat evidence, static responsive site, README charter, agent startup instructions, research/limitations report and a local SQLite snapshot detector. Sources reviewed through web search and page retrieval; article excerpts preserved, not full copyrighted archives.
 
@@ -408,3 +416,65 @@ artefact was hand-written where a generator existed).
 Hosted GitHub Actions runs and a real webhook delivery remain unverified until the pull
 request executes; no success is inferred from local tests. P2-5 (an end-to-end live
 webhook proof) is the open item that closes that gap.
+
+
+---
+
+# Merge reconciliation — 2026-10-07 (two sessions, one repository)
+
+While this branch was being written, `main` advanced by two pull requests from a parallel
+session: **#12** (database expanded 74 → **141 rows** across **22** stored archived pages,
+plus its own answer to the alert-system question) and **#13** (a site placeholder fix and a
+two-way element-contract test). Merging them was not a formality: the two sessions had
+built **the same name for two different things**.
+
+## The collision, and how it was resolved
+
+| Thing | This branch | `main` | Resolution |
+|---|---|---|---|
+| `data/alerts/health.json` | monitor **self-assessment**: eight checks, overall status, next action | **attempt ledger**: did a scheduled run happen (`ok`/`baseline`/`failed`/`unknown`) | Both kept, names separated. The ledger moved to `data/alerts/attempts.json`; `health.json` stays the assessment. |
+| `run.py health` | `--fail-on none\|warn\|fail`, exits 3 on failure | `--status ok --detail "…"`, records an attempt | `run.py health` = assessment; the ledger writer became `run.py attempt`. |
+| `feed.load_health` / `health_age_hours` | — | attempt-ledger helpers | Renamed `load_attempts` / `attempt_age_hours`; `record_attempt` unchanged. |
+| `renderHealth()` in `app.js` | renders the assessment table into `#health` | renders the banner into `#health-banner` | Two functions with one name would have silently shadowed each other in JS. `main`'s became `renderAttempts()` → `#attempts-banner`. |
+| Comparison feed | 3 same-day runs, each carrying `source_file_changed` | 3 runs incl. a genuine **15-day** vintage comparison | **Union: 4 runs.** The 15-day entry was back-filled from its own manifests, so it now also states source movement explicitly. |
+| `ALERT_SYSTEM_FEASIBILITY.md` §L9 | `record_id` is content-derived (P1-4 DONE) | "`record_id` is positional" | `main`'s text was written before this branch's fix. L9 is now marked **RESOLVED**, with the reason: ids survived the 74 → 141 growth precisely because they are content-derived. |
+| README §6 feed bullet | retracts the "no-op comparisons" claim with manifest evidence | repeats the retracted claim verbatim | The retraction stands; the stale bullet was deleted rather than left beside its own correction. |
+| Test suite | 159 tests | 88 tests | **173 tests**, all passing after the merge. |
+
+Nothing was dropped to make the merge compile. The one deliberate rename (`health` →
+`attempts` for the ledger) is documented in `AGENTS.md`, `LIMITATIONS.md` §15,
+`ALERT_SYSTEM_FEASIBILITY.md` L8 and the site's own code comments, so the next session does
+not "fix" it back.
+
+## Improvements the merge made possible
+
+- **The ledger is no longer banner-only.** `pipeline/health.py` gained an eighth check,
+  `attempt_ledger`, which reads `data/alerts/attempts.json`: a `failed` attempt makes the
+  whole assessment FAIL, a `baseline`-only attempt WARNs, and an ageing ledger WARNs even
+  when it says `ok`. `validate.yml` now rejects a ledger with an unusable status string.
+  Two sessions each built half of a dead-monitor alarm; joined, they close the loop.
+- **The null result got stronger.** `main`'s 15-day comparison (2026-09-22 → 2026-10-07,
+  two different input hashes, 7,308 already-final games, zero frozen-field differences) is
+  the first recorded run whose *compared bytes* genuinely differ, so "0 alerts" no longer
+  rests on same-day snapshots alone. All four runs now record that the upstream file moved.
+- **The 141-row database passed this branch's gates untouched.** `pipeline/schema.py`
+  → `OK — 141 correction row(s) across 22 source page(s)` and
+  `ingest_rendered.py --check` → exit 0 on the first try after the merge: the contract
+  written for 74 rows validated 12 pages it had never seen, including three deliberate
+  "no corrections" negative observations.
+
+## Numbers restated after the merge
+
+141 records · 22 stored archived pages (19 with rows, 3 explicit empty observations) ·
+severity 3/2/1/0 = **0 / 70 / 50 / 21** · market-relevant **120** · potential-to-change **70** ·
+**confirmed changed official outcome 0** · 4 rows flagged `TEAM_NOT_PRINTED` ·
+82 distinct players · 13 seasons · 16 season-weeks · correction lag **1–6 days**
+(mode 3, n = 137 joined rows) · 4 recorded comparisons, 0 alerts · Atom feeds:
+**141** correction entries and **4** comparison entries · 8 health checks (7 PASS, 1 UNKNOWN) ·
+173 tests.
+
+`data/evidence/verification_log.json` was regenerated from the merged tree: row counts agree
+on all 22 artefacts (declared = extractable = shipped, totalling 141), every artefact's
+header URL matches its manifest, and the log now states plainly that **21 of the 22 pages
+were not independently re-read** — the 12 that arrived from `main` were validated
+mechanically, not re-observed against the archive.

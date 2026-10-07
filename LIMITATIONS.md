@@ -52,29 +52,55 @@ rather than papered over with a fragile scraper.
 
 ---
 
-## 3. HIGH — player-stat monitoring is not implemented end-to-end
+## 3. BLOCKER — player-stat vintages are not retained by any reachable channel
 
-The repository contains release-metadata/download helpers for nflverse play-by-
-play assets, and the upstream repository documents a weekly refresh intended to
-incorporate stat corrections. That makes the source worth evaluating; it does
-not demonstrate that a usable, stable vintage is available to this project's
-workflow or that the data can be replayed historically.
+This is the most consequential finding of the 2026-10-07 review, and it
+converts what looked like an engineering task into an external dependency.
+
+### 3a. The asset bytes could not be downloaded from this environment
+
+Two routes were tested, both on 2026-10-07:
+
+| Route | Result |
+|---|---|
+| `https://github.com/nflverse/nflverse-data/releases/download/stats_player/stats_player_post_2018.csv` | 302 → `release-assets.githubusercontent.com` → **0 bytes** |
+| `https://api.github.com/repos/nflverse/nflverse-data/releases/assets/513236012` with `Accept: application/octet-stream` | 302 → **0 bytes** |
+
+The second route was tried specifically to rule out the possibility that the API
+proxies asset bytes. It does not. By contrast `codeload.github.com` returned a
+2.6 MB tarball in 0.65 s, so the failure is host-specific, not a general network
+block. GitHub Actions may well reach that host; **that is a hypothesis, not a
+verified result, and it cannot be verified from here.**
+
+### 3b. Even with byte access, historical vintages do not exist
+
+A differential detector needs the "before" bytes. Release assets are
+**overwritten in place**: the `stats_player` release was published
+**2025-07-31**, and its `stats_player_post_2023.csv` asset was created
+**2026-08-13**. When an asset is replaced, the prior bytes are gone.
+
+A search for a Git-committed player-stat file found none in:
+
+- `nflverse/nfldata` — commits `data/games.csv` (scoreboard only, no player stats)
+- `nflverse/nflverse-data` — code only; data lives in release assets
+- `nflverse/nflverse-pbp` — code and images only
+- `guga31bb/nflfastR-data` — code and images only
+
+**Consequence.** A player-stat detector can be written, and can start
+accumulating vintages from the day it is switched on, but it can **never** be
+backtested against the 141 known historical corrections, because the "before"
+bytes for those weeks no longer exist on any channel this project can reach.
+Every day without a running snapshotter is a day of history permanently lost.
 
 **What is missing.** No validated adapter currently downloads two genuine
 player-stat vintages, verifies and retains their bytes/hashes, normalizes game
 and player identities, separates additions/removals/nulls, diffs the changed
 plays/stat fields, and reconciles candidates against a known official correction.
-No player-stat detector has been backtested, and access from a GitHub Actions
-run has not been demonstrated as part of this review.
 
-**Environment note.** The release assets were not reachable from this sandbox;
-that limits local experimentation but does not prove they will work on Actions.
-Conversely, Actions availability alone would not solve version retention,
-schema, identity, provenance, licensing or false-positive issues.
-
-**Status.** Helpers and source documentation are leads, not a shipped
-player-stat monitoring capability. The player-stat adapter and historical
-backtest remain P0 work in `RECOMMENDATIONS.md`.
+**Status.** Download helpers and upstream refresh documentation are leads, not a
+shipped player-stat monitoring capability. The adapter remains P0 work in
+`RECOMMENDATIONS.md` P0-3, but the backtest that used to sit beside it is now
+recorded as **not achievable** with the reachable sources, not merely unfinished.
 
 ---
 
@@ -163,27 +189,72 @@ Per-game lines, bets and outcomes are **never guessed**.
 
 ## 7. MEDIUM — the database is a seed, not the comprehensive corpus
 
-**74 verified rows across 9 sampled season-weeks in 6 seasons** (2010 W1, 2012 W1,
-2013 W1, 2015 W1, 2015 W16, 2017 W1, 2017 W16, 2018 W1, 2018 W14), parsed from 10
-stored archived pages. An observed archive search surface includes candidate
-captures across 2010–2025, multiple position filters and weeks, but that surface
-has not been validated as a complete denominator or a guaranteed collection.
+**141 verified rows across 16 sampled season-weeks in 13 seasons**, parsed from
+**22** stored archived pages.
 
-**Rows per sampled week:** 2, 3, 6, 7, 7, 9, 11, 14, 15 (mean 8.2).
+| Season / week | Rows | | Season / week | Rows |
+|---|---:|---|---|---:|
+| 2010 W1 (DEF) | 2 | | 2018 W1 | 3 |
+| 2012 W1 | 7 | | 2018 W14 | 11 |
+| 2013 W1 | 15 | | 2019 W16 (O + DB) | 25 |
+| 2014 W16 | 3 | | 2020 W16 | 8 |
+| 2015 W1 | 6 | | 2021 W16 | 3 |
+| 2015 W16 | 14 | | 2022 W16 | 1 |
+| 2016 W16 (O + DEF) | 12 | | 2023 W16 (O + LB) | 15 |
+| 2017 W1 | 7 | | 2024 W16 | 0 (empty) |
+| 2017 W16 | 9 | | 2025 W1 | 0 (empty) |
+
+Two named gaps are stated instead of hidden:
+
+- **2011 is absent entirely** — no qualifying capture has been retrieved yet.
+- **Weeks 2–15 and 17 are almost entirely absent.** The sample is deliberately
+  weighted to weeks 1 and 16, so it cannot support any claim about weekly frequency.
+
+An observed archive search surface includes candidate captures across 2010–2025,
+multiple position filters and weeks, but that surface has not been validated as a
+complete denominator or a guaranteed collection.
 
 **What changed.** Expansion is no longer research work — it is mechanical. Each
 archived page is stored in `data/evidence/pages/`; `pipeline/ingest_rendered.py`
 parses them into the raw layer, and `--check` fails if the shipped copy drifts from
-the artefacts. Adding a week is: store the page, re-run, rebuild.
+the artefacts. Adding a week is: store the page, re-run, rebuild. A test now asserts
+that every artefact declares `url`, `snapshot_timestamp`, `season` and `week`, and
+that an empty page is marked `expect_empty: true`.
 
 **Why it is still not comprehensive.** Every page is a separate request against a
 rate-limited archive, and the archive itself rate-limits (an HTTP 429 was hit during
-the build). Bulk expansion belongs in a scheduled job with backoff, not in an
+an earlier build). Bulk expansion belongs in a scheduled job with backoff, not in an
 interactive session.
 
-**Deliberate choice.** 74 rows that each regenerate from a stored archived page a
+**Deliberate choice.** 141 rows that each regenerate from a stored archived page a
 human can open beat thousands of rows nobody can check. Bulk expansion is the top
 item in `RECOMMENDATIONS.md`.
+
+### 7a. New cell shapes found while expanding, all now regression-tested
+
+Expanding from 10 to 22 artefacts surfaced three cell shapes the parser had never
+seen. All three are captured as verbatim fixtures in
+`tests/test_pipeline.py::TestRealArchivedPageContent`:
+
+1. **A half sack** — Earl Thomas, 2019 W16: `Sack changed from 0 to 0.5`. Stored as a
+   float; rounding it to 0 or 1 would corrupt the numeric change.
+2. **A bold injury designation after the team** — D.J. Chark, 2020 W16:
+   `_WR - JAX_ **Q**`. The tag is not part of the player name.
+3. **The same, on a dotted-suffix name** — Kenneth Murray Jr., 2023 W16:
+   `_LB - TEN_ **IA**`. The "Jr." suffix survives; the tag does not.
+
+### 7b. Franchise names on later captures reflect the capture date, not the season
+
+Captures taken in 2025–2026 print **current** franchise names and codes. The 2016
+week-16 page shows Michael Crabtree, Derek Carr and Amari Cooper as `LV`, and the
+2016 defensive page shows "Las Vegas Raiders" — but the club was the **Oakland
+Raiders** in 2016.
+
+**Handling.** The transcription records exactly what the page printed. Historical
+codes are restored only in the derived layer (`build_database.py` `TEAM_ALIASES`,
+`OAK → LV`) for the game join, and displayed game data uses the codes the schedule
+mirror carries for that season. The affected artefacts say so in their own headers.
+This is recorded as an irregularity rather than silently normalised.
 
 ---
 
@@ -224,8 +295,10 @@ only way to look inside an interval, and that is what the study does.
 ## 10. LOW — exact publication latency and any general deadline remain unknown
 
 The archived pages expose correction calendar dates, not the exact publication
-time. In the selected 74-row seed, the 70 joined rows are 1–4 calendar days from
-game date to displayed correction date (mode 3). This sample does not establish
+time. In the selected 141-row seed, the 137 joined rows are 1–6 calendar days
+from game date to displayed correction date (mode 3). The gap is measured per
+game, not per week: the two 6-day rows are 2023 Week 16 corrections dated Dec 27
+against a Thursday-night game played Dec 21. This sample does not establish
 a general deadline or that all later corrections are captured. We did not verify
 a primary-source rule setting a universal correction deadline.
 
@@ -264,7 +337,8 @@ Two shapes were observed in real pages:
 versioned third-party schedule snapshot, so a typo fails the build). Rows where no code can be
 established are left `team: null`, labelled `team_source: "not_printed_on_source"`,
 flagged `TEAM_NOT_PRINTED`, and **no game join is attempted** — inferring a team would
-put unsourced data in the database. 4 of 74 rows are in this state.
+put unsourced data in the database. 4 of 141 rows are in this state (all four are
+2013 W1 Isaac Redman rows).
 
 ## 13. LOW — the official page sometimes lists the same correction twice
 
@@ -306,6 +380,14 @@ artefacts that the detector writes. It therefore cannot distinguish:
   reports as stale, but the cause is invisible to it;
 * a **runner outage** or a rejected `git push` from a source that went quiet;
 * a delivered notification that nobody read (see §14).
+
+**Partially narrowed since.** `data/alerts/attempts.json` is written by an
+`if: always()` step in `detect.yml`, so a run that *starts and fails* is now recorded
+and escalated: `pipeline/health.py` reads the ledger as its `attempt_ledger` check, a
+`failed` status makes the whole assessment FAIL, and `health.yml` then fails loudly and
+posts its own webhook notice. What remains invisible is a run that **never starts** —
+that writes nothing at all, and shows up only as an ageing ledger and an ageing feed
+(WARN, never OK). P3-5 (an out-of-band dead-man's switch) is the only way to close it.
 
 **Consequence.** Health statuses are statements about this repository's
 artefacts, not about GitHub's scheduler or about people. The Actions history
@@ -366,11 +448,11 @@ cannot generate an alert.
 |---|---|
 | 1. Official feed retired | **Blocked by an external party's decision.** Needs a licensed feed. |
 | 2. ESPN channel is JS-only | **Blocked** absent a documented API or permission. |
-| 3. Player-stat adapter/backtest | **Unfinished.** Local asset access is restricted; Actions access and a production adapter remain unproven. |
-| 4. Parser vs byte-exact HTML | **Partly resolved.** Validated against real rendered content; the HTML path still needs `selfcheck` on an appropriate runner. |
+| 3. Player-stat vintages | **Blocked.** Asset bytes unreachable here (two routes tested) and upstream overwrites assets in place, so no historical vintages exist. An adapter can be written and can accumulate future vintages; a backtest is not achievable with reachable sources. |
+| 4. Parser vs byte-exact HTML | **Partly resolved.** Validated against 22 real rendered artefacts and 5 real cell shapes; the HTML path still needs `selfcheck` on an appropriate runner. |
 | 5. Mirror ≠ NFL | **Inherent.** Requires independent provenance/corroboration; no second source is integrated. |
 | 6. Per-game lines/settlements | **Unverified source gap.** Do not assume they are unavailable everywhere or infer them. |
-| 7. Seed database (74 rows) | **Unfinished.** Now mechanical; needs a scheduled bulk job. |
+| 7. Seed database (141 rows) | **Unfinished.** Now mechanical; needs a scheduled bulk job. 2011 and weeks 2–15/17 are named gaps. |
 | 11. Archive serves another timestamp | **Inherent.** Both timestamps recorded per artefact. |
 | 12. No team code printed | **Inherent to the source.** Flagged, never inferred. |
 | 13. Duplicate published rows | **Inherent to the source.** Date is part of every key. |
@@ -380,13 +462,16 @@ cannot generate an alert.
 | 16. One-channel archive verification | **Environmental.** Strong consistency check, not independent observation; both timestamps and hashes recorded. |
 | 17. Provider id renumbering | **Inherent to the mirror.** Avoided by keying on `game_id` only. |
 
-**Bottom line.** A narrow scoreboard-mirror diff, a published run feed,
-subscribable Atom feeds, receipted webhook delivery and an independent health
-watchdog are implemented and tested; they do not solve the broader player-stat
-correction problem. The player-stat adapter/backtest is unfinished, and
-mirror-only alerts cannot establish official NFL/Elias attribution. Delivery can
-be proven accepted but never proven read. The retired correction channel is an
-external blocker; alternatives require product-specific evidence, rights and
-provenance review. The source-movement study now supplies a measured noise floor
-— 179 non-scoreboard edits on finished games in 59 days against 0 scoreboard
-edits — which is why the detector's scope is narrow on purpose.
+**Bottom line.** A narrow scoreboard-mirror diff, a published run feed (four
+recorded comparisons, including one genuine 15-day vintage window), subscribable
+Atom feeds, receipted webhook delivery, an attempt ledger that records failed runs
+as well as clean ones, and an independent health watchdog that reads it are all
+implemented and tested; they do not solve the broader player-stat correction
+problem. Player-stat alerting is blocked on data that upstream does not publish,
+not on code — and mirror-only alerts cannot establish official NFL/Elias
+attribution. Delivery can be proven accepted but never proven read. The retired
+correction channel is an external blocker; alternatives require product-specific
+evidence, rights and provenance review. The source-movement study supplies a
+measured noise floor — 179 non-scoreboard edits on finished games in 59 days
+against 0 scoreboard edits — which is why the detector's scope is narrow on
+purpose.

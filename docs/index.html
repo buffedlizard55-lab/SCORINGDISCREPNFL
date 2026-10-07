@@ -38,12 +38,14 @@
   <div class="wrap">
     <ul>
       <li><a href="#answer">The answer</a></li>
+      <li><a href="#alertsystem">Alert system</a></li>
       <li><a href="#feed">Comparison feed</a></li>
       <li><a href="#health">Monitor health</a></li>
       <li><a href="#subscribe">Get notified</a></li>
       <li><a href="#scoreboard">Do scores change?</a></li>
       <li><a href="#churn">Does the source move?</a></li>
       <li><a href="#database">Verified database</a></li>
+      <li><a href="#coverage">Coverage</a></li>
       <li><a href="#exposure">Exposure</a></li>
       <li><a href="#detection">Detection system</a></li>
       <li><a href="#limits">Limitations</a></li>
@@ -67,7 +69,7 @@
     <div class="card">
       <div class="num ok" id="stat-revisions">0</div>
       <div class="lbl">Mirror revisions observed</div>
-      <div class="sub">across <span id="stat-snapshots">—</span> already-finished games, checked at 4 historical points</div>
+      <div class="sub">across <span id="stat-snapshots">—</span> already-finished games<br><span id="stat-snapshots-status">—</span></div>
     </div>
     <div class="card">
       <div class="num accent" id="stat-records">—</div>
@@ -82,7 +84,7 @@
     <div class="card">
       <div class="num" id="stat-cadence">1–4</div>
       <div class="lbl">Calendar days in the joined sample</div>
-      <div class="sub">70 of 74 rows join to a game; not a general deadline</div>
+      <div class="sub">137 of 141 rows join to a game; measured per game, not a general deadline</div>
     </div>
   </div>
 
@@ -98,7 +100,8 @@
     Examples include yardage adjustments, sack/credit changes and a player line added after a game.
     These may be relevant to player markets or fantasy scoring if the applicable market and rules
     existed; the rows alone do not establish an offered line, a scoreboard change or settlement.
-    The nine sampled weeks do not establish a universal weekly frequency.</p>
+    The sixteen sampled season-weeks do not establish a universal weekly frequency, and
+    the sample is weighted to weeks 1 and 16.</p>
   </div>
 
   <div class="callout bad">
@@ -121,6 +124,10 @@
     <a href="https://github.com/buffedlizard55-lab/SCORINGDISCREPNFL/actions/workflows/detect.yml">workflow history</a>
     for the latest attempt and whether collection/comparison succeeded.
   </p>
+
+  <!-- Attempt ledger (data/alerts/attempts.json): did a scheduled run happen at
+       all, including failures? The wider self-assessment lives in #health. -->
+  <div class="callout" id="attempts-banner"></div>
 
   <div class="cards" id="feed-cards"></div>
 
@@ -253,6 +260,106 @@
         response, so a retry can duplicate one.</p>
     </div>
   </div>
+
+<!-- ================= ALERT SYSTEM FEASIBILITY ================= -->
+<section id="alertsystem">
+  <h2><span class="kicker">The question asked</span>Can we build an alert-detection notification system?</h2>
+  <p class="lede">
+    Three different questions hide inside that one question, and they have three different
+    answers. All findings below were produced by direct test, not assumption.
+  </p>
+
+  <div class="cards">
+    <div class="card">
+      <div class="num ok">Yes</div>
+      <div class="lbl">Final-score change detection</div>
+      <div class="sub">Shipped, and demonstrated on a real 15-day window</div>
+    </div>
+    <div class="card">
+      <div class="num warn">In principle</div>
+      <div class="lbl">Player-stat change detection</div>
+      <div class="sub">Can be built, but can never be backtested against history</div>
+    </div>
+    <div class="card">
+      <div class="num bad">No</div>
+      <div class="lbl">Official NFL / Elias attribution</div>
+      <div class="sub">The channel that said so was retired in 2026</div>
+    </div>
+  </div>
+
+  <h3>What is possible, and what is not</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Goal</th><th>Possible?</th><th>Blocker</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Alert when the mirror's <strong>final-score field</strong> changes after the game</td>
+          <td><span class="pill sev-1">yes — shipped</span></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>Alert when a <strong>player stat</strong> changes after the game</td>
+          <td><span class="pill sev-2">in principle; not demonstrated</span></td>
+          <td>Asset bytes are not downloadable from this environment (two routes tested), and upstream <strong>overwrites release assets in place</strong>, so no historical vintages exist to backtest against</td>
+        </tr>
+        <tr>
+          <td>Know that a detected change <strong>is</strong> an official Elias correction</td>
+          <td><span class="pill sev-3">no</span></td>
+          <td>The official corrections feed was retired in 2026. A mirror diff cannot tell an official correction from a provider data fix</td>
+        </tr>
+        <tr>
+          <td>Read the official corrections list <strong>automatically</strong></td>
+          <td><span class="pill sev-3">no</span></td>
+          <td>The successor page is a client-side JS app with no documented public API. Reverse-engineering a private API is brittle and likely against terms — declined</td>
+        </tr>
+        <tr>
+          <td>Say "this correction <strong>flipped</strong> a settled market"</td>
+          <td><span class="pill sev-3">no</span></td>
+          <td>Requires the actual offered line, timing, wager and applicable operator rules. No settlement record exists here; market categories are screening heuristics only</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout warn">
+    <p><strong>The structural blocker, stated plainly.</strong> A differential detector needs the
+    "before" bytes and the "after" bytes. <code>nflverse/nfldata</code> keeps <code>games.csv</code>
+    in Git, so scoreboard vintages exist — that file is scoreboard-only and contains no player
+    statistics. Player statistics are published as release assets that are
+    <strong>overwritten in place</strong>: the <code>stats_player</code> release was published
+    2025-07-31, and its <code>stats_player_post_2023.csv</code> asset was created 2026-08-13.
+    No Git-committed player-stat file was found in <code>nfldata</code>,
+    <code>nflverse-data</code>, <code>nflverse-pbp</code> or <code>nflfastR-data</code>.</p>
+    <p>A player-stat detector can be written and can begin accumulating vintages the day it is
+    switched on, but it can <strong>never</strong> be validated against the
+    <span id="stat-records-2">—</span> known historical corrections, because the "before" bytes for
+    those weeks no longer exist on any reachable channel. That is a property of how upstream
+    publishes data, not of our code.</p>
+  </div>
+
+  <h3>What was actually tested</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Route</th><th>Result</th><th>Consequence</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">api.github.com</td><td>200 OK</td><td>Vintage discovery and scheduling work</td></tr>
+        <tr><td class="mono">codeload.github.com</td><td>200 OK (2.6 MB in 0.65 s)</td><td>Historical <code>games.csv</code> vintages are retrievable</td></tr>
+        <tr><td class="mono">raw.githubusercontent.com</td><td>fails</td><td>The tarball route is mandatory, not a preference</td></tr>
+        <tr><td class="mono">…/releases/download/&lt;asset&gt;</td><td>302 → 0 bytes</td><td>Player-stat asset bytes not downloadable here</td></tr>
+        <tr><td class="mono">api.github.com/…/releases/assets/&lt;id&gt;</td><td>302 → 0 bytes</td><td>Second route tried to rule out an API proxy; same result</td></tr>
+        <tr><td class="mono">web.archive.org (bash)</td><td>fails</td><td>Archived pages arrive only through a render channel</td></tr>
+        <tr><td class="mono">web.archive.org CDX (render channel)</td><td>works</td><td>This is how all evidence artefacts were retrieved</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="footnote">
+    Full assessment, including the operational failure modes a demo hides, is in
+    <code>ALERT_SYSTEM_FEASIBILITY.md</code>. The recommendation there is to ship the narrow,
+    honest system and not widen its claims: an alert that overstates its own certainty converts a
+    monitoring system into a source of false confidence, and the first time it is wrong in a way
+    that costs money it will be switched off entirely.
+  </p>
 </section>
 
 <!-- ================= SCOREBOARD ================= -->
@@ -287,6 +394,7 @@
       <tfoot></tfoot>
     </table>
   </div>
+  <div class="callout" id="integrity-callout"></div>
   <p class="footnote" id="integrity-caveat"></p>
   <details>
     <summary>Why this is a finding and not a proof</summary>
@@ -402,6 +510,47 @@
   </p>
 </section>
 
+<!-- ================= COVERAGE ================= -->
+<section id="coverage">
+  <h2><span class="kicker">Honest scope</span>What the database covers — and what it does not</h2>
+  <p class="lede">
+    The brief asks for a comprehensive historical database. This is a verified seed, and the gaps
+    are named so they are never mistaken for absence of evidence. Every row below is counted from
+    the shipped data; nothing on this table is typed by hand.
+  </p>
+
+  <div class="table-wrap">
+    <table id="tbl-coverage">
+      <thead>
+        <tr>
+          <th>Season / week</th>
+          <th class="num">Rows</th>
+          <th>Games in the join</th>
+          <th class="num">Days to correction</th>
+          <th>Position filter(s)</th>
+          <th>Evidence artefact</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+      <tfoot></tfoot>
+    </table>
+  </div>
+
+  <div class="callout bad">
+    <p><strong>Named gaps.</strong> <span id="coverage-gaps"></span> These are stated rather than
+    hidden: until they are filled, no claim about how frequently corrections occur is supportable,
+    because the sample is deliberately weighted to weeks 1 and 16.</p>
+  </div>
+
+  <div class="callout">
+    <p><strong>Two weeks in the evidence set are deliberately empty.</strong> The archived pages for
+    2024 week 16 and 2025 week 1 render the literal string
+    <code>No stat corrections to display</code> under the All-Offense filter. They are stored as
+    negative observations so that "seasons 2010–2025 are represented" is never read as "every season
+    and week has corrections". Post-game corrections are not a weekly guarantee.</p>
+  </div>
+</section>
+
 <!-- ================= ROW DETAIL ================= -->
 <section id="detail">
   <h2><span class="kicker">Finding 3</span>The cases worth understanding</h2>
@@ -429,7 +578,12 @@
     <code>data/market_sensitivity_2025_2026.csv</code>.</p>
   </div>
   <h3>Zero-distance absolute-margin / spread-size matches</h3>
-  <p class="footnote">These are arithmetic matches of absolute values, not verified pushes. Settlement and the effect of any hypothetical correction are not modeled.</p>
+  <p class="lede">
+    <strong><span id="zero-margin-count">—</span></strong> game(s) in this window had an absolute
+    final margin exactly equal to the absolute spread magnitude. These are arithmetic matches of
+    absolute values, <strong>not verified pushes</strong>. Settlement, side, prices and the effect of
+    any hypothetical correction are not modeled.
+  </p>
   <div class="table-wrap">
     <table id="tbl-push">
       <thead>
@@ -458,7 +612,7 @@
       <thead><tr><th>Capability</th><th>Status</th><th>Why</th></tr></thead>
       <tbody>
         <tr><td>Compare frozen scoreboard fields between snapshots</td><td><span class="pill sev-2">implemented; narrow</span></td><td>Works on two valid third-party mirror snapshots; transient/reverted changes between polls can be missed</td></tr>
-        <tr><td>Detect a player-stat change after the game</td><td><span class="pill sev-3">not yet implemented end-to-end</span></td><td>Download helpers exist, but no validated vintage adapter, identity mapping or historical-correction backtest is shipped</td></tr>
+        <tr><td>Detect a player-stat change after the game</td><td><span class="pill sev-3">not implemented; backtest not achievable</span></td><td>Download helpers exist, but there is no validated vintage adapter or identity mapping — and upstream <strong>overwrites player-stat release assets in place</strong>, so the historical "before" bytes needed for a backtest no longer exist on any reachable channel</td></tr>
         <tr><td>Read the official corrections list automatically</td><td><span class="pill sev-3">not available here</span></td><td>The legacy feed was retired; the successor page has no documented public API used by this project</td></tr>
         <tr><td>Attribute a mirror change to NFL/Elias</td><td><span class="pill sev-3">not reliably</span></td><td>No independent corroboration source is integrated; agreement between correlated providers would still not prove official attribution</td></tr>
       </tbody>
@@ -576,11 +730,11 @@
     <table>
       <thead><tr><th>Check</th><th>Result</th><th>How to repeat it</th></tr></thead>
       <tbody>
-        <tr><td>Row counts agree on all 10 stored archived pages (declared = extractable = shipped)</td>
-            <td><span class="pill sev-1">10 / 10 agree</span></td>
+        <tr><td>Row counts agree on all 22 stored archived pages (declared = extractable = shipped)</td>
+            <td><span class="pill sev-1">22 / 22 agree</span></td>
             <td class="mono">python3 pipeline/schema.py</td></tr>
         <tr><td>Every artefact's recorded capture URL matches its manifest</td>
-            <td><span class="pill sev-1">10 / 10 match</span></td>
+            <td><span class="pill sev-1">22 / 22 match</span></td>
             <td class="mono">data/evidence/pages/*.md headers</td></tr>
         <tr><td>Independent re-read of one archived official page against its stored artefact</td>
             <td><span class="pill sev-1">11 / 11 rows identical</span></td>
@@ -597,7 +751,7 @@
         <tr><td>All 45 source-movement vintages re-downloadable and hash-identified</td>
             <td><span class="pill sev-1">45 / 45</span></td>
             <td class="mono">codeload_url in data/evidence/upstream_churn_study.json</td></tr>
-        <tr><td>The other 9 archived pages independently re-read this session</td>
+        <tr><td>The other 21 archived pages independently re-read this session</td>
             <td><span class="pill sev-2">not performed</span></td>
             <td>stated rather than implied; they remain self-consistent and were validated when stored</td></tr>
         <tr><td>Any sportsbook or fantasy settlement verified anywhere in this project</td>
