@@ -21,7 +21,7 @@ secondary commentary, each was reduced to something measurable:
 
 ---
 
-## Finding 1 — NFL final scores are effectively immutable once posted
+## Finding 1 — No revisions observed in selected mirror comparisons
 
 ### Method
 
@@ -52,9 +52,7 @@ scoreboard.** A receiver's 44 yards becomes 43; a sack is reassigned from one
 player to two half-sacks; a play is reclassified from a forward pass to a
 backwards lateral. None of that alters the final score.
 
-This has a direct market consequence: **game totals, spreads, moneylines and
-team totals are not materially exposed to post-game corrections.** Player props
-and fantasy scoring are exposed.
+These selected comparisons do not prove scores are immutable or establish zero scoring-market exposure. The 28,323 total counts overlapping game-snapshot comparisons, not unique games. Mirror changes require official confirmation; missed within-interval changes remain possible.
 
 ### Why this is a *finding* and not a *proof*
 
@@ -65,7 +63,7 @@ the mirror existed. That limitation is recorded in the artefact itself and in
 supports.
 
 We specifically hunted for the opposite result — a real instance of a final
-score being revised — and did not find one in 28,323 opportunities. That
+score being revised — and did not find one in 28,323 overlapping game-snapshot comparisons. That
 negative result is the deliverable.
 
 ---
@@ -264,7 +262,7 @@ real defects surfaced that no amount of specification writing would have found.
 
 | Brief question | Answer | Evidence |
 |---|---|---|
-| Can NFL scoring discrepancies occur after apparent completion? | **Statistically yes, routinely. For the scoreboard, effectively no** — 0 revisions in 28,323 final-game snapshots | Finding 1 |
+| Can NFL scoring discrepancies occur after apparent completion? | **Statistics can change; scoreboard permanence is not established** — no observed revisions in selected mirror comparisons | Finding 1 |
 | Can official records change across a relevant threshold? | **Yes.** Passing 182→181, receiving 44→43, rec 0→3 / yds 0→36 all cross real prop lines | Finding 2 |
 | How frequently do these occur? | **Every week, in small numbers.** 36 rows across four sampled weeks ≈ 4–14 per week across all positions | Finding 2 |
 | How quickly are corrections published? | **2–4 days after the game**, clustered on the following Wednesday; no published deadline | Finding 2 |

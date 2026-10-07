@@ -68,7 +68,7 @@ function renderIntegrity(study) {
     <td><strong>Total</strong></td>
     <td class="num"><strong>${num(t.game_snapshots_examined)}</strong></td>
     <td class="num"><strong>${num(t.final_scores_revised_after_completion)}</strong></td>
-    <td><span class="pill sev-2">no score ever revised</span></td>
+    <td><span class="pill sev-2">no observed mirror revision</span></td>
   </tr>`;
 
   document.getElementById('integrity-caveat').textContent = study.caveat;

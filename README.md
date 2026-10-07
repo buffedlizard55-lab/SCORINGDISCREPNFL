@@ -62,7 +62,7 @@ We diffed historical versions of `nflverse/nfldata`'s `data/games.csv` against t
 
 Artefact: [`data/evidence/score_integrity_study.json`](data/evidence/score_integrity_study.json)
 
-**What this means.** An NFL game's final score is effectively immutable once posted. What changes after a game is **attribution and statistics** — who gets the sack, whether a play was a forward pass or a lateral, whether a receiver's 44 yards were really 43. Those move *player* markets, not the scoreboard.
+**What this means.** No revisions were observed in these selected mirror comparisons; this does not establish that official scores cannot change. The 28,323 total is overlapping game-snapshot comparisons, not unique games. What changes after a game is **attribution and statistics** — who gets the sack, whether a play was a forward pass or a lateral, whether a receiver's 44 yards were really 43. Those move *player* markets, not the scoreboard.
 
 **What this does not prove.** It tests a *mirror* of the NFL record, not the NFL's own database. It cannot see a correction made and then reverted between two mirror updates, nor anything before the mirror existed. It also cannot see an **in-game replay reversal**, which is a different phenomenon entirely (see §1.6).
 

@@ -55,7 +55,7 @@
   <div class="cards">
     <div class="card">
       <div class="num ok" id="stat-revisions">0</div>
-      <div class="lbl">Final scores ever revised</div>
+      <div class="lbl">Mirror revisions observed</div>
       <div class="sub">across <span id="stat-snapshots">—</span> already-finished games, checked at 4 historical points</div>
     </div>
     <div class="card">
@@ -70,17 +70,16 @@
     </div>
     <div class="card">
       <div class="num" id="stat-cadence">2–4</div>
-      <div class="lbl">Days from game to correction</div>
+      <div class="lbl">Days in this selected sample</div>
       <div class="sub">every transcribed row fell in this window</div>
     </div>
   </div>
 
   <div class="callout ok">
-    <p><strong>A game's final score is effectively immutable once posted.</strong>
-    Across <span id="stat-snapshots-2">—</span> already-completed games compared between four historical
-    snapshots and today, <strong>not one</strong> score, result, total or overtime flag was ever
-    revised. Game totals, spreads and team totals are therefore not materially exposed to
-    post-game corrections.</p>
+    <p><strong>No revisions were observed in the selected mirror comparisons.</strong>
+    The study covers <span id="stat-snapshots-2">—</span> game-snapshot comparisons across four baselines,
+    not that many unique games. The same games recur across baselines. Zero observed revisions
+    does not prove league records are immutable or eliminate scoring-market risk.</p>
   </div>
 
   <div class="callout warn">
@@ -103,13 +102,22 @@
 </section>
 
 <!-- ================= SCOREBOARD ================= -->
+<section id="supplemental">
+  <h2>Additional sourced cases &amp; timing limits</h2>
+  <p>The selected 36-row sample is not an exhaustive history or a universal correction window.
+  <a href="https://www.nfl.com/news/j-j-watt-loses-nfl-s-sack-lead-on-statistical-correction-0ap1000000079268">NFL.com reported on October 10, 2012</a> that a sack from J.J. Watt's September 9 game was removed—a 31-calendar-day game-to-report gap, not an exact correction timestamp.</p>
+  <p><a href="research-seed/index.html">Explore seven supplemental narrative cases</a>: Dawson's apparent-final reversal,
+  Polamalu's unchanged final score, Manning's non-change and post-game player-stat corrections.
+  These cases are separate from the table below and are not automatically deduplicated into it.</p>
+</section>
+
 <section id="scoreboard">
   <h2><span class="kicker">Finding 1</span>Can a final score change after the game?</h2>
   <p class="lede">
     We took four historical versions of a git-versioned mirror of the NFL's official results,
     kept <strong>only games that had already finished</strong> at that point in time, and compared
-    every frozen score field against today's record. A single difference would be direct evidence
-    that a completed game's official score was revised afterwards.
+    every frozen score field against today's record. A difference would demonstrate a mirror revision requiring official confirmation,
+    not by itself a confirmed NFL score amendment.
   </p>
   <div class="table-wrap">
     <table id="tbl-integrity">
