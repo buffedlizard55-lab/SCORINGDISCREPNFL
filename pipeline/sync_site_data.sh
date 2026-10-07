@@ -24,10 +24,17 @@ cp "$root/data/discrepancies.json"                  "$root/docs/data/"
 cp "$root/data/evidence/score_integrity_study.json" "$root/docs/data/"
 cp "$root/data/market_sensitivity_2025_2026.json"   "$root/docs/data/"
 
+# 1b. the live detection feed -> docs/data/alerts/ (optional: a fresh fork has
+#     no runs yet, and the site renders "no runs recorded" rather than breaking)
+mkdir -p "$root/docs/data/alerts"
+if [ -f "$root/data/alerts/feed.json" ]; then
+  cp "$root/data/alerts/feed.json" "$root/docs/data/alerts/"
+fi
+
 # 2. canonical site assets -> repository root (root layout)
 for f in index.html app.js styles.css; do
   cp "$root/docs/$f" "$root/$f"
 done
 cp "$root/docs/.nojekyll" "$root/.nojekyll"
 
-echo "synced 3 data artefacts -> docs/data/ and 4 site assets -> repo root"
+echo "synced data artefacts + live feed -> docs/data/ and 4 site assets -> repo root"

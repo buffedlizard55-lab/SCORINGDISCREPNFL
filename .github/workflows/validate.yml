@@ -32,7 +32,10 @@ jobs:
           python-version: '3.11'
 
       - name: Unit tests, including the site/data contracts
-        run: python3 tests/test_pipeline.py
+        # Full discovery, not just tests/test_pipeline.py: the module's own
+        # __main__ runs 50 tests, while discover also picks up tests/test_project.py
+        # (9 more). The merge gate must cover the whole suite.
+        run: python3 -m unittest discover -s tests -v
 
       - name: Every published copy must match the canonical docs/ copy
         run: |
@@ -57,12 +60,24 @@ jobs:
               "docs/data/discrepancies.json": lambda d: len(d["records"]) > 0,
               "docs/data/score_integrity_study.json": lambda d: "totals" in d,
               "docs/data/market_sensitivity_2025_2026.json": lambda d: "summary" in d,
+              # The live feed is operational state; if it exists it must be valid
+              # and must carry its honesty labels, but a fresh fork may not have one.
+              "data/alerts/feed.json": lambda d: (
+                  "runs" in d and "meta" in d
+                  and all(k in d["meta"] for k in
+                          ("what_this_is", "what_a_recorded_alert_is", "what_a_clean_run_means"))
+              ),
           }
+
+          OPTIONAL = {"data/alerts/feed.json"}
 
           failed = False
           for path, check in required.items():
               p = pathlib.Path(path)
               if not p.exists():
+                  if path in OPTIONAL:
+                      print(f"skipped (optional, not present yet) {path}")
+                      continue
                   print(f"MISSING {path}")
                   failed = True
                   continue

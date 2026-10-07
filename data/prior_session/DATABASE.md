@@ -1,4 +1,4 @@
-> **ARCHIVED CONCURRENT DRAFT — UNVERIFIED / SUPERSEDED.** Read [archive notice](README.md) and current [research limitations](../RESEARCH.md). Claims below are retained for review, not endorsed.
+> **ARCHIVED CONCURRENT DRAFT — UNVERIFIED / SUPERSEDED.** Read [archive notice](README.md) and current [research limitations](../../docs/RESEARCH.md). Claims below are retained for review, not endorsed.
 
 # NFL Scoring Discrepancy Database
 

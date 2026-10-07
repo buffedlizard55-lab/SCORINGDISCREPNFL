@@ -68,9 +68,24 @@ Artefact: [`data/evidence/score_integrity_study.json`](data/evidence/score_integ
 
 ### 1.2 How frequently do corrections occur, and how fast?
 
-From the archived official release pages we transcribed, corrections for a given week are published **2–4 days after the games**, clustered on the Wednesday after (the NFL League Office and Elias Sports Bureau confer, then publish). Every one of the 36 transcribed rows landed inside that window — see `days_from_game_to_correction` in the database. The build raises `DATE_LATE` beyond 14 days and `DATE_INCONSISTENT` for anything before the game.
+Measured, not asserted: for the **70 of 74** rows that join to a real game, the gap from game day to published correction is **1–4 days**, with a mode of 3 days.
 
-Corrections are **routine, not exceptional** — a normal week produces a handful to a few dozen rows across all positions, mostly yardage and defensive-credit adjustments.
+| Days from game to correction | Rows |
+|---|---|
+| 1 | 3 |
+| 2 | 7 |
+| 3 | **44** |
+| 4 | 16 |
+
+(The other 4 rows carry no gap because the official page printed no team code for them, so no game join was attempted — see `review_flags`.)
+
+> **Correction to an earlier claim in this file.** A previous revision stated the window was "2–4 days". That was true of the 36-row sample it was measured on, and **false** of the current 74-row database: three rows were corrected just 1 day after the game. The claim is now stated as a measured distribution rather than a range.
+
+Secondary sources describe the league and Elias conferring midweek before publishing; that is consistent with the 3-day mode but is **not** independently verified to primary standard, so it is not stated as fact here. The build raises `DATE_LATE` beyond 14 days and `DATE_INCONSISTENT` for anything dated before the game.
+
+Corrections are **routine, not exceptional** — the sampled weeks produced 2 to 15 rows each (mean 8.2), mostly yardage and defensive-credit adjustments.
+
+**Not one of the 74 rows is a scoring event.** No touchdown, field goal, extra point, two-point conversion or safety was added or removed in any of them. Severity 3 (discrete scoring / scoreboard) count is **0**.
 
 ### 1.3 What official source controls the final record?
 
@@ -91,7 +106,29 @@ Corrections are **routine, not exceptional** — a normal week produces a handfu
 | Read the **official** corrections list automatically | ❌ Not today | The official feed was retired; the replacement is client-side JS with no documented public API |
 | Distinguish official corrections from mirror-feed bugs | ❌ Not reliably | No independent second feed available for free |
 
-Full engineering assessment: [`LIMITATIONS.md`](LIMITATIONS.md). Next work: [`RECOMMENDATIONS.md`](RECOMMENDATIONS.md). Also see [`docs/ALERT_SYSTEM_ANALYSIS.md`](docs/ALERT_SYSTEM_ANALYSIS.md) for the earlier feasibility write-up.
+Full engineering assessment: [`LIMITATIONS.md`](LIMITATIONS.md). Next work: [`RECOMMENDATIONS.md`](RECOMMENDATIONS.md). Also see [`docs/archive/ALERT_SYSTEM_ANALYSIS.md`](docs/archive/ALERT_SYSTEM_ANALYSIS.md) for the earlier feasibility write-up.
+
+### 1.4a Can we build an alert-detection notification system? Direct answer
+
+**Yes for detection. No, not yet, for authoritative attribution.** Both halves matter, so here they are separately.
+
+**What is built and working today:**
+
+- A differential detector that compares two versioned snapshots of an authoritative mirror and emits only *post-completion* changes to *frozen* fields (score, result, total, overtime). Three rules — implemented because testing found the bugs — keep it quiet: only games already final in the older snapshot are compared; pre-game lines are excluded; and every alert carries the old value, the new value and the SHA-256 of both inputs.
+- A **live feed** at [`data/alerts/feed.json`](data/alerts/feed.json), rendered on the site. It records **every** run including clean ones, because without that "nothing changed" is indistinguishable from "it never ran" — which is precisely the manual-checking problem the brief asks us to remove.
+- A scheduled GitHub Actions job (`detect.yml`) that snapshots, diffs, appends to the feed, publishes it, and optionally posts to a Slack/Discord webhook (`ALERT_WEBHOOK_URL`, off by default so a fork never spams anyone).
+
+**What is genuinely not possible today, and why:**
+
+| Goal | Possible? | Blocker |
+|---|---|---|
+| Alert when a **final score** changes after the game | **Yes — shipped** | — |
+| Alert when a **player stat** changes after the game | **Yes, on Actions** | The highest-resolution source (`nflverse-pbp` raw play-by-play, explicitly refreshed weekly to fold in corrections) is served from `release-assets.githubusercontent.com`, unreachable from this sandbox. Environment limit, not a design limit. |
+| Know that a detected change **is** an official Elias correction | **No** | The official corrections feed was retired in 2026 (LIMITATIONS §1). A mirror diff cannot tell an official correction from a data-provider bug fix. |
+| Read the official corrections list **automatically** | **No** | The successor ESPN page is a client-side JS app with no documented public API. Scraping it means reverse-engineering a private API — brittle and likely against terms. We decline to do that. |
+| Say "this correction **flipped** a settled market" | **No** | Requires per-game prop lines, which are a commercial product. We model the pricing *convention* and never guess a line. |
+
+**The honest one-line answer:** an automated system can reliably tell you *something changed in the official record after the game*, and can do so without any manual checking. It cannot, for free in 2026, tell you *whether the NFL or Elias is the one who changed it*. Every alert is therefore emitted as `detected_by_diff_pending_manual_confirmation` with `actually_changed_outcome: null`. **The machine detects; a human confirms.** That is a deliberate design decision, not a workaround we intend to hide.
 
 ### 1.5 Exposure — which games *could* have been flipped?
 
@@ -124,7 +161,9 @@ LIMITATIONS.md                  engineering + data limitations, ranked by severi
 RECOMMENDATIONS.md              prioritised next work
 IMPLEMENTATION_SUMMARY.md       summary from the earlier parallel session
 data/
-  verified_corrections_raw.json    36 transcribed official corrections (FACTS ONLY)
+  verified_corrections_raw.json    74 official corrections, regenerated from evidence (FACTS ONLY)
+  evidence/pages/*.md              10 stored archived official pages — the primary evidence
+  alerts/feed.json                 the live detection feed (records clean runs too)
   discrepancies.json|.csv          same rows + game join + market classification (derived)
   market_sensitivity_2025_2026.*   82 correction-sensitive games, with arithmetic
   evidence/score_integrity_study.json   the 28,323-snapshot result
@@ -134,11 +173,15 @@ pipeline/
   detect.py                     diff engine, severity classifier, alert renderers
   fetch.py                      source adapters (all verified reachable)
   parse_corrections.py          parser for archived official pages
+  ingest_rendered.py            stored archived pages -> raw corrections (regenerable)
+  feed.py                       append-only detection-run log (the live feed)
   build_database.py             raw facts -> shipping database, with flagging
   market_sensitivity.py         computes exposure to a scoring correction
   run.py                        CLI: snapshot | diff | evidence | corrections | selfcheck
+                                diff --feed appends every run, clean ones included
   sync_site_data.sh             keeps docs/data/ byte-identical to data/
-tests/test_pipeline.py          32 tests, incl. regressions for 5 real bugs found
+tests/test_pipeline.py          50 tests here; 59 with tests/test_project.py via discover
+                                incl. regressions for 8 real bugs found
 docs/                           the GitHub Pages site (canonical, single source)
 scripts/fetch_corrections.py    prior-session scraper, retained for reference
 .github/workflows/              scheduled detection + Pages deploy
@@ -167,7 +210,7 @@ Established from the official release pages themselves and corroborated by secon
 |---|---|---|
 | Elias Sports Bureau is the official statistician of the NFL | **Primary** | Publisher statement on the official corrections page |
 | Corrections are released by the NFL League Office **and** Elias | **Primary** | Same page header |
-| Corrections for a week arrive **2–4 days after the games**, typically the following Wednesday | **Measured** | `days_from_game_to_correction` on all 36 transcribed rows — the strongest primary evidence we hold |
+| Corrections for a week arrive **1–4 days after the games**, mode 3 days | **Measured** | `days_from_game_to_correction` on the 70 of 74 rows that join to a game — the strongest primary evidence we hold |
 | The league and Elias confer on Wednesdays before publishing | **Secondary** | Consistent across multiple independent fantasy-platform operator statements |
 | There is **no published deadline**; corrections can arrive days or weeks later | **Secondary** | Platform operator statements; no contrary primary source found |
 | The **official gamebook / league statistics** control the final record — not third-party box scores | **Primary** | Consistent with the publisher statement; the archive pages are the league's published view |
@@ -206,8 +249,13 @@ Critically, every alert is emitted as `verification_status: detected_by_diff_pen
 Stdlib only — no dependencies. Python 3.10+.
 
 ```bash
-# verify the whole pipeline (32 tests)
-python3 tests/test_pipeline.py
+# verify the whole pipeline (59 tests)
+python3 -m unittest discover -s tests -v
+
+# 0. Regenerate the raw corrections from the stored archived pages, and prove
+#    the shipped copy is byte-reproducible from them
+python3 pipeline/ingest_rendered.py --write
+python3 pipeline/ingest_rendered.py --check
 
 # 1. Get a current authoritative snapshot of games + closing lines
 python3 pipeline/run.py snapshot
@@ -237,12 +285,12 @@ python3 pipeline/run.py selfcheck     # reconciles the parser against real HTML 
 
 ## 6. Status and honesty statement
 
-**Verified and shipped:** the score-integrity study; the market-sensitivity analysis; the market-impact rule table; the diff engine and alerting; the corrections parser; 32 tests; 36 transcribed official correction records with per-row archived source links; the consolidated site.
+**Verified and shipped:** the score-integrity study; the market-sensitivity analysis; the market-impact rule table; the diff engine and alerting; the corrections parser, now validated against real archived page content; the live detection feed; 59 tests; 74 official correction records parsed from 10 stored archived pages, each with a per-row archived source link; the consolidated site.
 
 **Known incomplete, stated rather than hidden:**
 
-- The database is a **36-row verified seed, not the "comprehensive historical database"** the brief asks for. The archived corpus covers 2010–2025 × 10 position filters × 18+ weeks. **We would rather ship 36 verified rows than 5,000 unverified ones.** Expansion is the top item in `RECOMMENDATIONS.md`.
-- The parser is unit-tested against fixtures reproducing the observed page structure but has **not** been validated against byte-exact archived HTML, because the Internet Archive is not on the sandbox egress allowlist. `run.py selfcheck` reconciles it on the first Actions run.
+- The database is a **74-row verified seed across 6 seasons and 9 weeks, not the "comprehensive historical database"** the brief asks for. The archived corpus covers 2010–2025 × 10 position filters × 18+ weeks, so the ceiling is orders of magnitude larger. Expansion is now **mechanical rather than research**: drop an archived page into `data/evidence/pages/`, run `ingest_rendered.py --write`, rebuild. **We would rather ship 74 rows that regenerate from stored evidence than 5,000 nobody can check.** Bulk expansion is the top item in `RECOMMENDATIONS.md`.
+- The parser **is now validated against real archived page content** (2026-10-07): running it on the actual pages found two bugs that produced **zero usable rows** from every real page, both fixed and both covered by regression tests that fail if they return. What it is still *not* validated against is **byte-exact HTML** — the archive is reachable only through a document-render channel from this sandbox, so the stored evidence is the rendered table, not raw bytes. `run.py selfcheck` reconciles the HTML path on Actions.
 - **No row in the verified database claims a realised game-outcome change**, because we found no verifiable case, and a test fails the build if such a claim is made without evidence. Candidate cases that might qualify are walled off in `data/prior_session/` pending primary-source verification.
 - The prior session's 11 candidate entries are **preserved but not endorsed**; §1.6 and `data/prior_session/README.md` explain exactly what would be required to promote them.
 

@@ -1,0 +1,27 @@
+{
+  "generated_at": "2026-10-07T16:58:20+00:00",
+  "source": "nfldata_games",
+  "min_severity": 0,
+  "total_alerts": 0,
+  "counts_by_severity": {},
+  "alerts": [],
+  "disclaimer": "Alerts are MACHINE-DETECTED differences between two snapshots of a third-party mirror of the NFL's official record. Each alert is a candidate discrepancy, not a confirmed official correction. Confirm against https://operations.nfl.com statistics / official gamebook before acting. See LIMITATIONS.md.",
+  "inputs": {
+    "old": {
+      "path": "snapshots/nfldata_games/2026-10-07T045150Z/games.slim.csv",
+      "sha256": "341417dee2d4cb58938e4b483f9029d184b03b9e52f94949806afed1eedb0498"
+    },
+    "new": {
+      "path": "snapshots/nfldata_games/2026-10-07T165648Z/games.slim.csv",
+      "sha256": "341417dee2d4cb58938e4b483f9029d184b03b9e52f94949806afed1eedb0498"
+    },
+    "old_records": 7340,
+    "new_records": 7340,
+    "old_final_records": 7340
+  },
+  "rules_applied": [
+    "only rows final in OLD snapshot are compared",
+    "only frozen fields compared: ['away_score', 'home_score', 'result', 'total', 'overtime']",
+    "volatile fields excluded: ['spread_line', 'total_line', 'away_moneyline', 'home_moneyline', 'away_spread_odds', 'home_spread_odds', 'gametime', 'weekday']"
+  ]
+}

@@ -7,19 +7,26 @@ reason, and how we would know it succeeded.
 
 ## P0 — Unblock the two things that actually gate live alerting
 
-### P0-1. Validate the corrections parser against real archived HTML (`run.py selfcheck`)
+### P0-1. ~~Validate the corrections parser against real archived HTML~~ — **DONE 2026-10-07 (rendered form); HTML path still open**
 
-**Work.** Run `python3 pipeline/run.py selfcheck` on a machine that can reach
-`web.archive.org` (i.e. GitHub Actions). If it reports fewer than 10 parsed
-rows, reconcile `pipeline/parse_corrections.py` against the real markup.
+**What was done.** The archive became reachable through a document-render channel, so
+the parser was run against **real archived page content** for the first time. It
+produced **zero usable rows from every page**, for two reasons the fixtures could not
+catch: the real page bolds the numbers (`from **0** to **1**`), and a player with a
+highlight reel renders a second link in the same cell (`Case Keenum    View Videos`).
+Both are fixed, both are covered by `TestRealArchivedPageContent`, and both were
+**mutation-checked** (re-introducing either bug fails 6 and 2 tests).
 
-**Why.** It is the only component shipped without real-input validation
-(LIMITATIONS §4). Everything downstream of the parser is currently taken on
-trust.
+`pipeline/ingest_rendered.py` now regenerates `data/verified_corrections_raw.json` from
+stored artefacts in `data/evidence/pages/`, and `--check` fails if the shipped copy is
+not byte-reproducible from them. The raw layer is no longer hand-typed.
 
-**Done when.** `selfcheck` prints `SELFCHECK PASS` in CI, on every run.
+**Still open.** The HTML extraction path has never seen byte-exact HTML. Run
+`python3 pipeline/run.py selfcheck` on Actions; reconcile if it reports < 10 rows.
 
-### P0-2. Expand the database from 36 rows to the full archived corpus
+**Done when.** `selfcheck` prints `SELFCHECK PASS` in CI on every run.
+
+### P0-2. Expand the database from 74 rows to the full archived corpus — **now mechanical**
 
 **Work.** Add a scheduled job that walks the archived corpus
 (2010–2025 × positions `O,1,2,3,4,7,8,11,12,13` × weeks 1–22), one request at a
@@ -27,8 +34,14 @@ time with exponential backoff, and appends to
 `data/verified_corrections_raw.json`. The archive rate-limits (HTTP 429 was hit
 during the build), so this must be a patient background job, not a burst.
 
-**Why.** The brief asks for a *comprehensive* historical database. 36 rows is a
-verified seed, not the deliverable. The parse path is already written and tested.
+**Why.** The brief asks for a *comprehensive* historical database. 74 rows is a
+verified seed, not the deliverable. The parse path is now **proven against real pages**
+and the ingest path is regenerable, so the remaining work is fetching, not research.
+
+**Progress 2026-10-07.** 36 → 74 rows, 4 → 6 seasons, 4 → 9 season-weeks. Use the CDX
+API (`web.archive.org/cdx/search/cdx?url=fantasy.nfl.com/research/statcorrections&matchType=prefix&output=json`)
+to enumerate exact capture timestamps before fetching: requesting a timestamp that has
+no capture silently returns the *nearest* one (LIMITATIONS §11).
 
 **Done when.** Coverage spans every season with archived snapshots, every row
 retains a resolvable archived URL, and row counts per week are non-zero for
@@ -79,7 +92,7 @@ joins on name alone.
 
 ### P1-3. Backtest the detector against known corrections
 
-**Work.** For each of the 36 transcribed corrections, replay the detector using
+**Work.** For each of the 74 transcribed corrections, replay the detector using
 snapshots bracketing that week and confirm it would have fired, with correct
 severity, and with no false positives in the same window.
 
@@ -88,17 +101,51 @@ an assertion, not a capability. This is the highest-value correctness work
 available, because ground truth already exists in-repo.
 
 **Done when.** A report shows detection rate and false-positive rate across all
-36 historical cases.
+74 historical cases.
+
+> **Scope caveat worth stating before this is attempted.** The 74 rows are *player
+> statistics* corrections. The detector as built diffs **scoreboard** fields, so it will
+> correctly fire on **none** of them. A meaningful backtest first requires the
+> play-by-play / weekly-stat differential from P0-3; backtesting the scoreboard diff
+> against stat corrections would measure nothing.
 
 ---
 
+### P1-4. Make `record_id` content-stable instead of positional
+
+**The bug.** `record_id` is assigned as `SC-{i:04d}` in build order. On 2026-10-07,
+adding 38 rows silently re-pointed **all six** of the site's case cards at different
+records — `SC-0034` went from Michael Clark's 0 → 36 receiving yards to an unrelated
+Roethlisberger row. Nothing failed; the page simply showed the wrong evidence under a
+plausible-looking heading.
+
+**Shipped mitigation.** The case cards now select by natural key
+(`season|week|player|stat|correction_date`), and a test asserts every key resolves to
+exactly one record. Note the date is required: the official page sometimes lists the
+same correction on two consecutive days (LIMITATIONS §13).
+
+**Still open.** `record_id` itself is still positional, so anything *external* that
+cites one (an issue, an email, a bookmarked row) breaks on the next insert.
+
+**Work.** Derive `record_id` from a hash of the row's identity
+(`source_id|player|stat|original|corrected|correction_date`) so IDs are stable under
+insertion.
+
+**Done when.** Adding a row never changes an existing `record_id`, asserted by a test
+that builds the database twice with an extra artefact present.
+
 ## P2 — Coverage and product
 
-### P2-1. Publish a public alert archive
+### P2-1. ~~Publish a public alert archive~~ — **DONE 2026-10-07**
 
-Append every emitted alert to a time-series file so the site can show "this
-week's corrections" rather than only a historical table. Rendered as the
-current feed beside the verified history.
+`pipeline/feed.py` appends **every** detection run — including clean ones — to
+`data/alerts/feed.json`, which the site renders as a "Live detection feed" section with
+per-run SHA-256 hashes of both inputs. Recording clean runs is the point: without them,
+"nothing changed" is indistinguishable from "it never ran". `detect.yml` now passes
+`--feed` and re-syncs the published copy.
+
+**Still open.** History is capped at 200 runs and there is no retention/export strategy
+yet, and the feed records *runs*, not a human-readable "this week's corrections" digest.
 
 ### P2-2. Fantasy-platform re-scoring impact
 
