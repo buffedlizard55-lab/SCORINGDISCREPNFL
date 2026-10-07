@@ -1,0 +1,89 @@
+name: Validate site and data
+
+# WHY THIS DOES NOT DEPLOY
+#   GitHub Pages for this repository is configured to build from `main` / (the
+#   repository root) using the legacy branch deploy. That setting cannot be
+#   changed with the available token, and a workflow-based `deploy-pages` job
+#   would conflict with it. So Pages serves the site directly from the merged
+#   files, and this workflow's job is to guarantee that what gets merged is
+#   correct and that every published copy is in step.
+#
+#   Consequence worth knowing: if a commit lands that breaks the site, the
+#   breakage is live immediately. This workflow is the gate that prevents that —
+#   it must pass before merge.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Unit tests, including the site/data contracts
+        run: python3 tests/test_pipeline.py
+
+      - name: Every published copy must match the canonical docs/ copy
+        run: |
+          ./pipeline/sync_site_data.sh > /dev/null
+          if ! git diff --quiet; then
+            echo "::error::Published copies have drifted from data/ and docs/."
+            echo "Run ./pipeline/sync_site_data.sh and commit the result."
+            git --no-pager diff --stat
+            exit 1
+          fi
+          echo "All published copies are in sync."
+
+      - name: Data the site will render must be present and well-formed
+        run: |
+          python3 - <<'PY'
+          import json, pathlib, sys
+
+          required = {
+              "data/discrepancies.json": lambda d: len(d["records"]) > 0,
+              "data/evidence/score_integrity_study.json": lambda d: "totals" in d and "caveat" in d,
+              "data/market_sensitivity_2025_2026.json": lambda d: "summary" in d,
+              "docs/data/discrepancies.json": lambda d: len(d["records"]) > 0,
+              "docs/data/score_integrity_study.json": lambda d: "totals" in d,
+              "docs/data/market_sensitivity_2025_2026.json": lambda d: "summary" in d,
+          }
+
+          failed = False
+          for path, check in required.items():
+              p = pathlib.Path(path)
+              if not p.exists():
+                  print(f"MISSING {path}")
+                  failed = True
+                  continue
+              try:
+                  data = json.loads(p.read_text())
+              except Exception as e:
+                  print(f"INVALID JSON {path}: {e}")
+                  failed = True
+                  continue
+              if not check(data):
+                  print(f"FAILED CONTENT CHECK {path}")
+                  failed = True
+              else:
+                  print(f"ok {path} ({p.stat().st_size} bytes)")
+
+          sys.exit(1 if failed else 0)
+          PY
+
+      - name: Site assets must exist at the root, because that is what Pages serves
+        run: |
+          for f in index.html app.js styles.css .nojekyll; do
+            test -f "$f" || { echo "::error::missing root $f"; exit 1; }
+          done
+          echo "root site assets present"

@@ -144,9 +144,18 @@ scripts/fetch_corrections.py    prior-session scraper, retained for reference
 .github/workflows/              scheduled detection + Pages deploy
 ```
 
-> **One canonical site.** The site lives in **`docs/`** and is deployed by
-> `.github/workflows/pages.yml`. Earlier duplicate copies at the repository root
-> and in `site/` were removed so there is exactly one source of truth for the UI.
+> **One canonical site, two published copies.** The site is authored in
+> **`docs/`** and mirrored to the **repository root**, because GitHub Pages for
+> this repo is configured to publish from the root and that setting cannot be
+> changed with the available token. The root copies are *generated* by
+> `pipeline/sync_site_data.sh`, never hand-edited, and
+> `tests/test_pipeline.py` fails if they drift by a single byte. `app.js`
+> resolves its data files in either layout, so the same file works in both
+> places. Earlier duplicate copies in `site/` were removed.
+>
+> ```bash
+> ./pipeline/sync_site_data.sh   # re-sync docs/data + root site files
+> ```
 
 ---
 
@@ -243,5 +252,22 @@ python3 pipeline/run.py selfcheck     # reconciles the parser against real HTML 
 
 ## 7. Deploying
 
-- **Site:** `.github/workflows/pages.yml` publishes **`docs/`** to GitHub Pages. Enable once: *Settings → Pages → Source: GitHub Actions*.
-- **Detection:** `.github/workflows/detect.yml` runs on a schedule (daily in season, plus a Wednesday run after nflverse's 02:00 UTC correction refresh). Set `ALERT_WEBHOOK_URL` (Slack/Discord-compatible) as a repo secret to receive alerts; without it, alerts go to the job summary and an artefact. Webhook notification is **off by default** so a fork never spams anyone.
+- **Site:** GitHub Pages is already configured with **legacy branch deploy from
+  `main` / (repository root)**, so merging to `main` publishes the site
+  directly — there is no deploy workflow to enable. Because a bad commit goes
+  live immediately, `.github/workflows/validate.yml` is the gate: it runs the
+  test suite, asserts every published copy is byte-identical to its canonical
+  source, and checks that the data the page renders is present and well-formed.
+  **That workflow must pass before merge.**
+
+  > *If you have repo-admin rights*, the cleaner long-term setup is
+  > *Settings → Pages → Source: GitHub Actions* with a `deploy-pages` workflow
+  > publishing `docs/`. That would let `docs/` be the single published copy and
+  > remove the root mirror entirely. It could not be applied here because the
+  > available token returns 403 on the Pages settings API.
+
+- **Detection:** `.github/workflows/detect.yml` runs on a schedule (daily in
+  season, plus a Wednesday run after nflverse's 02:00 UTC correction refresh).
+  Set `ALERT_WEBHOOK_URL` (Slack/Discord-compatible) as a repo secret to receive
+  alerts; without it, alerts go to the job summary and an artefact. Webhook
+  notification is **off by default** so a fork never spams anyone.
