@@ -1,3 +1,8 @@
+"""
+NOTE: retained from an earlier parallel session for reference.
+The canonical, tested pipeline for this project lives in `pipeline/`
+(see pipeline/run.py and pipeline/parse_corrections.py). Prefer those.
+"""
 #!/usr/bin/env python3
 """
 NFL Stat Corrections Fetcher

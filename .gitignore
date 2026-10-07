@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Full raw snapshots are ~2.1 MB each and are referenced by SHA-256 in the
+# adjacent manifest instead of being committed. The slim frozen-field snapshot
+# (games.slim.csv, ~400 KB) IS committed — it is the system's memory and the
+# only thing the differ needs. See detect.slim_frozen_csv() for the rationale.
+snapshots/**/games.csv
+snapshots/**/*.tar.gz
+
+# Local scratch
+/tmp/
+*.tmp
+.DS_Store
+
+# Local-only webhook configuration. Never commit a secret.
+.env
+webhook.txt

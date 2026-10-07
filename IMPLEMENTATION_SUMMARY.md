@@ -1,3 +1,10 @@
+> **Reconciliation note (added when the two efforts were merged).**
+> This document was written by an earlier, parallel session on the same brief.
+> It is preserved for its research value. It is **not** the current source of
+> truth: see `README.md` for the governing brief and the verified findings, and
+> `data/prior_session/README.md` for the verification status of the candidate
+> cases this session catalogued.
+
 # NFL Scoring Discrepancy Project - Implementation Summary
 
 **Date:** 2026-10-07  

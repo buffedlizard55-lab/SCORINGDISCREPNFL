@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NFL Scoring Discrepancy Tracker — verified corrections &amp; automated detection</title>
+<meta name="description" content="A verified database of official NFL post-game statistical corrections, with archived primary sources, an analysis of whether final scores can change after a game, and an automated detection system.">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <h1>NFL Scoring Discrepancy Tracker</h1>
+    <p class="tagline">
+      Every row below is transcribed from an archived snapshot of the NFL's own
+      stat-corrections release — published by the <strong>NFL League Office</strong> and the
+      official statistician of the NFL, the <strong>Elias Sports Bureau</strong> — with a link you can
+      open and check by hand. Nothing is inferred. Nothing is guessed.
+    </p>
+    <div class="badges">
+      <span class="badge ok" id="badge-records">verified records</span>
+      <span class="badge ok" id="badge-tests">32 tests passing</span>
+      <span class="badge warn">official feed retired 2026</span>
+      <span class="badge">stdlib only · no dependencies</span>
+    </div>
+  </div>
+</header>
+
+<nav class="toc">
+  <div class="wrap">
+    <ul>
+      <li><a href="#answer">The answer</a></li>
+      <li><a href="#scoreboard">Do scores change?</a></li>
+      <li><a href="#database">Verified database</a></li>
+      <li><a href="#exposure">Exposure</a></li>
+      <li><a href="#detection">Detection system</a></li>
+      <li><a href="#limits">Limitations</a></li>
+      <li><a href="#method">Method &amp; sources</a></li>
+    </ul>
+  </div>
+</nav>
+
+<main class="wrap">
+
+<!-- ================= ANSWER ================= -->
+<section id="answer">
+  <h2><span class="kicker">Executive summary</span>The answer, up front</h2>
+  <p class="lede">
+    The project asked whether NFL scoring discrepancies can appear <em>after</em> a game looks
+    finished, whether they can cross a market-relevant threshold, and whether this can be
+    detected automatically. Here is what the evidence says.
+  </p>
+
+  <div class="cards">
+    <div class="card">
+      <div class="num ok" id="stat-revisions">0</div>
+      <div class="lbl">Final scores ever revised</div>
+      <div class="sub">across <span id="stat-snapshots">—</span> already-finished games, checked at 4 historical points</div>
+    </div>
+    <div class="card">
+      <div class="num accent" id="stat-records">—</div>
+      <div class="lbl">Verified corrections</div>
+      <div class="sub">each with an archived official source link</div>
+    </div>
+    <div class="card">
+      <div class="num warn" id="stat-potential">—</div>
+      <div class="lbl">Could have moved a market</div>
+      <div class="sub">potential impact — <strong>not</strong> a confirmed outcome change</div>
+    </div>
+    <div class="card">
+      <div class="num" id="stat-cadence">2–4</div>
+      <div class="lbl">Days from game to correction</div>
+      <div class="sub">every transcribed row fell in this window</div>
+    </div>
+  </div>
+
+  <div class="callout ok">
+    <p><strong>A game's final score is effectively immutable once posted.</strong>
+    Across <span id="stat-snapshots-2">—</span> already-completed games compared between four historical
+    snapshots and today, <strong>not one</strong> score, result, total or overtime flag was ever
+    revised. Game totals, spreads and team totals are therefore not materially exposed to
+    post-game corrections.</p>
+  </div>
+
+  <div class="callout warn">
+    <p><strong>What <em>does</em> change is attribution and statistics — and it changes every week.</strong>
+    A receiver's 44 yards becomes 43. A sack is reassigned. A play is reclassified from a
+    forward pass to a backwards lateral. A player recorded as not having played at all is
+    credited with three catches for 36 yards, four days later. Those move
+    <strong>player props and fantasy scoring</strong>, and they are routine.</p>
+  </div>
+
+  <div class="callout bad">
+    <p><strong>The official feed that used to publish these was switched off in 2026.</strong>
+    <code>fantasy.nfl.com/research/statcorrections</code> — the page that carried
+    <em>"official stat corrections as released by the NFL League Office and the official
+    statistician of the NFL, Elias Sports Bureau"</em> — now 302-redirects to a news hub that
+    promotes ESPN as the official fantasy partner. Archived snapshots survive and are what this
+    database is built from, but <strong>live alerting can no longer rely on an authoritative feed</strong>.
+    See <a href="#limits">Limitations</a>.</p>
+  </div>
+</section>
+
+<!-- ================= SCOREBOARD ================= -->
+<section id="scoreboard">
+  <h2><span class="kicker">Finding 1</span>Can a final score change after the game?</h2>
+  <p class="lede">
+    We took four historical versions of a git-versioned mirror of the NFL's official results,
+    kept <strong>only games that had already finished</strong> at that point in time, and compared
+    every frozen score field against today's record. A single difference would be direct evidence
+    that a completed game's official score was revised afterwards.
+  </p>
+  <div class="table-wrap">
+    <table id="tbl-integrity">
+      <thead>
+        <tr>
+          <th>Snapshot baseline</th>
+          <th class="num">Games already final</th>
+          <th class="num">Frozen fields revised later</th>
+          <th>Result</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+      <tfoot></tfoot>
+    </table>
+  </div>
+  <p class="footnote" id="integrity-caveat"></p>
+  <details>
+    <summary>Why this is a finding and not a proof</summary>
+    <p id="integrity-caveat-full"></p>
+    <p>Full artefact, including both input SHA-256 hashes and the exact extraction method:
+      <code>data/evidence/score_integrity_study.json</code>.</p>
+  </details>
+</section>
+
+<!-- ================= DATABASE ================= -->
+<section id="database">
+  <h2><span class="kicker">Finding 2</span>Verified corrections database</h2>
+  <p class="lede">
+    Transcribed verbatim from archived official release pages. Game, date, teams and closing
+    lines are joined from an authoritative schedule/results record — not assumed. The
+    <em>Original → Corrected</em> column shows exactly what the official record said before and
+    after, so any row can be reproduced and checked.
+  </p>
+
+  <div class="controls">
+    <input type="search" id="q" placeholder="Search player, team, stat…" aria-label="Search the corrections database">
+    <select id="f-sev" aria-label="Filter by severity">
+      <option value="">All severities</option>
+      <option value="3">3 — scoring / scoreboard event</option>
+      <option value="2">2 — line-priced or threshold</option>
+      <option value="1">1 — market-relevant but small</option>
+      <option value="0">0 — out of scope</option>
+    </select>
+    <select id="f-season" aria-label="Filter by season"><option value="">All seasons</option></select>
+    <span class="count" id="count"></span>
+  </div>
+
+  <div class="table-wrap">
+    <table id="tbl-db">
+      <thead>
+        <tr>
+          <th data-k="severity_label">Impact</th>
+          <th data-k="season">Season</th>
+          <th data-k="player">Player</th>
+          <th data-k="team">Team</th>
+          <th data-k="game_id">Game</th>
+          <th data-k="game_date">Game date</th>
+          <th data-k="stat">Statistic</th>
+          <th class="chg">Original → Corrected</th>
+          <th class="num" data-k="days_from_game_to_correction">Days to correction</th>
+          <th class="no-sort">Official source</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <p class="footnote">
+    Click any column header to sort. Every <em>source</em> link opens an archived snapshot of the
+    official page at the Internet Archive for manual review. The retired live URL is recorded on
+    each record too, so the provenance is auditable even though the page no longer exists.
+  </p>
+</section>
+
+<!-- ================= ROW DETAIL ================= -->
+<section id="detail">
+  <h2><span class="kicker">Finding 3</span>The cases worth understanding</h2>
+  <p class="lede">
+    Six rows from the database that show what post-game corrections actually look like in
+    practice, and why they move player markets but not the scoreboard.
+  </p>
+  <div id="cases" class="grid-2"></div>
+</section>
+
+<!-- ================= EXPOSURE ================= -->
+<section id="exposure">
+  <h2><span class="kicker">Finding 4</span>Exposure — which games <em>could</em> have flipped</h2>
+  <p class="lede">
+    The brief asks us to separate corrections that <strong>actually</strong> changed an outcome from
+    corrections that merely <strong>had the potential</strong> to change a market. The first half is
+    answered above (zero score revisions). This is the second half: how close the finished games
+    actually came to a market line.
+  </p>
+  <div class="cards" id="exposure-cards"></div>
+  <div class="callout">
+    <p><strong>Read this as sensitivity, not occurrence.</strong> A row means a scoring correction
+    <em>would</em> have changed a market. Combined with zero observed score revisions, the honest
+    reading is: this is the set of games where the failure mode <em>could</em> have bitten — and
+    empirically it did not, because scores are not revised. Full arithmetic per row in
+    <code>data/market_sensitivity_2025_2026.csv</code>.</p>
+  </div>
+  <h3>Sharpest cases — games that pushed exactly on the closing spread</h3>
+  <p class="footnote">On a push, no bet wins or loses. A correction of <em>any</em> size creates a winner where there was none.</p>
+  <div class="table-wrap">
+    <table id="tbl-push">
+      <thead>
+        <tr>
+          <th>Game</th><th>Date</th><th class="num">Final</th>
+          <th class="num">Closing spread</th><th class="num">Closing total</th>
+          <th class="num">Margin gap</th><th class="num">Total gap</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ================= DETECTION ================= -->
+<section id="detection">
+  <h2><span class="kicker">Finding 5</span>Can this be detected automatically?</h2>
+  <p class="lede">
+    Partly — and it is important to be precise about which part. Detection is solved and shipped.
+    <em>Attribution</em> — knowing a detected change is a genuine official Elias correction rather
+    than a data-provider glitch — is not solvable for free in 2026.
+  </p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Capability</th><th>Status</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td>Detect a scoreboard change after the game</td><td><span class="pill sev-2">works</span></td><td>Differential snapshots of a versioned mirror; engine implemented and tested</td></tr>
+        <tr><td>Detect a player-stat change after the game</td><td><span class="pill sev-2">works in principle</span></td><td>Same method on play-by-play vintages — but those assets are network-blocked in the build sandbox, not on CI</td></tr>
+        <tr><td>Read the official corrections list automatically</td><td><span class="pill sev-3">blocked</span></td><td>The official feed was retired; the successor is client-side JS with no documented public API</td></tr>
+        <tr><td>Distinguish official corrections from mirror bugs</td><td><span class="pill sev-3">not reliably</span></td><td>No free, independent second mirror was found for cross-checking</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>How the engine works, and why it is built this way</h3>
+  <p class="lede">
+    Since there is no authoritative feed to poll, the system keeps <strong>its own versioned
+    snapshots</strong> of a mirror of the official record and diffs them. Three rules — each one
+    derived from a real bug found by testing against real data — keep the signal clean:
+  </p>
+  <ul class="tight lede">
+    <li><strong>Only compare records already final</strong> at the older snapshot. A naive diff flagged 61 "changes"; <em>all 61</em> were simply games that had not kicked off yet.</li>
+    <li><strong>Only compare frozen fields</strong> — score, result, total, overtime. Pre-game betting lines move constantly; 18 of those 61 false positives were pure line movement.</li>
+    <li><strong>Carry both values and SHA-256 hashes of both inputs</strong>, so any alert can be independently reproduced by a third party.</li>
+  </ul>
+
+  <h3>Impact classification</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Severity</th><th>Meaning</th><th>Examples</th></tr></thead>
+      <tbody>
+        <tr><td><span class="pill sev-3">3</span></td><td>Discrete scoring event, or a scoreboard field changed</td><td>Touchdown, field goal, extra point, two-point conversion, safety, defensive score</td></tr>
+        <tr><td><span class="pill sev-2">2</span></td><td>A line-priced stat moved, or a round-number milestone was crossed</td><td>Passing yards 182→181 (crosses 181.5); receiving yards 0→36; sacks 5→6; passing yards 299→301</td></tr>
+        <tr><td><span class="pill sev-1">1</span></td><td>Market-relevant but small, and not line-priced</td><td>Tackles, assisted tackles, games-played eligibility</td></tr>
+        <tr><td><span class="pill sev-0">0</span></td><td>Out of scope under the brief</td><td>Stats that cannot determine a player or game market result</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout ok">
+    <p><strong>The machine detects; a human confirms.</strong> Every alert is emitted as
+    <code>detected_by_diff_pending_manual_confirmation</code> with
+    <code>actually_changed_outcome: null</code>. A test in the suite fails the build if any record
+    ever asserts a realised outcome change without evidence. The system points at a discrepancy —
+    it does not certify one.</p>
+  </div>
+</section>
+
+<!-- ================= LIMITS ================= -->
+<section id="limits">
+  <h2><span class="kicker">Honesty</span>Limitations that constrain the project</h2>
+  <p class="lede">
+    Ranked by how much each one blocks the goal. Every limitation has a named workaround, or an
+    explicit statement that there isn't one. Full detail in <code>LIMITATIONS.md</code>.
+  </p>
+  <div id="limits-list"></div>
+</section>
+
+<!-- ================= METHOD ================= -->
+<section id="method">
+  <h2><span class="kicker">Auditability</span>Method &amp; sources</h2>
+
+  <h3>The official record and who controls it</h3>
+  <p class="lede">
+    The official corrections page stated its own provenance, quoted verbatim:
+  </p>
+  <blockquote class="callout" style="border-left-color: var(--accent); font-style: italic;">
+    "View official stat corrections as released by the NFL League Office and the official
+    statistician of the NFL, Elias Sports Bureau."
+  </blockquote>
+  <p class="lede">
+    So <strong>Elias Sports Bureau</strong> is the official statistician of the NFL, the
+    <strong>NFL League Office</strong> co-publishes, and that publication is what controls the final
+    record. <strong>That channel is now retired.</strong>
+  </p>
+
+  <h3>Source register</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Source</th><th>Role</th><th>Status</th><th>Link</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>NFL League Office + Elias Sports Bureau, via NFL.com Fantasy "Stat Corrections"</td>
+          <td>The authoritative correction release — every row in the database comes from here</td>
+          <td><span class="pill sev-3">retired 2026</span> live URL 302s to a news hub</td>
+          <td><a href="https://web.archive.org/web/20260516203131/https://fantasy.nfl.com/research/statcorrections?position=8&amp;sort=pts&amp;statCategory=stats&amp;statSeason=2010&amp;statType=weekStats&amp;statWeek=1" target="_blank" rel="noopener">archived snapshot ↗</a></td>
+        </tr>
+        <tr>
+          <td>Internet Archive Wayback Machine</td>
+          <td>Primary-source archive of the above; every database row links to its exact snapshot</td>
+          <td><span class="pill sev-2">live</span></td>
+          <td><a href="https://web.archive.org/" target="_blank" rel="noopener">web.archive.org ↗</a></td>
+        </tr>
+        <tr>
+          <td>nflverse / nfldata — <code>data/games.csv</code></td>
+          <td>Schedule, final scores and closing lines; input to the diff engine and the game join</td>
+          <td><span class="pill sev-2">live</span> auto-committed ~every 30 min in season</td>
+          <td><a href="https://github.com/nflverse/nfldata" target="_blank" rel="noopener">github.com/nflverse/nfldata ↗</a></td>
+        </tr>
+        <tr>
+          <td>nflverse-pbp — raw play-by-play</td>
+          <td>Highest-resolution correction signal. nflverse explicitly refreshes it weekly to fold in stat corrections (Wed 02:00 UTC)</td>
+          <td><span class="pill sev-2">CI only</span> release assets unreachable from the build sandbox</td>
+          <td><a href="https://github.com/nflverse/nflverse-pbp" target="_blank" rel="noopener">github.com/nflverse/nflverse-pbp ↗</a></td>
+        </tr>
+        <tr>
+          <td>ESPN Fantasy stat corrections</td>
+          <td>Consumer successor channel</td>
+          <td><span class="pill sev-0">JS-only</span> no documented public API; not relied upon</td>
+          <td><a href="https://fantasy.espn.com/football/statcorrections" target="_blank" rel="noopener">fantasy.espn.com ↗</a></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Reproduce every number on this page</h3>
+  <p class="lede">Stdlib Python only — no dependencies, no network needed to re-derive the database:</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>What</th><th>Command</th></tr></thead>
+      <tbody>
+        <tr><td>Verify the pipeline</td><td class="mono">python3 tests/test_pipeline.py</td></tr>
+        <tr><td>Re-run the score-integrity study</td><td class="mono">python3 pipeline/run.py evidence</td></tr>
+        <tr><td>Rebuild the verified database</td><td class="mono">python3 pipeline/build_database.py --games games.csv</td></tr>
+        <tr><td>Recompute market exposure</td><td class="mono">python3 pipeline/market_sensitivity.py --games games.csv --seasons 2025,2026</td></tr>
+        <tr><td>Diff two snapshots for alerts</td><td class="mono">python3 pipeline/run.py diff OLD.csv NEW.csv --min-severity 2</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <details>
+    <summary>What this project deliberately does not do</summary>
+    <ul class="tight">
+      <li><strong>No fabricated prop lines.</strong> We model the <em>pricing convention</em> of line-priced stats. We never assert that a line existed at a specific number.</li>
+      <li><strong>No realised-outcome claims.</strong> Every record documents <em>potential</em> impact only. A test fails the build if an outcome change is asserted without evidence.</li>
+      <li><strong>No unverifiable anecdote.</strong> Widely repeated community reports of corrections flipping fantasy championships are excluded, because they could not be verified to primary-source standard. Their absence is a known gap, not evidence that nothing happened.</li>
+      <li><strong>No inflating the row count.</strong> The database is a verified seed, not the full archived corpus. 36 checkable rows beat thousands nobody can verify.</li>
+    </ul>
+  </details>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>
+      <strong>SCORINGDISCREPNFL</strong> — an open investigation into NFL post-game scoring and
+      statistical corrections, built to be checked line by line.
+    </p>
+    <p>
+      Data provenance: NFL League Office &amp; Elias Sports Bureau (via archived NFL.com Fantasy
+      stat-corrections pages) · Internet Archive · nflverse.
+      Generated content is explicitly labelled as derived and is never presented as an official
+      NFL record.
+    </p>
+    <p class="footnote" id="generated"></p>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
