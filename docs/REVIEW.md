@@ -40,5 +40,5 @@ both main and supplemental JavaScript syntax checks pass; supplemental build is
 deterministic; diff against current main has no new whitespace errors.
 
 PR #4 subsequently merged (`9a96509`) to restore root Pages and add validation.
-Kept its root site, validation workflow and sync script intact. Re-ran all **44
+Kept its root site, validation workflow and sync script intact. Re-ran all **42
 integrated tests** successfully. Supplemental code still never overwrites root.
