@@ -14,11 +14,11 @@
    ".github/workflows/health.yml"
   ]
  },
- "generated_at": "2026-10-07T22:07:10Z",
+ "generated_at": "2026-10-08T12:30:06Z",
  "status": "warn",
  "headline": "Monitor degraded: it is running, but at least one check needs attention.",
  "last_successful_comparison_at": "2026-10-07T21:22:14+00:00",
- "hours_since_last_comparison": 0.75,
+ "hours_since_last_comparison": 15.13,
  "stale_after_hours": 40.0,
  "identical_input_streak": 1,
  "source_watermark": {
@@ -38,18 +38,18 @@
   {
    "check": "freshness",
    "status": "ok",
-   "detail": "newest completed comparison is 0.75h old (threshold 40.0h)",
+   "detail": "newest completed comparison is 15.13h old (threshold 40.0h)",
    "last_comparison_at": "2026-10-07T21:22:14+00:00",
-   "age_hours": 0.75,
+   "age_hours": 15.13,
    "threshold_hours": 40.0
   },
   {
    "check": "attempt_ledger",
    "status": "ok",
-   "detail": "the last scheduled attempt completed 0.43h ago; 15-day vintage comparison 2026-09-22 -> 2026-10-07 completed; 7,308 already-final games compared, 0 frozen-field differences",
+   "detail": "the last scheduled attempt completed 14.81h ago; 15-day vintage comparison 2026-09-22 -> 2026-10-07 completed; 7,308 already-final games compared, 0 frozen-field differences",
    "attempt_status": "ok",
    "consecutive_failures": 0,
-   "hours_since_last_attempt": 0.43
+   "hours_since_last_attempt": 14.81
   },
   {
    "check": "source_movement",
@@ -62,7 +62,7 @@
   {
    "check": "snapshot_store",
    "status": "ok",
-   "detail": "7 snapshot(s); newest is pinned to upstream commit b8a4c3931e (0.87h old)",
+   "detail": "7 snapshot(s); newest is pinned to upstream commit b8a4c3931e (15.25h old)",
    "snapshots": 7,
    "watermark": {
     "upstream_commit_sha": "b8a4c3931e3f85a7b6d9056198354ff5aadc8da4",
@@ -71,7 +71,7 @@
     "source_file_sha256": "460f01c5e8273d85249032077d95ba921f6ee4613e13eb55ea88e324b744f1f3",
     "snapshot_dir": "2026-10-07T211802Z"
    },
-   "watermark_age_hours": 0.87
+   "watermark_age_hours": 15.25
   },
   {
    "check": "push_notification",
