@@ -13,9 +13,9 @@
   ]
  },
  "status": "ok",
- "last_attempt": "2026-10-07T21:41:37Z",
- "last_success": "2026-10-07T21:41:37Z",
+ "last_attempt": "2026-10-08T18:13:32Z",
+ "last_success": "2026-10-08T18:13:32Z",
  "last_failure": null,
  "consecutive_failures": 0,
- "detail": "15-day vintage comparison 2026-09-22 -> 2026-10-07 completed; 7,308 already-final games compared, 0 frozen-field differences"
+ "detail": "collection, comparison and publication completed"
 }
