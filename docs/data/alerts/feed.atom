@@ -3,12 +3,19 @@
   <id>tag:github.com,2026:buffedlizard55-lab/SCORINGDISCREPNFL/comparisons</id>
   <title>NFL scoring-discrepancy monitor — comparison feed</title>
   <subtitle>Every completed snapshot comparison, including clean ones. Machine-detected difference between two snapshots of a third-party mirror of the NFL record. A candidate for review, not a confirmed official NFL/Elias correction, and not a statement about any wager, line or settlement.</subtitle>
-  <updated>2026-10-09T17:46:40Z</updated>
+  <updated>2026-10-10T16:40:11Z</updated>
   <link rel="self" href="https://buffedlizard55-lab.github.io/SCORINGDISCREPNFL/data/alerts/feed.atom"/>
   <link rel="alternate" href="https://buffedlizard55-lab.github.io/SCORINGDISCREPNFL/"/>
   <author><name>SCORINGDISCREPNFL monitor</name><uri>https://github.com/buffedlizard55-lab/SCORINGDISCREPNFL</uri></author>
   <rights>Research artefact. Data originates from a third-party mirror of the NFL record and from
 archived NFL League Office / Elias Sports Bureau correction pages.</rights>
+  <entry>
+    <id>tag:github.com,2026:buffedlizard55-lab/SCORINGDISCREPNFL/comparison/abe808d8ac4a337d</id>
+    <title>Clean comparison (inputs byte-identical — no source movement observed)</title>
+    <updated>2026-10-10T16:40:11Z</updated>
+    <link rel="alternate" href="https://buffedlizard55-lab.github.io/SCORINGDISCREPNFL/#feed"/>
+    <content type="html">&lt;table&gt;&lt;tr&gt;&lt;th&gt;Status&lt;/th&gt;&lt;td&gt;clean&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;th&gt;Compared at&lt;/th&gt;&lt;td&gt;2026-10-10T16:40:11+00:00&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;th&gt;Records compared&lt;/th&gt;&lt;td&gt;7341&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;th&gt;Old snapshot&lt;/th&gt;&lt;td&gt;snapshots/nfldata_games/2026-10-09T174640Z/games.slim.csv (sha256 3d38ed900abbecd2881cd9c0c4d495f689fc66c66ae92c629ad170c6f1cfde90)&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;th&gt;New snapshot&lt;/th&gt;&lt;td&gt;snapshots/nfldata_games/2026-10-10T164011Z/games.slim.csv (sha256 3d38ed900abbecd2881cd9c0c4d495f689fc66c66ae92c629ad170c6f1cfde90)&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;th&gt;Inputs identical&lt;/th&gt;&lt;td&gt;yes — this comparison observed no source movement&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;th&gt;Min severity&lt;/th&gt;&lt;td&gt;2&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;th&gt;Verification status&lt;/th&gt;&lt;td&gt;no_change_detected&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;th&gt;Outcome changed&lt;/th&gt;&lt;td&gt;not asserted (null)&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;p&gt;&lt;i&gt;Machine-detected difference between two snapshots of a third-party mirror of the NFL record. A candidate for review, not a confirmed official NFL/Elias correction, and not a statement about any wager, line or settlement.&lt;/i&gt;&lt;/p&gt;</content>
+  </entry>
   <entry>
     <id>tag:github.com,2026:buffedlizard55-lab/SCORINGDISCREPNFL/comparison/a10d2e01df750c77</id>
     <title>Clean comparison — 7340 finished games, no frozen-field change</title>

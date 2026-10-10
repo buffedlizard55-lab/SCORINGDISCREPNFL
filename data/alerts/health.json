@@ -14,86 +14,85 @@
    ".github/workflows/health.yml"
   ]
  },
- "generated_at": "2026-10-10T11:37:01Z",
+ "generated_at": "2026-10-10T16:40:13Z",
  "status": "warn",
  "headline": "Monitor degraded: it is running, but at least one check needs attention.",
- "last_successful_comparison_at": "2026-10-09T17:46:40+00:00",
- "hours_since_last_comparison": 17.84,
+ "last_successful_comparison_at": "2026-10-10T16:40:11+00:00",
+ "hours_since_last_comparison": 0.0,
  "stale_after_hours": 40.0,
- "identical_input_streak": 0,
+ "identical_input_streak": 1,
  "source_watermark": {
-  "upstream_commit_sha": "f2a9030986cb8034b47ca58edbd577baf455eecf",
-  "upstream_commit_date": "2026-10-09T17:45:14Z",
-  "upstream_commit_url": "https://github.com/nflverse/nfldata/commit/f2a9030986cb8034b47ca58edbd577baf455eecf",
-  "source_file_sha256": "d7edd7c8b1e3ec3e9161b3b25730220dac6c2212667ba8ca06a16c6afb6d40db",
-  "snapshot_dir": "2026-10-09T174640Z"
+  "upstream_commit_sha": null,
+  "upstream_commit_date": null,
+  "upstream_commit_url": null,
+  "source_file_sha256": "a06ca5f608332ba4936d5f13f8868d92bf423b9d8b88b3c2dba293162575cfac",
+  "snapshot_dir": "2026-10-10T164011Z"
  },
  "checks": [
   {
    "check": "comparison_feed",
    "status": "ok",
-   "detail": "6 completed comparison(s) recorded",
-   "runs_recorded": 6
+   "detail": "7 completed comparison(s) recorded",
+   "runs_recorded": 7
   },
   {
    "check": "freshness",
    "status": "ok",
-   "detail": "newest completed comparison is 17.84h old (threshold 40.0h)",
-   "last_comparison_at": "2026-10-09T17:46:40+00:00",
-   "age_hours": 17.84,
+   "detail": "newest completed comparison is 0.0h old (threshold 40.0h)",
+   "last_comparison_at": "2026-10-10T16:40:11+00:00",
+   "age_hours": 0.0,
    "threshold_hours": 40.0
   },
   {
    "check": "attempt_ledger",
    "status": "ok",
-   "detail": "the last scheduled attempt completed 17.84h ago; collection, comparison and publication completed",
+   "detail": "the last scheduled attempt completed 0.00h ago; collection, comparison and publication completed",
    "attempt_status": "ok",
    "consecutive_failures": 0,
-   "hours_since_last_attempt": 17.84
+   "hours_since_last_attempt": 0.0
   },
   {
    "check": "source_movement",
    "status": "ok",
-   "detail": "the upstream source file changed in 3 of the last 3 comparisons; the frozen-field projection changed in none of them (identical-input streak 0), which is the expected state for a scoreboard-only monitor",
-   "identical_input_streak": 0,
+   "detail": "the upstream source file changed in 3 of the last 3 comparisons; the frozen-field projection changed in none of them (identical-input streak 1), which is the expected state for a scoreboard-only monitor",
+   "identical_input_streak": 1,
    "comparisons_inspected": 3,
    "source_file_changed_in": 3
   },
   {
    "check": "snapshot_store",
-   "status": "ok",
-   "detail": "9 snapshot(s); newest is pinned to upstream commit f2a9030986 (17.86h old)",
-   "snapshots": 9,
+   "status": "warn",
+   "detail": "10 snapshot(s) present, but the newest does not record which upstream commit it came from, so source freshness cannot be established from it",
+   "snapshots": 10,
    "watermark": {
-    "upstream_commit_sha": "f2a9030986cb8034b47ca58edbd577baf455eecf",
-    "upstream_commit_date": "2026-10-09T17:45:14Z",
-    "upstream_commit_url": "https://github.com/nflverse/nfldata/commit/f2a9030986cb8034b47ca58edbd577baf455eecf",
-    "source_file_sha256": "d7edd7c8b1e3ec3e9161b3b25730220dac6c2212667ba8ca06a16c6afb6d40db",
-    "snapshot_dir": "2026-10-09T174640Z"
-   },
-   "watermark_age_hours": 17.86
+    "upstream_commit_sha": null,
+    "upstream_commit_date": null,
+    "upstream_commit_url": null,
+    "source_file_sha256": "a06ca5f608332ba4936d5f13f8868d92bf423b9d8b88b3c2dba293162575cfac",
+    "snapshot_dir": "2026-10-10T164011Z"
+   }
   },
   {
    "check": "push_notification",
    "status": "unknown",
-   "detail": "all 3 recorded attempt(s) found no webhook configured, so no alert would currently reach a person; delivery is opt-in via the ALERT_WEBHOOK_URL secret, and the Atom feed is the zero-configuration alternative",
+   "detail": "all 4 recorded attempt(s) found no webhook configured, so no alert would currently reach a person; delivery is opt-in via the ALERT_WEBHOOK_URL secret, and the Atom feed is the zero-configuration alternative",
    "summary": {
-    "attempts_recorded": 3,
+    "attempts_recorded": 4,
     "by_outcome": {
-     "not_configured": 3
+     "not_configured": 4
     },
     "delivered": 0,
     "failed": 0,
     "dead_letter": 0,
-    "last_delivery_attempt": "2026-10-09T17:46:40Z",
+    "last_delivery_attempt": "2026-10-10T16:40:11Z",
     "last_dead_letter": null
    }
   },
   {
    "check": "atom_feed",
    "status": "ok",
-   "detail": "6 subscribable entr(ies), unique ids, <updated> 2026-10-09T17:46:40Z",
-   "entries": 6
+   "detail": "7 subscribable entr(ies), unique ids, <updated> 2026-10-10T16:40:11Z",
+   "entries": 7
   },
   {
    "check": "published_copies",
@@ -102,6 +101,7 @@
   }
  ],
  "irregularities": [
+  "newest snapshot has no upstream commit watermark",
   "notification is not configured; alerts reach nobody"
  ],
  "next_action": "Push notification is not configured, so a detected candidate would reach nobody unless they poll. Either set the ALERT_WEBHOOK_URL repository secret (Slack or Discord compatible) or subscribe to the Atom feed at data/alerts/feed.atom. Until then the honest state is: detection works, notification does not."
