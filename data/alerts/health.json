@@ -14,11 +14,11 @@
    ".github/workflows/health.yml"
   ]
  },
- "generated_at": "2026-10-09T17:46:56Z",
+ "generated_at": "2026-10-10T11:37:01Z",
  "status": "warn",
  "headline": "Monitor degraded: it is running, but at least one check needs attention.",
  "last_successful_comparison_at": "2026-10-09T17:46:40+00:00",
- "hours_since_last_comparison": 0.0,
+ "hours_since_last_comparison": 17.84,
  "stale_after_hours": 40.0,
  "identical_input_streak": 0,
  "source_watermark": {
@@ -38,18 +38,18 @@
   {
    "check": "freshness",
    "status": "ok",
-   "detail": "newest completed comparison is 0.0h old (threshold 40.0h)",
+   "detail": "newest completed comparison is 17.84h old (threshold 40.0h)",
    "last_comparison_at": "2026-10-09T17:46:40+00:00",
-   "age_hours": 0.0,
+   "age_hours": 17.84,
    "threshold_hours": 40.0
   },
   {
    "check": "attempt_ledger",
    "status": "ok",
-   "detail": "the last scheduled attempt completed 0.00h ago; collection, comparison and publication completed",
+   "detail": "the last scheduled attempt completed 17.84h ago; collection, comparison and publication completed",
    "attempt_status": "ok",
    "consecutive_failures": 0,
-   "hours_since_last_attempt": 0.0
+   "hours_since_last_attempt": 17.84
   },
   {
    "check": "source_movement",
@@ -62,7 +62,7 @@
   {
    "check": "snapshot_store",
    "status": "ok",
-   "detail": "9 snapshot(s); newest is pinned to upstream commit f2a9030986 (0.03h old)",
+   "detail": "9 snapshot(s); newest is pinned to upstream commit f2a9030986 (17.86h old)",
    "snapshots": 9,
    "watermark": {
     "upstream_commit_sha": "f2a9030986cb8034b47ca58edbd577baf455eecf",
@@ -71,7 +71,7 @@
     "source_file_sha256": "d7edd7c8b1e3ec3e9161b3b25730220dac6c2212667ba8ca06a16c6afb6d40db",
     "snapshot_dir": "2026-10-09T174640Z"
    },
-   "watermark_age_hours": 0.03
+   "watermark_age_hours": 17.86
   },
   {
    "check": "push_notification",
