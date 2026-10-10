@@ -14,11 +14,11 @@
    ".github/workflows/health.yml"
   ]
  },
- "generated_at": "2026-10-10T16:40:13Z",
+ "generated_at": "2026-10-10T16:40:29Z",
  "status": "warn",
  "headline": "Monitor degraded: it is running, but at least one check needs attention.",
  "last_successful_comparison_at": "2026-10-10T16:40:11+00:00",
- "hours_since_last_comparison": 0.0,
+ "hours_since_last_comparison": 0.01,
  "stale_after_hours": 40.0,
  "identical_input_streak": 1,
  "source_watermark": {
@@ -38,18 +38,18 @@
   {
    "check": "freshness",
    "status": "ok",
-   "detail": "newest completed comparison is 0.0h old (threshold 40.0h)",
+   "detail": "newest completed comparison is 0.01h old (threshold 40.0h)",
    "last_comparison_at": "2026-10-10T16:40:11+00:00",
-   "age_hours": 0.0,
+   "age_hours": 0.01,
    "threshold_hours": 40.0
   },
   {
    "check": "attempt_ledger",
    "status": "ok",
-   "detail": "the last scheduled attempt completed 0.00h ago; collection, comparison and publication completed",
+   "detail": "the last scheduled attempt completed 0.01h ago; collection, comparison and publication completed",
    "attempt_status": "ok",
    "consecutive_failures": 0,
-   "hours_since_last_attempt": 0.0
+   "hours_since_last_attempt": 0.01
   },
   {
    "check": "source_movement",
