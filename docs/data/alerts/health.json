@@ -14,86 +14,86 @@
    ".github/workflows/health.yml"
   ]
  },
- "generated_at": "2026-10-12T13:56:36Z",
+ "generated_at": "2026-10-12T20:38:39Z",
  "status": "warn",
  "headline": "Monitor degraded: it is running, but at least one check needs attention.",
- "last_successful_comparison_at": "2026-10-11T17:06:15+00:00",
- "hours_since_last_comparison": 20.84,
+ "last_successful_comparison_at": "2026-10-12T20:38:38+00:00",
+ "hours_since_last_comparison": 0.0,
  "stale_after_hours": 40.0,
- "identical_input_streak": 2,
+ "identical_input_streak": 0,
  "source_watermark": {
-  "upstream_commit_sha": "1a11488a950f483d619a315f66d606e69635fba0",
-  "upstream_commit_date": "2026-10-11T16:45:14Z",
-  "upstream_commit_url": "https://github.com/nflverse/nfldata/commit/1a11488a950f483d619a315f66d606e69635fba0",
-  "source_file_sha256": "ea28a8ff9b756009add998d8b6ac73055811794e8c97b159958daa906fcd696b",
-  "snapshot_dir": "2026-10-11T170615Z"
+  "upstream_commit_sha": "a734486bcb07270923225b6ada2b3a61f56cf0a8",
+  "upstream_commit_date": "2026-10-12T20:35:13Z",
+  "upstream_commit_url": "https://github.com/nflverse/nfldata/commit/a734486bcb07270923225b6ada2b3a61f56cf0a8",
+  "source_file_sha256": "c5fa00b8e50ce938de5d39432f7c7c495aaa88f5e7211a1f22fc58ff8366dc31",
+  "snapshot_dir": "2026-10-12T203837Z"
  },
  "checks": [
   {
    "check": "comparison_feed",
    "status": "ok",
-   "detail": "8 completed comparison(s) recorded",
-   "runs_recorded": 8
+   "detail": "9 completed comparison(s) recorded",
+   "runs_recorded": 9
   },
   {
    "check": "freshness",
    "status": "ok",
-   "detail": "newest completed comparison is 20.84h old (threshold 40.0h)",
-   "last_comparison_at": "2026-10-11T17:06:15+00:00",
-   "age_hours": 20.84,
+   "detail": "newest completed comparison is 0.0h old (threshold 40.0h)",
+   "last_comparison_at": "2026-10-12T20:38:38+00:00",
+   "age_hours": 0.0,
    "threshold_hours": 40.0
   },
   {
    "check": "attempt_ledger",
    "status": "ok",
-   "detail": "the last scheduled attempt completed 20.84h ago; collection, comparison and publication completed",
+   "detail": "the last scheduled attempt completed 0.00h ago; collection, comparison and publication completed",
    "attempt_status": "ok",
    "consecutive_failures": 0,
-   "hours_since_last_attempt": 20.84
+   "hours_since_last_attempt": 0.0
   },
   {
    "check": "source_movement",
    "status": "ok",
-   "detail": "the upstream source file changed in 3 of the last 3 comparisons; the frozen-field projection changed in none of them (identical-input streak 2), which is the expected state for a scoreboard-only monitor",
-   "identical_input_streak": 2,
+   "detail": "the upstream source file changed in 3 of the last 3 comparisons; the frozen-field projection changed in none of them (identical-input streak 0), which is the expected state for a scoreboard-only monitor",
+   "identical_input_streak": 0,
    "comparisons_inspected": 3,
    "source_file_changed_in": 3
   },
   {
    "check": "snapshot_store",
    "status": "ok",
-   "detail": "11 snapshot(s); newest is pinned to upstream commit 1a11488a95 (21.19h old)",
-   "snapshots": 11,
+   "detail": "12 snapshot(s); newest is pinned to upstream commit a734486bcb (0.06h old)",
+   "snapshots": 12,
    "watermark": {
-    "upstream_commit_sha": "1a11488a950f483d619a315f66d606e69635fba0",
-    "upstream_commit_date": "2026-10-11T16:45:14Z",
-    "upstream_commit_url": "https://github.com/nflverse/nfldata/commit/1a11488a950f483d619a315f66d606e69635fba0",
-    "source_file_sha256": "ea28a8ff9b756009add998d8b6ac73055811794e8c97b159958daa906fcd696b",
-    "snapshot_dir": "2026-10-11T170615Z"
+    "upstream_commit_sha": "a734486bcb07270923225b6ada2b3a61f56cf0a8",
+    "upstream_commit_date": "2026-10-12T20:35:13Z",
+    "upstream_commit_url": "https://github.com/nflverse/nfldata/commit/a734486bcb07270923225b6ada2b3a61f56cf0a8",
+    "source_file_sha256": "c5fa00b8e50ce938de5d39432f7c7c495aaa88f5e7211a1f22fc58ff8366dc31",
+    "snapshot_dir": "2026-10-12T203837Z"
    },
-   "watermark_age_hours": 21.19
+   "watermark_age_hours": 0.06
   },
   {
    "check": "push_notification",
    "status": "unknown",
-   "detail": "all 5 recorded attempt(s) found no webhook configured, so no alert would currently reach a person; delivery is opt-in via the ALERT_WEBHOOK_URL secret, and the Atom feed is the zero-configuration alternative",
+   "detail": "all 6 recorded attempt(s) found no webhook configured, so no alert would currently reach a person; delivery is opt-in via the ALERT_WEBHOOK_URL secret, and the Atom feed is the zero-configuration alternative",
    "summary": {
-    "attempts_recorded": 5,
+    "attempts_recorded": 6,
     "by_outcome": {
-     "not_configured": 5
+     "not_configured": 6
     },
     "delivered": 0,
     "failed": 0,
     "dead_letter": 0,
-    "last_delivery_attempt": "2026-10-11T17:06:15Z",
+    "last_delivery_attempt": "2026-10-12T20:38:38Z",
     "last_dead_letter": null
    }
   },
   {
    "check": "atom_feed",
    "status": "ok",
-   "detail": "8 subscribable entr(ies), unique ids, <updated> 2026-10-11T17:06:15Z",
-   "entries": 8
+   "detail": "9 subscribable entr(ies), unique ids, <updated> 2026-10-12T20:38:38Z",
+   "entries": 9
   },
   {
    "check": "published_copies",
