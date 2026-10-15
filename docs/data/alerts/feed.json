@@ -9,8 +9,45 @@
    "RECOMMENDATIONS.md"
   ]
  },
- "last_checked_at": "2026-10-14T16:13:57+00:00",
+ "last_checked_at": "2026-10-15T16:01:38+00:00",
  "runs": [
+  {
+   "checked_at": "2026-10-15T16:01:38+00:00",
+   "status": "clean",
+   "alerts_total": 0,
+   "counts_by_severity": {},
+   "records_compared": 7355,
+   "old_snapshot": "snapshots/nfldata_games/2026-10-14T161356Z/games.slim.csv",
+   "new_snapshot": "snapshots/nfldata_games/2026-10-15T160138Z/games.slim.csv",
+   "old_sha256": "dd60f878d5cb276373be54d21a14b81151e2bfa8be7acd8b66bd43b6af247763",
+   "new_sha256": "dd60f878d5cb276373be54d21a14b81151e2bfa8be7acd8b66bd43b6af247763",
+   "identical_inputs": true,
+   "old_source": {
+    "source_file_sha256": "c9d597a8a84df33eeb1169e167c7f612c499768e9933e63fd7bf790b8742b3c6",
+    "source_bytes": 2184485,
+    "upstream_commit_sha": "13658840e6580c289a5346440575eb1881dbe67f",
+    "upstream_commit_date": "2026-10-14T15:45:12Z",
+    "manifest": "snapshots/nfldata_games/2026-10-14T161356Z/games.slim.csv.manifest.json"
+   },
+   "new_source": {
+    "source_file_sha256": "f51646973d58a31d36761508846100f11f0cf605dfd3810b79256993cb2722e3",
+    "source_bytes": 2184486,
+    "upstream_commit_sha": "5776760f6e87454b7b617d7e6291f86cff7bb5da",
+    "upstream_commit_date": "2026-10-15T15:45:13Z",
+    "manifest": "snapshots/nfldata_games/2026-10-15T160138Z/games.slim.csv.manifest.json"
+   },
+   "source_file_changed": true,
+   "identical_inputs_note": "The COMPARED projection (final games, frozen scoreboard fields only) was byte-identical. This says nothing by itself about whether the upstream source file changed; see source_file_changed.",
+   "min_severity": 2,
+   "rules_applied": [
+    "only rows final in OLD snapshot are compared",
+    "only frozen fields compared: ['away_score', 'home_score', 'result', 'total', 'overtime']",
+    "volatile fields excluded: ['spread_line', 'total_line', 'away_moneyline', 'home_moneyline', 'away_spread_odds', 'home_spread_odds', 'gametime', 'weekday']"
+   ],
+   "alerts": [],
+   "verification_status": "no_change_detected",
+   "actually_changed_outcome": null
+  },
   {
    "checked_at": "2026-10-14T16:13:57+00:00",
    "status": "clean",
@@ -465,37 +502,37 @@
   }
  ],
  "summary": {
-  "runs_recorded": 12,
+  "runs_recorded": 13,
   "runs_with_alerts": 0,
-  "runs_clean": 12,
+  "runs_clean": 13,
   "total_alerts": 0,
   "first_run": "2026-10-07T16:58:20+00:00",
-  "last_run": "2026-10-14T16:13:57+00:00"
+  "last_run": "2026-10-15T16:01:38+00:00"
  },
  "latest": {
-  "checked_at": "2026-10-14T16:13:57+00:00",
+  "checked_at": "2026-10-15T16:01:38+00:00",
   "status": "clean",
   "alerts_total": 0,
   "counts_by_severity": {},
   "records_compared": 7355,
-  "old_snapshot": "snapshots/nfldata_games/2026-10-14T091014Z/games.slim.csv",
-  "new_snapshot": "snapshots/nfldata_games/2026-10-14T161356Z/games.slim.csv",
+  "old_snapshot": "snapshots/nfldata_games/2026-10-14T161356Z/games.slim.csv",
+  "new_snapshot": "snapshots/nfldata_games/2026-10-15T160138Z/games.slim.csv",
   "old_sha256": "dd60f878d5cb276373be54d21a14b81151e2bfa8be7acd8b66bd43b6af247763",
   "new_sha256": "dd60f878d5cb276373be54d21a14b81151e2bfa8be7acd8b66bd43b6af247763",
   "identical_inputs": true,
   "old_source": {
-   "source_file_sha256": "52c75da902a903bb6ce948f687e20406ec57c396efeb6cff9ca993e7b1855af6",
-   "source_bytes": 2184479,
-   "upstream_commit_sha": "391a2e5ba5169564eaa90a401fccb4f919020af0",
-   "upstream_commit_date": "2026-10-14T09:05:13Z",
-   "manifest": "snapshots/nfldata_games/2026-10-14T091014Z/games.slim.csv.manifest.json"
-  },
-  "new_source": {
    "source_file_sha256": "c9d597a8a84df33eeb1169e167c7f612c499768e9933e63fd7bf790b8742b3c6",
    "source_bytes": 2184485,
    "upstream_commit_sha": "13658840e6580c289a5346440575eb1881dbe67f",
    "upstream_commit_date": "2026-10-14T15:45:12Z",
    "manifest": "snapshots/nfldata_games/2026-10-14T161356Z/games.slim.csv.manifest.json"
+  },
+  "new_source": {
+   "source_file_sha256": "f51646973d58a31d36761508846100f11f0cf605dfd3810b79256993cb2722e3",
+   "source_bytes": 2184486,
+   "upstream_commit_sha": "5776760f6e87454b7b617d7e6291f86cff7bb5da",
+   "upstream_commit_date": "2026-10-15T15:45:13Z",
+   "manifest": "snapshots/nfldata_games/2026-10-15T160138Z/games.slim.csv.manifest.json"
   },
   "source_file_changed": true,
   "identical_inputs_note": "The COMPARED projection (final games, frozen scoreboard fields only) was byte-identical. This says nothing by itself about whether the upstream source file changed; see source_file_changed.",
