@@ -1,4 +1,4 @@
-# Scoring-discrepancy alerts — 2026-10-24T15:07:06+00:00
+# Scoring-discrepancy alerts — 2026-10-25T15:20:09+00:00
 
 **Source:** `nfldata_games`  
 **Total alerts:** 0  
