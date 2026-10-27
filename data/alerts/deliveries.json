@@ -7,6 +7,18 @@
  },
  "deliveries": [
   {
+   "delivery_id": "57615ab948eb1d72424fe7832e86944a-20261027T170618Z",
+   "idempotency_key": "57615ab948eb1d72424fe7832e86944a",
+   "attempted_at": "2026-10-27T17:06:18Z",
+   "alert_count": 0,
+   "report_digest": "a128357aaa9e6736",
+   "review_url": null,
+   "attempts": 0,
+   "outcome": "not_configured",
+   "detail": "no webhook URL configured; report remains in the feed and artefact",
+   "dead_letter": false
+  },
+  {
    "delivery_id": "44cae1919b9a7c4e762a9d623b912c54-20261026T175924Z",
    "idempotency_key": "44cae1919b9a7c4e762a9d623b912c54",
    "attempted_at": "2026-10-26T17:59:24Z",
@@ -272,15 +284,15 @@
   }
  ],
  "summary": {
-  "attempts_recorded": 22,
+  "attempts_recorded": 23,
   "by_outcome": {
-   "not_configured": 22
+   "not_configured": 23
   },
   "delivered": 0,
   "failed": 0,
   "dead_letter": 0,
-  "last_delivery_attempt": "2026-10-26T17:59:24Z",
+  "last_delivery_attempt": "2026-10-27T17:06:18Z",
   "last_dead_letter": null
  },
- "generated_at": "2026-10-26T17:59:24Z"
+ "generated_at": "2026-10-27T17:06:18Z"
 }
