@@ -14,7 +14,7 @@
    ".github/workflows/health.yml"
   ]
  },
- "generated_at": "2026-10-29T17:50:10Z",
+ "generated_at": "2026-10-29T17:50:25Z",
  "status": "warn",
  "headline": "Monitor degraded: it is running, but at least one check needs attention.",
  "last_successful_comparison_at": "2026-10-29T17:50:09+00:00",
@@ -62,7 +62,7 @@
   {
    "check": "snapshot_store",
    "status": "ok",
-   "detail": "32 snapshot(s); newest is pinned to upstream commit 16c767a2e7 (0.08h old)",
+   "detail": "32 snapshot(s); newest is pinned to upstream commit 16c767a2e7 (0.09h old)",
    "snapshots": 32,
    "watermark": {
     "upstream_commit_sha": "16c767a2e73fd8f8956d450c9f753a06ab6b0648",
@@ -71,7 +71,7 @@
     "source_file_sha256": "b86e8a04fa24075bcca123fb6329b819071ad6d334a76f08a3846873339c1ef8",
     "snapshot_dir": "2026-10-29T175009Z"
    },
-   "watermark_age_hours": 0.08
+   "watermark_age_hours": 0.09
   },
   {
    "check": "push_notification",
