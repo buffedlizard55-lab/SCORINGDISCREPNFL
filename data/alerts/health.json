@@ -14,7 +14,7 @@
    ".github/workflows/health.yml"
   ]
  },
- "generated_at": "2026-10-30T17:30:31Z",
+ "generated_at": "2026-10-30T17:30:44Z",
  "status": "warn",
  "headline": "Monitor degraded: it is running, but at least one check needs attention.",
  "last_successful_comparison_at": "2026-10-30T17:30:30+00:00",
