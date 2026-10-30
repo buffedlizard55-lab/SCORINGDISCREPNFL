@@ -1,0 +1,16 @@
+{
+  "source": "nfldata_games",
+  "file": "games.slim.csv",
+  "bytes": 415691,
+  "sha256": "9735ca959c024bafb3e4bfb9fd4948157a6ad70cbaa92085057fb3ded70777bf",
+  "repo": "nflverse/nfldata",
+  "ref": "master",
+  "source_file_sha256": "463c39b0f83163ac2b4c95b2cbe815e9fc1b9a7ef48355415ca42179bf39663a",
+  "source_bytes": 2187066,
+  "note": "slim = final games only, frozen fields only",
+  "upstream_commit_sha": "2e4fc11b3eb6826e8619dc57b739a1ecdb743154",
+  "upstream_commit_date": "2026-10-30T17:05:18Z",
+  "upstream_commit_message": "Automated data update",
+  "upstream_commit_url": "https://github.com/nflverse/nfldata/commit/2e4fc11b3eb6826e8619dc57b739a1ecdb743154",
+  "codeload_url": "https://codeload.github.com/nflverse/nfldata/tar.gz/2e4fc11b3eb6826e8619dc57b739a1ecdb743154"
+}
