@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-30T17:30:30+00:00",
+  "generated_at": "2026-10-31T16:35:46+00:00",
   "source": "nfldata_games",
   "min_severity": 2,
   "total_alerts": 0,
@@ -8,16 +8,16 @@
   "disclaimer": "Alerts are MACHINE-DETECTED differences between two snapshots of a third-party mirror of the NFL's official record. Each alert is a candidate discrepancy, not a confirmed official correction. Cross-check against an authoritative source before treating it as official. See LIMITATIONS.md.",
   "inputs": {
     "old": {
-      "path": "snapshots/nfldata_games/2026-10-29T175009Z/games.slim.csv",
-      "sha256": "9b642b9b7de18afdd035e65d0bcaa0b7c731cf978875d3836fd2e445ce101368"
-    },
-    "new": {
       "path": "snapshots/nfldata_games/2026-10-30T173029Z/games.slim.csv",
       "sha256": "9735ca959c024bafb3e4bfb9fd4948157a6ad70cbaa92085057fb3ded70777bf"
     },
-    "old_records": 7383,
+    "new": {
+      "path": "snapshots/nfldata_games/2026-10-31T163546Z/games.slim.csv",
+      "sha256": "9735ca959c024bafb3e4bfb9fd4948157a6ad70cbaa92085057fb3ded70777bf"
+    },
+    "old_records": 7384,
     "new_records": 7384,
-    "old_final_records": 7383
+    "old_final_records": 7384
   },
   "rules_applied": [
     "only rows final in OLD snapshot are compared",
